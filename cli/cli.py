@@ -84,7 +84,7 @@ def do_cmake(platform: BuildPlatform, type_: BuildType) -> None:
 
 
 @timing
-def do_build(target: BuildTarget, platform: BuildPlatform):
+def do_build(target: BuildTarget, platform: BuildPlatform, type_: BuildType):
     match platform:
         case BuildPlatform.Win:
             run_command(
@@ -97,7 +97,7 @@ def do_build(target: BuildTarget, platform: BuildPlatform):
             )
 
         case BuildPlatform.Web:
-            run_command(rf"cmake --build .cmake\Web -t {target}")
+            run_command(rf"cmake --build .cmake\Web_{type_} -t {target}")
 
         case _:
             assert False, f"Not supported platform: {platform}"
@@ -293,7 +293,7 @@ def command(f: Callable[P, T]) -> Callable[P, T]:
 @command
 def build(target: BuildTarget, platform: BuildPlatform, type_: BuildType):
     do_cmake(platform, type_)
-    do_build(target, platform)
+    do_build(target, platform, type_)
 
 
 @command
@@ -303,7 +303,7 @@ def run_in_debugger(target, type_: BuildType):
     do_stop_debugger_ahk()
 
     do_cmake(platform, type_)
-    do_build(target, platform)
+    do_build(target, platform, type_)
 
     do_run_in_debugger_ahk(target, type_)
 

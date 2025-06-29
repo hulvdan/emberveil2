@@ -4,6 +4,10 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
 
+#define LOGI(...) SDL_Log(__VA_ARGS__)
+#define LOGW(...) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+#define LOGE(...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+
 #if defined(SDL_PLATFORM_EMSCRIPTEN)
 #  include <emscripten.h>
 #endif
@@ -30,10 +34,23 @@ void Update() {
   }
 }
 
+#if defined(SDL_PLATFORM_EMSCRIPTEN)
+EM_JS(void, log_webgl_version, (), {
+  let canvas = document.createElement('canvas');
+  let gl     = canvas.getContext('webgl2') || canvas.getContext('webgl');
+  if (gl) {
+    console.log("GL_VERSION: " + gl.getParameter(gl.VERSION));
+  }
+  else {
+    console.log("No WebGL context available.");
+  }
+});
+#endif
+
 int SDL_main(int argc, char* argv[]) {
   SDL_Init(0);
 
-  auto window = SDL_CreateWindow("Bgfx SDL3", 1280, 720, 0);
+  auto window = SDL_CreateWindow("The Game", 1280, 720, 0);
 
   {
     bgfx::PlatformData pd{};
@@ -84,18 +101,20 @@ int SDL_main(int argc, char* argv[]) {
     init.platformData.ndt  = pd.ndt;
     init.resolution.width  = 1280;
     init.resolution.height = 720;
-    // init.resolution.reset = BGFX_RESET_VSYNC;
+    init.resolution.reset  = BGFX_RESET_VSYNC;
     if (!bgfx::init(init)) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "bgfx::init(init) failed!");
+      LOGE("bgfx::init(init) failed!");
       return 1;
     }
 
     // bgfx::reset( 1280, 720, BGFX_RESET_VSYNC );
     bgfx::setDebug(BGFX_DEBUG_TEXT);
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f, 0);
+    // bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f, 0);
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR, 0x303030FF, 1.0f, 0);
   }
 
 #if defined(SDL_PLATFORM_EMSCRIPTEN)
+  log_webgl_version();
   emscripten_set_main_loop(Update, 0, 1);
 #else
   while (!g_shouldExit)
@@ -109,3 +128,5 @@ int SDL_main(int argc, char* argv[]) {
 
   return 0;
 }
+
+///
