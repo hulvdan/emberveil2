@@ -1,0 +1,34 @@
+BasedOnStyle: Chromium
+AccessModifierOffset: '-4'
+AlignAfterOpenBracket: BlockIndent
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignOperands: true
+AlignTrailingComments: true
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: Never
+BreakInheritanceList: BeforeComma
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Custom
+Cpp11BracedListStyle: true
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  BeforeElse: true
+  AfterControlStatement: MultiLine
+ColumnLimit: '90'
+ContinuationIndentWidth: '2'
+IndentCaseLabels: false
+IndentWidth: '2'
+Language: Cpp
+ReflowComments: true
+SortIncludes: false
+FixNamespaceComments: true
+ShortNamespaceLines: 0
+AllowShortFunctionsOnASingleLine: 'Empty'
+IfMacros: ['SAFETY_IF']
+ForEachMacros: ['FOR_DIRECTION', 'FOR_RANGE', 'FOREACH', 'TEST_CASE',
+  # NOTE: Исключительно для целей корректного форматирования всятавил сюда LAMBDA.
+  'LAMBDA']
+IndentPPDirectives: 'AfterHash'
+LineEnding: LF

@@ -1,0 +1,10 @@
+# https://pre-commit.com/
+repos:
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-no-eval
+        entry: 'nocheckin'
+        language: pygrep
+        files: ^(?!.pre-commit-config).*.(h|c|hpp|cpp|json|jsonc|yaml|yml|txt|py|md|toml|cfg)$
+        types: []

@@ -1,0 +1,95 @@
+[tool.poetry]
+name = "game-template"
+version = "0.1.0"
+description = ""
+authors = ["Aleksei Chistov <aleksey.chistov@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "cli" },
+]
+
+[tool.poetry.dependencies]
+fnvhash = "^0.1.0"
+pillow = "^10.3.0"
+pre-commit-hooks = "^5.0.0"
+pyjson5 = "^1.6.6"
+python = "^3.11"
+typer = "^0.12.3"
+lxml = "^5.3.0"
+pydantic = "^2.10.4"
+cpplint = "^2.0.0"
+pyyaml = "^6.0.2"
+pytest = "^8.3.4"
+cogapp = "^3.4.1"
+opencv-python = "^4.11.0.86"
+numpy = "^2.2.3"
+ruff = "^0.11.2"
+black = "^25.1.0"
+isort = "^6.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 90
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN",
+    "B011",
+    "BLE001",
+    "C401",
+    "C901",
+    "COM",
+    "D",
+    "DTZ005",
+    "E501",
+    "E731",
+    "E741",
+    "ERA001",
+    "FA102",
+    "FBT003",
+    "G001",
+    "G004",
+    "LOG002",
+    "N806",
+    "PERF401",
+    "PGH004",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR1714",
+    "PLR1722",
+    "PLR2004",
+    "PLR5501",
+    "PLW0603",
+    "PT015",
+    "PTH123",
+    "RET507",
+    "RUF001",
+    "RUF003",
+    "RUF012",
+    "S",
+    "SIM102",
+    "SIM103",
+    "SIM108",
+    "SIM114",
+    "T201",
+    "TRY300",
+    "UP032",
+    "UP035",
+]
+
+[tool.pytest.ini_options]
+addopts = ["-ra", "-q"]
+pythonpath = "cli"
+testpaths = ["cli"]
+python_files = ["*.py"]
+python_functions = ["test_*"]
+python_classes = ["Test*"]
