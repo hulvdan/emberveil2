@@ -111,11 +111,11 @@ int SDL_main(int argc, char* argv[]) {
     bgfx_set_platform_data(&pd);
 
     bgfx_init_t init{};
-#if defined(SDL_PLATFORM_EMSCRIPTEN)
+    // #if defined(SDL_PLATFORM_EMSCRIPTEN)
     init.type = BGFX_RENDERER_TYPE_OPENGL;
-#else
-    init.type = BGFX_RENDERER_TYPE_DIRECT3D11;
-#endif
+    // #else
+    // init.type = BGFX_RENDERER_TYPE_DIRECT3D11;
+    // #endif
     init.vendorId          = BGFX_PCI_ID_NONE;
     init.platformData.nwh  = pd.nwh;
     init.platformData.ndt  = pd.ndt;
