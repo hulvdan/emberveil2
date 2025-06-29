@@ -61,11 +61,12 @@ app = typer.Typer(
 
 
 @timing
-def do_cmake(platform: BuildPlatform, type_: BuildType) -> None:
+def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
     command = [
         "cmake",
         "-DBUILD_SHARED_LIBS=OFF",
         f"-DPLATFORM={platform}",
+        f"-DCMAKE_CONFIGURATION_TYPES={build_type}",
     ]
 
     match platform:
@@ -75,7 +76,7 @@ def do_cmake(platform: BuildPlatform, type_: BuildType) -> None:
 
         case BuildPlatform.Web:
             command.insert(0, "emcmake")
-            command.append(rf"-B .cmake\{platform}_{type_}")
+            command.append(rf"-B .cmake\{platform}_{build_type}")
 
         case _:
             assert False, f"Not supported platform: {platform}"
@@ -84,7 +85,7 @@ def do_cmake(platform: BuildPlatform, type_: BuildType) -> None:
 
 
 @timing
-def do_build(target: BuildTarget, platform: BuildPlatform, type_: BuildType):
+def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType):
     match platform:
         case BuildPlatform.Win:
             run_command(
@@ -97,7 +98,7 @@ def do_build(target: BuildTarget, platform: BuildPlatform, type_: BuildType):
             )
 
         case BuildPlatform.Web:
-            run_command(rf"cmake --build .cmake\Web_{type_} -t {target}")
+            run_command(rf"cmake --build .cmake\Web_{build_type} -t {target}")
 
         case _:
             assert False, f"Not supported platform: {platform}"
@@ -231,8 +232,8 @@ def do_stop_debugger_ahk() -> None:
 
 
 @timing
-def do_run_in_debugger_ahk(target: BuildTarget, type_: BuildType) -> None:
-    exe_path = f".cmake/vs17/{type_}/{target}.exe"
+def do_run_in_debugger_ahk(target: BuildTarget, build_type: BuildType) -> None:
+    exe_path = f".cmake/vs17/{build_type}/{target}.exe"
     run_command(rf".nvim-personal\cli.ahk run_in_debugger {exe_path}")
 
 
@@ -291,21 +292,21 @@ def command(f: Callable[P, T]) -> Callable[P, T]:
 
 
 @command
-def build(target: BuildTarget, platform: BuildPlatform, type_: BuildType):
-    do_cmake(platform, type_)
-    do_build(target, platform, type_)
+def build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType):
+    do_cmake(platform, build_type)
+    do_build(target, platform, build_type)
 
 
 @command
-def run_in_debugger(target, type_: BuildType):
+def run_in_debugger(target, build_type: BuildType):
     platform = BuildPlatform.Win
 
     do_stop_debugger_ahk()
 
-    do_cmake(platform, type_)
-    do_build(target, platform, type_)
+    do_cmake(platform, build_type)
+    do_build(target, platform, build_type)
 
-    do_run_in_debugger_ahk(target, type_)
+    do_run_in_debugger_ahk(target, build_type)
 
 
 # @command

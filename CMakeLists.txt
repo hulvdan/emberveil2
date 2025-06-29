@@ -84,7 +84,6 @@ elseif ("${PLATFORM}" STREQUAL "Web")
             "-sASSERTIONS=2"
             "-g4"
             "-O0"
-            "-sDEMANGLE_SUPPORT=1"
             "-sFORCE_FILESYSTEM=1"
             "--shell-file=${PROJECT_SOURCE_DIR}/vendor/shell_debug.html"
         )
