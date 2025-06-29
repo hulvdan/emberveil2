@@ -4,6 +4,9 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
 
+#include "bf_lib.cpp"
+#include "bf_game.cpp"
+
 #define LOGI(...) SDL_Log(__VA_ARGS__)
 #define LOGW(...) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 #define LOGE(...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
@@ -50,7 +53,16 @@ EM_JS(void, log_webgl_version, (), {
 int SDL_main(int argc, char* argv[]) {
   SDL_Init(0);
 
-  auto window = SDL_CreateWindow("The Game", 1280, 720, 0);
+  auto window = SDL_CreateWindow(
+    "The Game"
+#if BF_DEBUG
+    " [DEBUG]"
+#endif
+    ,
+    1280,
+    720,
+    0
+  );
 
   {
     bgfx::PlatformData pd{};

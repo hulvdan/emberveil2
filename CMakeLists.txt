@@ -1,12 +1,18 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.29)
 project(game CXX C)
 
-include(FetchContent)
-set(FETCHCONTENT_QUIET FALSE)
+# include(FetchContent)
+# set(FETCHCONTENT_QUIET FALSE)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
+    add_compile_definitions("BF_DEBUG=1")
+else()
+    add_compile_definitions("BF_DEBUG=0")
+endif()
 
 # bgfx
 #-----------------------------------------------------------------------------------
@@ -60,6 +66,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/sdl")
 add_executable(game "${PROJECT_SOURCE_DIR}/src/main.cpp")
 target_link_libraries(game bgfx SDL3-static)
 
+set_target_properties(game PROPERTIES
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
 
 if ("${PLATFORM}" STREQUAL "Win")
 elseif ("${PLATFORM}" STREQUAL "Web")
@@ -104,8 +113,6 @@ else()
     message(FATAL_ERROR "game: Not supported platform: ${PLATFORM}")
 endif()
 
-add_compile_definitions("$<$<CONFIG:Debug>:BF_DEBUG=1>")
-add_compile_definitions("$<$<NOT:$<CONFIG:Debug>>:BF_DEBUG=0>")
 
 # Windows. Startup project in Visual Studio.
 #-----------------------------------------------------------------------------------

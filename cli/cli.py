@@ -67,6 +67,7 @@ def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
         "-DBUILD_SHARED_LIBS=OFF",
         f"-DPLATFORM={platform}",
         f"-DCMAKE_CONFIGURATION_TYPES={build_type}",
+        "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug",
     ]
 
     match platform:
@@ -88,6 +89,10 @@ def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
 def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType):
     match platform:
         case BuildPlatform.Win:
+            crt = "MT"
+            if build_type == BuildType.Debug:
+                crt += "d"
+
             run_command(
                 rf"""
                 "{MSBUILD_PATH}" .cmake\vs17\game.sln
