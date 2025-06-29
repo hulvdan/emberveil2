@@ -14,6 +14,11 @@ else()
     add_compile_definitions("BF_DEBUG=0")
 endif()
 
+# vendor
+#-----------------------------------------------------------------------------------
+add_library(vendor INTERFACE)
+target_include_directories(vendor INTERFACE "${PROJECT_SOURCE_DIR}/vendor")
+
 # bgfx
 #-----------------------------------------------------------------------------------
 add_library(bgfx STATIC IMPORTED)
@@ -64,7 +69,7 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/sdl")
 # game
 #-----------------------------------------------------------------------------------
 add_executable(game "${PROJECT_SOURCE_DIR}/src/main.cpp")
-target_link_libraries(game bgfx SDL3-static)
+target_link_libraries(game bgfx SDL3-static vendor)
 
 set_target_properties(game PROPERTIES
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"

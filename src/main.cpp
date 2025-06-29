@@ -22,6 +22,7 @@ void Update() {
 
   bgfx::setViewRect(0, 0, 0, uint16_t(1280), uint16_t(720));
   bgfx::touch(0);
+  Draw();
   bgfx::dbgTextClear();
   bgfx::dbgTextPrintf(0, 1, 0x4f, "Counter: %d", counter++);
   bgfx::frame();
@@ -87,11 +88,9 @@ int SDL_main(int argc, char* argv[]) {
       );
     }
     else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
-      // struct wl_display *display*
       pd.ndt = SDL_GetPointerProperty(
         SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL
       );
-      // struct wl_surface *surface*
       pd.nwh = SDL_GetPointerProperty(
         SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL
       );
