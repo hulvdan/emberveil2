@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.29)
 project(game CXX C)
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -76,8 +78,6 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/sdl")
 add_executable(game "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
 target_link_libraries(game PRIVATE SDL3-static bgfx vendor_and_codegen)
 target_include_directories(game PRIVATE "${CMAKE_SOURCE_DIR}/src")
-
-set_target_properties(game PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 if ("${PLATFORM}" STREQUAL "Win")
 elseif ("${PLATFORM}" STREQUAL "Web")
