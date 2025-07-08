@@ -81,24 +81,25 @@ target_include_directories(game PRIVATE "${CMAKE_SOURCE_DIR}/src")
 
 if ("${PLATFORM}" STREQUAL "Win")
 elseif ("${PLATFORM}" STREQUAL "Web")
-    set_target_properties(game PROPERTIES OUTPUT_NAME "index")
-    set_target_properties(game PROPERTIES SUFFIX ".html")
-    add_compile_options(
+    target_compile_options(game PRIVATE
         "-o MIN_WEBGL_VERSION=1"
         "-o MAX_WEBGL_VERSION=2"
     )
-    add_link_options(
+    target_link_options(game PRIVATE
+        "-sUSE_WEBGL2=1"
         "-sMIN_WEBGL_VERSION=1"
         "-sMAX_WEBGL_VERSION=2"
         "-sALLOW_MEMORY_GROWTH=1"
     )
+    set_target_properties(game PROPERTIES OUTPUT_NAME "index")
+    set_target_properties(game PROPERTIES SUFFIX ".html")
 
     if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
-        add_compile_options(
+        target_compile_options(game PRIVATE
             "-O0"
             "-oASSERTIONS=2"
         )
-        add_link_options(
+        target_link_options(game PRIVATE
             "-sASSERTIONS=2"
             "-g4"
             "-O0"
@@ -106,11 +107,11 @@ elseif ("${PLATFORM}" STREQUAL "Web")
             "--shell-file=${CMAKE_SOURCE_DIR}/vendor/shell_debug.html"
         )
     else()
-        add_compile_options(
+        target_compile_options(game PRIVATE
             "-O3"
             "-oASSERTIONS=0"
         )
-        add_link_options(
+        target_link_options(game PRIVATE
             "-O3"
             "-sASSERTIONS=0"
             "-sEXIT_RUNTIME=0"
