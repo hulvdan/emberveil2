@@ -10,6 +10,7 @@ from bf_lib import (
     T,
     global_timing_manager_instance,
     hash32,
+    recursive_mkdir,
     run_command,
     timed_exit,
     timing,
@@ -95,6 +96,7 @@ def do_generate() -> None:
                     varyingdef = str(shader).rsplit("_", 1)[0] + "_var.def.sc"
 
                     out_file = output_directory / (shader.stem + f"_{profile}.bin")
+                    recursive_mkdir(out_file)
 
                     run_command(
                         [
