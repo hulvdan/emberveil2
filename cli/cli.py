@@ -10,7 +10,6 @@ from bf_lib import (
     T,
     global_timing_manager_instance,
     hash32,
-    log,
     run_command,
     timed_exit,
     timing,
