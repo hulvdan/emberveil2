@@ -131,11 +131,6 @@ require("conform").setup({
             args = { "-r", "$FILENAME" },
             stdin = false,
         },
-        shader = {
-            command = [[.venv\Scripts\python.exe]],
-            args = { "cli/cli.py", "shader", "$FILENAME" },
-            stdin = false,
-        },
     },
     formatters_by_ft = {
         cpp = function(bufnr)
@@ -149,9 +144,6 @@ require("conform").setup({
         end,
         markdown = function(bufnr)
             return { "cog" }
-        end,
-        glsl = function(bufnr)
-            return { "cog", "good_clang_format", "shader" }
         end,
     },
 })
