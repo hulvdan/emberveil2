@@ -45,6 +45,7 @@ function rebuild_tasks()
         { "a_select_target", select_target },
         { "e_build", cli_command(string.format("build %s %s %s", target, platform, build_type)) },
         { "d_debug", cli_command(string.format("run_in_debugger %s Debug", target)) },
+        { "u_update_template", cli_command("update_template") },
         -- { "t_test", cli_command("test") },
         -- { "p_test_python", [[.venv\Scripts\pytest.exe]] },
         -- -- { "killall", [[start .nvim-personal\cli.ahk killall]] },
@@ -125,8 +126,6 @@ end
 
 require("conform").setup({
     formatters = {
-        black = { command = [[.venv\Scripts\black.exe]] },
-        isort = { command = [[.venv\Scripts\isort.exe]] },
         cog = {
             command = [[.venv\Scripts\cog.exe]],
             args = { "-r", "$FILENAME" },
@@ -150,10 +149,6 @@ require("conform").setup({
         end,
         markdown = function(bufnr)
             return { "cog" }
-        end,
-        python = function(bufnr)
-            -- return { "cog", "black", "isort" }
-            return { "black", "isort" }
         end,
         glsl = function(bufnr)
             return { "cog", "good_clang_format", "shader" }

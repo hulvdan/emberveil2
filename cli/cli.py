@@ -9,6 +9,7 @@ from bf_lib import (
     T,
     global_timing_manager_instance,
     hash32,
+    log,
     run_command,
     timed_exit,
     timing,
@@ -433,6 +434,16 @@ def run_in_debugger(target, build_type: BuildType):
     do_build(target, platform, build_type)
 
     do_run_in_debugger_ahk(target, build_type)
+
+
+@command
+def update_template():
+    result = subprocess.run(
+        "git status --porcelain", capture_output=True, check=True, shell=True
+    )
+    if result.stdout.strip():
+        log.fatal("Your git worktree is dirty! `git status` should return nothing!")
+        exit(1)
 
 
 # @command
