@@ -446,6 +446,11 @@ def update_template():
         log.fatal("Your git worktree is dirty! `git status` should return nothing!")
         exit(1)
 
+    log.info("Git status is empty. Continuing with update")
+
+    subprocess.run("git fetch template", check=True, shell=True)
+    subprocess.run("git rebase template/template", check=True, shell=True)
+
 
 # @command
 # def test():
