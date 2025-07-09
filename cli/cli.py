@@ -439,15 +439,6 @@ def run_in_debugger(target, build_type: BuildType):
 
 @command
 def update_template():
-    result = subprocess.run(
-        "git status --porcelain", capture_output=True, check=True, shell=True
-    )
-    if result.stdout.strip():
-        log.fatal("Your git worktree is dirty! `git status` should return nothing!")
-        exit(1)
-
-    log.info("Git status is empty. Continuing with update")
-
     subprocess.run("git fetch template", check=True, shell=True)
     subprocess.run("git rebase template/template", check=True, shell=True)
 
