@@ -7,4 +7,5 @@
 /.temp/
 /codegen/
 /compile_commands.json
+/resources/atlas.png
 __pycache__/

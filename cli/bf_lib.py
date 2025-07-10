@@ -4,12 +4,34 @@ import re
 import subprocess
 import sys
 from contextlib import contextmanager
+from enum import Enum
 from functools import wraps
 from pathlib import Path
 from time import time
 from typing import Any, Callable, Iterator, NoReturn, ParamSpec, TypeVar
 
 import fnvhash
+
+
+class StrEnum(str, Enum):
+    def __str__(self):
+        return self.value
+
+
+class BuildType(StrEnum):
+    Debug = "Debug"
+    RelWithDebInfo = "RelWithDebInfo"
+    Release = "Release"
+
+
+class BuildPlatform(StrEnum):
+    Win = "Win"
+    Web = "Web"
+
+
+class BuildTarget(StrEnum):
+    game = "game"
+
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -148,10 +170,10 @@ PROJECT_DIR = Path(__file__).parent.parent
 TEMP_DIR = PROJECT_DIR / ".temp"
 CLI_DIR = Path("cli")
 SRC_DIR = Path("src")
-ASSETS_DIR = SRC_DIR / "game" / "assets"
+ASSETS_DIR = PROJECT_DIR / "assets"
 ART_DIR = ASSETS_DIR / "art"
 RESOURCES_DIR = PROJECT_DIR / "resources"
-GAME_DIR = PROJECT_DIR / "src" / "game" / "resources"
+GAME_DIR = PROJECT_DIR / "src" / "game"
 HANDS_GENERATED_DIR = PROJECT_DIR / "codegen" / "hands"
 FLATBUFFERS_GENERATED_DIR = PROJECT_DIR / "codegen" / "flatbuffers"
 # CMAKE_DEBUG_BUILD_DIR = Path(".cmake") / "vs17" / "Debug"
@@ -162,6 +184,7 @@ CLANG_FORMAT_PATH = "C:/Program Files/LLVM/bin/clang-format.exe"
 CLANG_TIDY_PATH = "C:/Program Files/LLVM/bin/clang-tidy.exe"
 CPPCHECK_PATH = "C:/Program Files/Cppcheck/cppcheck.exe"
 FLATC_PATH = CLI_DIR / "flatc.exe"
+SHADERC_PATH = str(PROJECT_DIR / "vendor/bgfx/.build/win64_vs2022/bin/shadercRelease.exe")
 
 MSBUILD_PATH = r"c:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 
@@ -221,7 +244,9 @@ def remove_spaces(string: str) -> str:
     return re.sub(REPLACING_SPACES_PATTERN, "", string)
 
 
-def run_command(cmd: list[str] | str, stdin_input: str | None = None, cwd=None) -> None:
+def run_command(
+    cmd: list[str | Path] | str, stdin_input: str | None = None, cwd=None
+) -> None:
     if isinstance(cmd, str):
         cmd = replace_double_spaces(cmd.replace("\n", " ").strip())
 
@@ -249,13 +274,11 @@ def run_command(cmd: list[str] | str, stdin_input: str | None = None, cwd=None) 
 
 def recursive_mkdir(path: Path) -> None:
     parents = list(path.parents)
-
+    parents.insert(0, path)
     count = len(parents)
-    if path.is_file():
-        count -= 1
 
     for i in range(count):
-        parents[len(parents) - i - 1].mkdir(exist_ok=True)
+        parents[-i - 1].mkdir(exist_ok=True)
 
 
 def eprint(*args, **kwargs):
@@ -284,3 +307,12 @@ def hash32_file_utf8(filepath) -> int:
 def batched(list_: list[T], n: int) -> Iterator[list[T]]:
     for i in range(0, len(list_), n):
         yield list_[i : i + n]
+
+
+def generate_binary_file_header(genline, source_path: Path, variable_name: str) -> None:
+    data = source_path.read_bytes()
+    genline(f"const u8 {variable_name}[] = {{")
+    for i in range(0, len(data), 12):
+        chunk = ", ".join(f"0x{b:02x}" for b in data[i : i + 12])
+        genline(f"    {chunk},")
+    genline("};\n")

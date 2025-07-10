@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+from collections import defaultdict
 from math import radians
 from pathlib import Path
 from typing import Any, Sequence
@@ -10,13 +11,16 @@ from bf_lib import (
     ART_DIR,
     ASSETS_DIR,
     FLATBUFFERS_GENERATED_DIR,
-    FLATBUFFERS_SRC_DIR,
     FLATC_PATH,
     GAME_DIR,
     HANDS_GENERATED_DIR,
+    PROJECT_DIR,
     RESOURCES_DIR,
+    SHADERC_PATH,
     SRC_DIR,
     TEMP_DIR,
+    BuildPlatform,
+    generate_binary_file_header,
     log,
     recursive_mkdir,
     run_command,
@@ -92,7 +96,7 @@ def recursive_replace_transform(
                             errors = []
                         errors.append(v)
             else:
-                assert isinstance(value, str), f"value: {value[i]}"
+                assert isinstance(value, str), f"value: {value}"
                 try:
                     gamelib_recursed[key] = codename_to_index[value]
                 except KeyError:
@@ -227,8 +231,9 @@ def genenum(
 def convert_gamelib_json_to_binary(
     texture_name_2_id: dict[str, int], genline, atlas_data
 ) -> None:
-    with open(GAME_DIR / "gamelib.yaml", encoding="utf-8") as in_file:
-        gamelib = yaml.safe_load(in_file)
+    gamelib = (
+        yaml.safe_load((GAME_DIR / "gamelib.yaml").read_text(encoding="utf-8")) or {}
+    )
 
     gamelib["atlas"] = atlas_data
 
@@ -254,22 +259,22 @@ def convert_gamelib_json_to_binary(
             "-o",
             TEMP_DIR,
             "-b",
-            FLATBUFFERS_SRC_DIR / "bf_gamelib.fbs",
+            GAME_DIR / "bf_gamelib.fbs",
             intermediate_path,
         ]
     )
 
-    intermediate_binary_path = str(intermediate_path).rsplit(".", 1)[0] + ".bin"
-    shutil.move(intermediate_binary_path, RESOURCES_DIR / "gamelib.bin")
+    intermediate_binary_path = Path(str(intermediate_path).rsplit(".", 1)[0] + ".bin")
+    # shutil.move(intermediate_binary_path, RESOURCES_DIR / "gamelib.bin")
+
+    generate_binary_file_header(genline, intermediate_binary_path, "g_gamelib")
 
 
 @timing
 def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
     assert str(path).endswith(".ftpp")
 
-    filename_wo_extension = path.name.rsplit(".", 1)[0]
-
-    shutil.copytree(ART_DIR / "to_do_nothing", TEMP_DIR / "art", dirs_exist_ok=True)
+    shutil.copytree(ART_DIR / "textures", TEMP_DIR / "art", dirs_exist_ok=True)
 
     cache_filepath = TEMP_DIR / ".atlas.cache"
 
@@ -292,7 +297,7 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
         cache_filepath.write_text(str(cache_value))
 
     # Подгоняем спецификацию под наш формат.
-    json_path = TEMP_DIR / (filename_wo_extension + ".json")
+    json_path = TEMP_DIR / (path.stem + ".json")
     with open(json_path) as json_file:
         json_data = json.load(json_file)
 
@@ -305,13 +310,6 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
         assert name not in found_textures
         found_textures.add(name)
 
-        outlined = (ART_DIR / "to_outline" / (name + ".png")).exists() or (
-            "__outlined" in name
-        )
-        baseline = data["frame"]["h"]
-        if outlined:
-            baseline -= 20
-
         texture_data = {
             "id": -1,
             "debug_name": name,
@@ -319,22 +317,7 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
             "size_y": data["frame"]["h"],
             "atlas_x": data["frame"]["x"],
             "atlas_y": data["frame"]["y"],
-            "scaled": (
-                outlined
-                or (ART_DIR / "to_scale" / (name + ".png")).exists()
-                or (ART_DIR / "decorations" / "tiles" / (name + ".png")).exists()
-                or (
-                    ART_DIR
-                    / "to_bone"
-                    / (
-                        name.replace("__shadowed", "")
-                        .replace("__outlined", "")
-                        .replace("__scaled", "")
-                        + ".png"
-                    )
-                ).exists()
-            ),
-            "baseline": baseline,
+            "baseline": 0,
         }
         textures.append(texture_data)
 
@@ -346,10 +329,12 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
         name = textures[i]["debug_name"]
         texture_name_2_id[name] = i
 
+    recursive_mkdir(RESOURCES_DIR)
+
     # Копируем в resources.
     shutil.copyfile(
-        TEMP_DIR / (filename_wo_extension + ".png"),
-        RESOURCES_DIR / (filename_wo_extension + ".png"),
+        TEMP_DIR / (path.stem + ".png"),
+        RESOURCES_DIR / (path.stem + ".png"),
     )
 
     return texture_name_2_id, {
@@ -416,6 +401,8 @@ def listfiles_with_hashes_in_dir(path: str | Path) -> dict[str, int]:
 
 @timing
 def generate_flatbuffer_files():
+    recursive_mkdir(FLATBUFFERS_GENERATED_DIR)
+
     hashes_for_msbuild = listfiles_with_hashes_in_dir(FLATBUFFERS_GENERATED_DIR)
 
     # Генерируем cpp файлы из FlatBuffer (.fbs) файлов.
@@ -451,6 +438,68 @@ def generate_flatbuffer_files():
 
 @timing
 def do_generate() -> None:
+    for platform in BuildPlatform:
+        platform_mapping = {
+            # BuildPlatform.Win: [("windows", "s_5_0")],
+            BuildPlatform.Win: [("windows", "s_4_0")],
+            # BuildPlatform.Win: [("windows", "300_es")],
+            # BuildPlatform.Win: [("windows", "330")],
+            BuildPlatform.Web: [("asm.js", "100_es")],
+        }
+
+        assert platform in platform_mapping, f"Not supported platform: {platform}"
+
+        output_directory = PROJECT_DIR / "codegen" / "shaders"
+
+        found_shader_names = set()
+        all_shaders_by_type = defaultdict(list)
+
+        for base in (
+            PROJECT_DIR / "src" / "engine" / "shaders",
+            PROJECT_DIR / "src" / "game" / "shaders",
+        ):
+            for shader_type, shaders in (
+                ("vertex", list(base.glob("*_vs.sc"))),
+                ("fragment", list(base.glob("*_fs.sc"))),
+            ):
+                for shader in shaders:
+                    assert shader.stem not in found_shader_names, (
+                        f"Shader '{shader.stem}' is an engine's shader. Rename it!"
+                    )
+                    found_shader_names.add(shader.stem)
+                    all_shaders_by_type[shader_type].append(shader)
+
+        for shaderc_platform_name, profile in platform_mapping[platform]:
+            for shader_type, shaders in all_shaders_by_type.items():
+                for shader in shaders:
+                    varyingdef = str(shader).rsplit("_", 1)[0] + "_var.def.sc"
+
+                    out_file = output_directory / (shader.stem + f"_{profile}.bin")
+                    recursive_mkdir(output_directory)
+
+                    run_command(
+                        [
+                            SHADERC_PATH,
+                            "-f",
+                            shader,
+                            "-o",
+                            out_file,
+                            "--type",
+                            shader_type,
+                            "--platform",
+                            shaderc_platform_name,
+                            "--profile",
+                            profile,
+                            "-i",
+                            PROJECT_DIR / "vendor" / "bgfx" / "src",
+                            "--varyingdef",
+                            varyingdef,
+                            "--bin2c",
+                            "-O3",
+                            "--Werror",
+                        ]
+                    )
+
     recursive_mkdir(HANDS_GENERATED_DIR)
 
     with open(

@@ -20,6 +20,7 @@ cd vendor
 cd bgfx
 make
 make wasm
+msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Debug
 msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Release
 cd ..
 cd ..

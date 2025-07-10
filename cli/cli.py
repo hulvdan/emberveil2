@@ -1,17 +1,18 @@
 import os
 import subprocess
-from collections import defaultdict
-from enum import Enum
 from typing import Callable, ParamSpec
 
 import typer
+from bf_gamelib import do_generate
 from bf_lib import (
     MSBUILD_PATH,
     PROJECT_DIR,
+    BuildPlatform,
+    BuildTarget,
+    BuildType,
     T,
     global_timing_manager_instance,
     hash32,
-    recursive_mkdir,
     run_command,
     timed_exit,
     timing,
@@ -19,46 +20,11 @@ from bf_lib import (
 
 P = ParamSpec("P")
 
-SHADERC_PATH = str(PROJECT_DIR / "vendor/bgfx/.build/win64_vs2022/bin/shadercRelease.exe")
-
-
-class StrEnum(str, Enum):
-    def __str__(self):
-        return self.value
-
-
-class BuildType(StrEnum):
-    Debug = "Debug"
-    RelWithDebInfo = "RelWithDebInfo"
-    Release = "Release"
-
-
-class BuildPlatform(StrEnum):
-    Win = "Win"
-    Web = "Web"
-
 
 sdl_platforms_mapping = {
     BuildPlatform.Win: "SDL_PLATFORM_WIN32",
     BuildPlatform.Web: "SDL_PLATFORM_EMSCRIPTEN",
 }
-
-
-class BuildTarget(StrEnum):
-    game = "game"
-
-
-# ASSETS_DIR,
-# CLANG_TIDY_PATH,
-# CMAKE_TESTS_PATH,
-# CPPCHECK_PATH,
-# PROJECT_DIR,
-# SRC_DIR,
-# TEMP_DIR,
-# global_timing_manager_instance,
-# hash32,
-# hash32_file_utf8,
-# recursive_mkdir,
 
 
 def hook_exit():
@@ -69,136 +35,6 @@ def hook_exit():
 app = typer.Typer(
     callback=hook_exit, result_callback=timed_exit, pretty_exceptions_enable=False
 )
-
-
-@timing
-def do_generate() -> None:
-    for platform in BuildPlatform:
-        platform_mapping = {
-            # BuildPlatform.Win: [("windows", "s_5_0")],
-            BuildPlatform.Win: [("windows", "s_4_0")],
-            # BuildPlatform.Win: [("windows", "300_es")],
-            # BuildPlatform.Win: [("windows", "330")],
-            BuildPlatform.Web: [("asm.js", "100_es")],
-        }
-
-        assert platform in platform_mapping, f"Not supported platform: {platform}"
-
-        output_directory = PROJECT_DIR / "codegen" / "shaders"
-
-        found_shader_names = set()
-        all_shaders_by_type = defaultdict(list)
-
-        for base in (
-            PROJECT_DIR / "src" / "engine" / "shaders",
-            PROJECT_DIR / "src" / "game" / "shaders",
-        ):
-            for shader_type, shaders in (
-                ("vertex", list(base.glob("*_vs.sc"))),
-                ("fragment", list(base.glob("*_fs.sc"))),
-            ):
-                for shader in shaders:
-                    assert shader.stem not in found_shader_names, (
-                        f"Shader '{shader.stem}' is an engine's shader. Rename it!"
-                    )
-                    found_shader_names.add(shader.stem)
-                    all_shaders_by_type[shader_type].append(shader)
-
-        for shaderc_platform_name, profile in platform_mapping[platform]:
-            for shader_type, shaders in all_shaders_by_type.items():
-                for shader in shaders:
-                    varyingdef = str(shader).rsplit("_", 1)[0] + "_var.def.sc"
-
-                    out_file = output_directory / (shader.stem + f"_{profile}.bin")
-                    recursive_mkdir(out_file)
-
-                    run_command(
-                        [
-                            SHADERC_PATH,
-                            "-f",
-                            shader,
-                            "-o",
-                            out_file,
-                            "--type",
-                            shader_type,
-                            "--platform",
-                            shaderc_platform_name,
-                            "--profile",
-                            profile,
-                            "-i",
-                            PROJECT_DIR / "vendor" / "bgfx" / "src",
-                            "--varyingdef",
-                            varyingdef,
-                            "--bin2c",
-                            "-O3",
-                            "--Werror",
-                        ]
-                    )
-
-
-# with open(PROJECT_DIR / "codegen" / "codegen.cpp", "w") as codegen_file:
-#
-#     def genline(line: str) -> None:
-#         codegen_file.write(line)
-#         codegen_file.write("\n")
-#
-#     shaders_per_platform = defaultdict(list)
-#
-#     for platform in BuildPlatform.values():
-#         platform_mapping = {
-#             # BGFX_RENDERER_TYPE
-#             BuildPlatform.Win: [
-#                 ("windows", "s_5_0", ["DIRECT3D11", "DIRECT3D12"]),
-#             ],
-#             BuildPlatform.Web: [
-#                 ("asm.js", "100_es", ["OPENGLES"]),
-#                 ("asm.js", "300_es", ["OPENGLES"]),
-#             ],
-#         }
-#
-#         assert platform in platform_mapping, f"Not supported platform: {platform}"
-#
-#         output_directory = PROJECT_DIR / "codegen" / "shaders"
-#
-#         base = PROJECT_DIR / "src" / "shaders"
-#
-#         for shader_type, shaders in (
-#             ("vertex", list(base.glob("*_vs.sc"))),
-#             ("fragment", list(base.glob("*_fs.sc"))),
-#         ):
-#             for shaderc_platform_name, profile, renderers in platform_mapping[
-#                 platform
-#             ]:
-#                 for shader in shaders:
-#                     varyingdef = str(shader).rsplit("_", 1)[0] + "_var.def.sc"
-#
-#                     out_file = output_directory / (
-#                         shader.stem + f"_{platform}_{profile}.bin"
-#                     )
-#
-#                     shaders_per_platform[platform].append(
-#                         (out_file, shader_type, profile, renderers)
-#                     )
-#
-#                     run_command(
-#                         [
-#                             SHADERC_PATH,
-#                             f"-f {shader}",
-#                             f"-o {out_file}",
-#                             f"--type {shader_type}",
-#                             f"--platform {shaderc_platform_name}",
-#                             f"--profile {profile}",
-#                             f'-i {PROJECT_DIR / "vendor" / "bgfx" / "src"}',
-#                             f"--varyingdef {varyingdef}",
-#                             "--bin2c",
-#                             "-O3",
-#                         ]
-#                     )
-#
-#         for platform, d in shaders_per_platform.items():
-#             genline("#ifdef {}".format(sdl_platforms_mapping[platform]))
-#
-#             genline("#endif")
 
 
 @timing
