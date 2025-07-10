@@ -12,17 +12,22 @@ struct Texture2D {
   bgfx_texture_handle_t tex = {};
 };
 
+const BFGame::GameLibrary* glib = nullptr;
+
 struct EngineData {
-  Texture2D      atlas   = {};
-  gbFileContents gamelib = {};
-} e = {};
+  struct Meta {
+    Texture2D atlas = {};
+    // gbFileContents gamelib = {};
+    void* gamelib = {};
+  } meta;
+} ge = {};
 
 ///
-Texture2D LoadTexture(const char* path) {
+Texture2D LoadTexture(const char* filepath) {
   Texture2D result{};
 
   int channels = 0;
-  result.data  = stbi_load(path, &result.w, &result.h, &channels, 4);
+  result.data  = stbi_load(filepath, &result.w, &result.h, &channels, 4);
   ASSERT(result.data);
 
   auto memory = bgfx_copy(result.data, result.w * result.h * 4);
@@ -47,19 +52,59 @@ Texture2D LoadTexture(const char* path) {
 ///
 void UnloadTexture(Texture2D* texture) {
   ASSERT(texture->data);
-
-  static_assert(sizeof(texture->tex) == sizeof(bgfx_texture_handle_t));
   bgfx_destroy_texture(*(bgfx_texture_handle_t*)&texture->tex);
-
-  texture->tex = {};
   stbi_image_free(texture->data);
-  texture->data = nullptr;
+  *texture = {};
+}
+
+void* LoadFileData(const char* filepath, int* out_size = nullptr) {
+  auto fp = fopen(filepath, "rb");
+  ASSERT(fp);
+  if (!fp) {
+    perror("Failed to open file");
+    LOGE("Failed to open file %s", filepath);
+    INVALID_PATH;
+    return nullptr;
+  }
+
+  fseek(fp, 0, SEEK_END);
+  auto size = ftell(fp);
+  rewind(fp);
+
+  auto buffer = malloc(size + 1);
+  if (!buffer) {
+    LOGE("Failed to allocate buffer while opening file");
+    fclose(fp);
+    INVALID_PATH;
+    return nullptr;
+  }
+
+  auto read_size = fread(buffer, 1, size, fp);
+  if (read_size != size) {
+    LOGE("Failed to read entire file");
+    free(buffer);
+    fclose(fp);
+    return nullptr;
+  }
+
+  ((u8*)buffer)[size] = '\0';
+  fclose(fp);
+
+  if (out_size)
+    *out_size = size;
+
+  return buffer;
+}
+
+void UnloadFileData(void* ptr) {
+  free(ptr);
 }
 
 void InitializeEngine() {
-  e.atlas   = LoadTexture("resources/atlas.png");
-  e.gamelib = gb_file_read_contents(gb_heap_allocator(), 0, "resources/gamelib.bin");
+  ge.meta.atlas   = LoadTexture("resources/atlas.png");
+  ge.meta.gamelib = LoadFileData("resources/gamelib.bin");
   LOGI("Initialized engine!");
+  glib = BFGame::GetGameLibrary(ge.meta.gamelib);
 }
 
 ///

@@ -1,8 +1,5 @@
 #pragma once
 
-#define GB_IMPLEMENTATION
-#include "gb.h"
-
 #define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -16,6 +13,9 @@
 #if defined(SDL_PLATFORM_EMSCRIPTEN)
 #  include <emscripten.h>
 #endif
+
+#include "flatbuffers/flatbuffers.h"
+#include "flatbuffers/bf_gamelib_generated.h"
 
 #include "engine/bf_engine.cpp"
 #include "game/bf_game.cpp"
