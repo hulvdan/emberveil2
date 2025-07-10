@@ -1,5 +1,6 @@
 import os
 import subprocess
+from collections import defaultdict
 from enum import Enum
 from typing import Callable, ParamSpec
 
@@ -85,13 +86,26 @@ def do_generate() -> None:
 
         output_directory = PROJECT_DIR / "codegen" / "shaders"
 
-        base = PROJECT_DIR / "src" / "shaders"
+        found_shader_names = set()
+        all_shaders_by_type = defaultdict(list)
 
-        for shader_type, shaders in (
-            ("vertex", list(base.glob("*_vs.sc"))),
-            ("fragment", list(base.glob("*_fs.sc"))),
+        for base in (
+            PROJECT_DIR / "src" / "engine" / "shaders",
+            PROJECT_DIR / "src" / "game" / "shaders",
         ):
-            for shaderc_platform_name, profile in platform_mapping[platform]:
+            for shader_type, shaders in (
+                ("vertex", list(base.glob("*_vs.sc"))),
+                ("fragment", list(base.glob("*_fs.sc"))),
+            ):
+                for shader in shaders:
+                    assert shader.stem not in found_shader_names, (
+                        f"Shader '{shader.stem}' is an engine's shader. Rename it!"
+                    )
+                    found_shader_names.add(shader.stem)
+                    all_shaders_by_type[shader_type].append(shader)
+
+        for shaderc_platform_name, profile in platform_mapping[platform]:
+            for shader_type, shaders in all_shaders_by_type.items():
                 for shader in shaders:
                     varyingdef = str(shader).rsplit("_", 1)[0] + "_var.def.sc"
 
