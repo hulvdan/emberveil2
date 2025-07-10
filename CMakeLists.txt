@@ -90,6 +90,7 @@ elseif ("${PLATFORM}" STREQUAL "Web")
         "-sMIN_WEBGL_VERSION=1"
         "-sMAX_WEBGL_VERSION=2"
         "-sALLOW_MEMORY_GROWTH=1"
+        "--preload-file resources"
     )
     set_target_properties(game PROPERTIES OUTPUT_NAME "index")
     set_target_properties(game PROPERTIES SUFFIX ".html")
@@ -122,6 +123,13 @@ elseif ("${PLATFORM}" STREQUAL "Web")
 else()
     message(FATAL_ERROR "Not supported platform: ${PLATFORM}")
 endif()
+
+add_custom_command(
+    TARGET game PRE_BUILD
+    COMMAND ${CMAKE_COMMAND}
+      -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:game>/resources
+    DEPENDS game
+)
 
 # Windows. Startup project in Visual Studio.
 #-----------------------------------------------------------------------------------

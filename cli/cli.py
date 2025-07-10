@@ -292,6 +292,7 @@ def run_in_debugger(target, build_type: BuildType):
 def update_template():
     subprocess.run("git fetch template", check=True, shell=True)
     subprocess.run("git rebase template/template", check=True, shell=True)
+    subprocess.run("poetry install", check=True, shell=True)
 
 
 # @command

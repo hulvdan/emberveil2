@@ -4,7 +4,6 @@
 #define LOGW(...) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 #define LOGE(...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 
-///
 struct Texture2D {
   int   w    = {};
   int   h    = {};
@@ -12,6 +11,11 @@ struct Texture2D {
 
   bgfx_texture_handle_t tex = {};
 };
+
+struct EngineData {
+  Texture2D      atlas   = {};
+  gbFileContents gamelib = {};
+} e = {};
 
 ///
 Texture2D LoadTexture(const char* path) {
@@ -50,6 +54,12 @@ void UnloadTexture(Texture2D* texture) {
   texture->tex = {};
   stbi_image_free(texture->data);
   texture->data = nullptr;
+}
+
+void InitializeEngine() {
+  e.atlas   = LoadTexture("resources/atlas.png");
+  e.gamelib = gb_file_read_contents(gb_heap_allocator(), 0, "resources/gamelib.bin");
+  LOGI("Initialized engine!");
 }
 
 ///
