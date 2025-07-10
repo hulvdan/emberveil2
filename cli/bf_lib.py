@@ -67,7 +67,7 @@ def timing(f: Callable[P, T]) -> Callable[P, T]:
             _timing_recursion_depth -= 1
 
             elapsed = time() - started_at
-            log.debug("Running '{}' took: {:.2f} ms".format(f.__name__, elapsed * 1000))
+            log.info("Running '{}' took: {:.2f} ms".format(f.__name__, elapsed * 1000))
 
             old_stack.append((f.__name__, elapsed, timings_stack, _timing_marks))
 
@@ -254,7 +254,7 @@ def run_command(
     if not isinstance(c, str):
         c = " ".join(str(i) for i in cmd)
 
-    log.debug(f"Executing command: {c}")
+    log.info(f"Executing command: {c}")
 
     p = subprocess.run(  # noqa: PLW1510
         cmd,
