@@ -31,6 +31,7 @@ class BuildPlatform(StrEnum):
 
 class BuildTarget(StrEnum):
     game = "game"
+    tests = "tests"
 
 
 P = ParamSpec("P")
@@ -176,8 +177,6 @@ RESOURCES_DIR = PROJECT_DIR / "resources"
 GAME_DIR = PROJECT_DIR / "src" / "game"
 HANDS_GENERATED_DIR = PROJECT_DIR / "codegen" / "hands"
 FLATBUFFERS_GENERATED_DIR = PROJECT_DIR / "codegen" / "flatbuffers"
-# CMAKE_DEBUG_BUILD_DIR = Path(".cmake") / "vs17" / "Debug"
-# CMAKE_RELEASE_BUILD_DIR = Path(".cmake") / "vs17" / "Release"
 CMAKE_TESTS_PATH = Path(".cmake") / "vs17" / "Debug" / "tests.exe"
 
 CLANG_FORMAT_PATH = "C:/Program Files/LLVM/bin/clang-format.exe"

@@ -44,9 +44,8 @@ constexpr Color GREEN = Color{0, u8_max / 2, 0, u8_max};
 constexpr Color BLUE  = Color{0, 0, u8_max / 2, u8_max};
 
 struct Texture2D {
-  int   w    = {};
-  int   h    = {};
-  void* data = {};
+  Vector2Int size = {};
+  void*      data = {};
 
   bgfx::TextureHandle handle = {};
 };
@@ -72,6 +71,7 @@ struct Camera {
 struct EngineData {
   struct Meta {
     Texture2D           atlas        = {};
+    Vector2Int          atlasSize    = {};
     void*               gamelibBytes = {};
     bgfx::ProgramHandle program      = {};
 
@@ -79,6 +79,9 @@ struct EngineData {
     Vector2Int screenSize = {};
   } meta;
 } ge = {};
+
+void BeginMode2D(Camera camera) {}
+void EndMode2D() {}
 
 ///
 bgfx::ShaderHandle _LoadShader(const u8* data, u32 size) {
@@ -99,14 +102,14 @@ Texture2D LoadTexture(const char* filepath) {
   Texture2D result{};
 
   int channels = 0;
-  result.data  = stbi_load(filepath, &result.w, &result.h, &channels, 4);
+  result.data  = stbi_load(filepath, &result.size.x, &result.size.y, &channels, 4);
   ASSERT(result.data);
 
-  auto memory = bgfx::makeRef(result.data, result.w * result.h * 4);
+  auto memory = bgfx::makeRef(result.data, result.size.x * result.size.y * 4);
 
   result.handle = bgfx::createTexture2D(
-    result.w,
-    result.h,
+    result.size.x,
+    result.size.y,
     false /* _hasMips*/,
     1,
     bgfx::TextureFormat::RGBA8,
@@ -209,6 +212,22 @@ struct DrawTextureData {
   // int materialsBufferStart = -1;
 };
 
+f32 ScaleToFit(Vector2 inner, Vector2 container) {
+  f32 scaleX = container.x / inner.x;
+  f32 scaleY = container.y / inner.y;
+  f32 scale  = (scaleX < scaleY) ? scaleX : scaleY;
+  return scale;
+}
+
+f32 ScaleToCover(Vector2 inner, Vector2 container) {
+  f32 scaleX = container.x / inner.x;
+  f32 scaleY = container.y / inner.y;
+  f32 scale  = (scaleX > scaleY) ? scaleX : scaleY;
+  return scale;
+}
+
+constexpr Vector2Int LOGICAL_RESOLUTION = {1280, 720};
+
 ///
 void DrawTexture(DrawTextureData data) {
   ASSERT(data.texId >= 0);
@@ -246,15 +265,27 @@ void DrawTexture(DrawTextureData data) {
   auto sx1 = sx0 + sourceRec.size.x;
   auto sy0 = sourceRec.pos.y;
   auto sy1 = sy0 + sourceRec.size.y;
-  sx0 /= sourceRec.size.x;
-  sx1 /= sourceRec.size.x;
-  sy0 /= sourceRec.size.y;
-  sy1 /= sourceRec.size.y;
+
+  sx0 /= (f32)ge.meta.atlas.size.x;
+  sx1 /= (f32)ge.meta.atlas.size.x;
+  sy0 /= (f32)ge.meta.atlas.size.y;
+  sy1 /= (f32)ge.meta.atlas.size.y;
 
   auto dx0 = destRec.pos.x;
   auto dx1 = destRec.pos.x + destRec.size.x;
   auto dy0 = destRec.pos.y;
   auto dy1 = destRec.pos.y + destRec.size.y;
+  dx0 /= (LOGICAL_RESOLUTION.x / 2);
+  dx1 /= (LOGICAL_RESOLUTION.x / 2);
+  dy0 /= (LOGICAL_RESOLUTION.y / 2);
+  dy1 /= (LOGICAL_RESOLUTION.y / 2);
+
+  dx0 -= 1;
+  dx1 -= 1;
+  dx1 *= 2;
+  dy0 -= 1;
+  dy1 -= 1;
+  dy1 *= 2;
 
   // TODO TRANSFORM destRec
   const _PosColorTexVertex quadVertices[] = {
@@ -263,6 +294,17 @@ void DrawTexture(DrawTextureData data) {
     {dx0, dy1, 0.0f, color, sx0, sy1},  // Bottom-left
     {dx1, dy1, 0.0f, color, sx1, sy1},  // Bottom-right
   };
+
+  // auto ratio
+  //   = ScaleToFit({(f32)tex->size_x(), (f32)tex->size_y()}, ge.meta.screenSize);
+  // ratio /= ge.meta.screenSize;
+  //
+  // const _PosColorTexVertex quadVertices[] = {
+  //   {-ratio.x, -ratio.y, 0.0f, color, sx0, sy0},  // Top-left
+  //   {ratio.x, -ratio.y, 0.0f, color, sx1, sy0},   // Top-right
+  //   {-ratio.x, ratio.y, 0.0f, color, sx0, sy1},   // Bottom-left
+  //   {ratio.x, ratio.y, 0.0f, color, sx1, sy1},    // Bottom-right
+  // };
 
   const uint16_t quadIndices[] = {0, 1, 2, 1, 3, 2};
 

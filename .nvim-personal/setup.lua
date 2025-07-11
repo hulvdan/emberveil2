@@ -46,6 +46,7 @@ function rebuild_tasks()
         { "e_build", cli_command(string.format("build %s %s %s", target, platform, build_type)) },
         { "d_debug", cli_command(string.format("run_in_debugger %s Debug", target)) },
         { "u_update_template", cli_command("update_template") },
+        { "t_test", cli_command("test") },
         -- { "t_test", cli_command("test") },
         -- { "p_test_python", [[.venv\Scripts\pytest.exe]] },
         -- -- { "killall", [[start .nvim-personal\cli.ahk killall]] },

@@ -21,6 +21,8 @@ table GameLibrary {
     atlas_size_y: uint;
     atlas_textures: [Texture] (required);
 
+    background_texture_id: int;
+
     // GAME STUFF
     // GAME STUFF END
 }

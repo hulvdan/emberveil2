@@ -5,6 +5,7 @@ from typing import Callable, ParamSpec
 import typer
 from bf_gamelib import do_generate
 from bf_lib import (
+    CMAKE_TESTS_PATH,
     MSBUILD_PATH,
     PROJECT_DIR,
     BuildPlatform,
@@ -81,23 +82,23 @@ def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType
             assert False, f"Not supported platform: {platform}"
 
 
-# @timing
-# def do_build_tests() -> None:
-#     run_command(
-#         rf"""
-#         "{MSBUILD_PATH}" .cmake\vs17\game.sln
-#         -v:minimal
-#         -property:WarningLevel=3
-#         -t:tests
-#         """
-#     )
-#
-#
-# @timing
-# def do_test() -> None:
-#     run_command(str(CMAKE_TESTS_PATH))
-#
-#
+@timing
+def do_build_tests() -> None:
+    run_command(
+        rf"""
+        "{MSBUILD_PATH}" .cmake\vs17\game.sln
+        -v:minimal
+        -property:WarningLevel=3
+        -t:tests
+        """
+    )
+
+
+@timing
+def do_test() -> None:
+    run_command(str(CMAKE_TESTS_PATH))
+
+
 # @timing
 # def do_lint() -> None:
 #     files_to_lint = [
@@ -295,13 +296,16 @@ def update_template():
     subprocess.run("poetry install", check=True, shell=True)
 
 
-# @command
-# def test():
-#     do_cmake_vs_files(Debug=True)
-#     do_build_tests()
-#     do_test()
-#
-#
+@command
+def test():
+    platform = BuildPlatform.Win
+    build_type = BuildType.Debug
+
+    do_cmake(platform, build_type)
+    do_build(BuildTarget.tests, platform, build_type)
+    do_test()
+
+
 # @command
 # def lint():
 #     do_cmake_ninja_files()

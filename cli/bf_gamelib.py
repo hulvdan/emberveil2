@@ -319,11 +319,11 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
         textures.append(texture_data)
 
     texture_name_2_id = {}
-    textures.sort(key=lambda x: x["debug_name"])
+    textures.sort(key=lambda x: (x["debug_name"] != "undefined", x["debug_name"]))
 
-    for i in range(len(textures)):
-        textures[i]["id"] = i
-        name = textures[i]["debug_name"]
+    for i, texture in enumerate(textures):
+        texture["id"] = i
+        name = texture["debug_name"]
         texture_name_2_id[name] = i
 
     recursive_mkdir(RESOURCES_DIR)

@@ -1,6 +1,10 @@
 #pragma once
 
-#define SDL_MAIN_USE_CALLBACKS
+#include "doctest.h"
+
+#ifndef TESTS
+#  define SDL_MAIN_USE_CALLBACKS
+#endif
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -22,10 +26,10 @@
 #include "flatbuffers/flatbuffers.h"
 #include "flatbuffers/bf_gamelib_generated.h"
 
-#include "bf_lib.cpp"
-
 #include "shaders/quad_fs_100_es.bin"
 #include "shaders/quad_vs_100_es.bin"
+
+#include "bf_lib.cpp"
 
 #include "engine/bf_engine.cpp"
 #include "game/bf_game.cpp"
@@ -188,7 +192,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 
     // bgfx_reset( ge.meta.screenSize.x, ge.meta.screenSize.y, BGFX_RESET_VSYNC );
     bgfx::setDebug(BGFX_DEBUG_TEXT);
-    // bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f, 0);
+    // bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f,
+    0);
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR, 0x303030FF, 1.0f, 0);
   }
 

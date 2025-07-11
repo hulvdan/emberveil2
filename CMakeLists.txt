@@ -78,6 +78,7 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/sdl")
 add_executable(game "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
 target_link_libraries(game PRIVATE SDL3-static bgfx vendor_and_codegen)
 target_include_directories(game PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_definitions(game PRIVATE DOCTEST_CONFIG_DISABLE)
 
 if ("${PLATFORM}" STREQUAL "Win")
 elseif ("${PLATFORM}" STREQUAL "Web")
@@ -129,6 +130,18 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND}
       -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:game>/resources
     DEPENDS game
+)
+
+# tests
+#-----------------------------------------------------------------------------------
+add_executable(tests "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
+target_link_libraries(tests PRIVATE SDL3-static bgfx vendor_and_codegen)
+target_include_directories(tests PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_definitions(tests PRIVATE
+    TESTS
+    SDL_MAIN_NOIMPL
+    SDL_MAIN_HANDLED
+    DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 )
 
 # Windows. Startup project in Visual Studio.
