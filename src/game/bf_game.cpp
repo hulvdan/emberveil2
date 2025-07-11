@@ -9,5 +9,14 @@ const char* GetWindowTitle() {
 }
 
 UpdateFunctionResult GameUpdate() {
-  return UpdateFunctionResult_FINISHED_SUCCESSFULLY;
+  DrawTexture({
+    .texId = 0,
+    // .rotation   =0,
+    // .pos        ={},
+    // .anchor     =Vector2Half(),
+    // .scale      =,
+    // .sourceSize =,
+    // .color      =,
+  });
+  return UpdateFunctionResult_CONTINUE;
 }
