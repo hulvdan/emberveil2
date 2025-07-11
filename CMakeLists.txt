@@ -102,7 +102,7 @@ elseif ("${PLATFORM}" STREQUAL "Web")
         )
         target_link_options(game PRIVATE
             "-sASSERTIONS=2"
-            "-g4"
+            "-g"
             "-O0"
             "-sFORCE_FILESYSTEM=1"
             "--shell-file=${CMAKE_SOURCE_DIR}/vendor/shell_debug.html"
