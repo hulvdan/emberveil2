@@ -3,6 +3,12 @@
 #define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+
+#if defined(SDL_PLATFORM_WIN32) || defined(SDL_PLATFORM_MACOS) \
+  || defined(SDL_PLATFORM_LINUX)
+#  define SDL_PLATFORM_DESKTOP
+#endif
+
 #include <bgfx/bgfx.h>
 #include "glm/glm.hpp"
 
@@ -108,12 +114,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 
   SDL_WindowFlags flags = 0;
 
-#if defined(SDL_PLATFORM_WIN32) || defined(SDL_PLATFORM_MACOS) \
-  || defined(SDL_PLATFORM_LINUX)
+#if defined(SDL_PLATFORM_DESKTOP)
   flags |= SDL_WINDOW_RESIZABLE;
 #endif
 
-  auto window = SDL_CreateWindow(GetWindowTitle(), 1280, 720, flags);
+  ge.meta.screenSize = {1280, 820};
+  auto window        = SDL_CreateWindow(
+    GetWindowTitle(), ge.meta.screenSize.x, ge.meta.screenSize.y, flags
+  );
   if (!window) {
     LOGE("SDL_CreateWindow failed!");
     return SDL_APP_FAILURE;
@@ -167,8 +175,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     init.type              = bgfx::RendererType::OpenGL;
     init.vendorId          = BGFX_PCI_ID_NONE;
     init.platformData      = pd;
-    init.resolution.width  = 1280;
-    init.resolution.height = 720;
+    init.resolution.width  = ge.meta.screenSize.x;
+    init.resolution.height = ge.meta.screenSize.y;
     // init.resolution.reset  = BGFX_RESET_VSYNC;
     if (!bgfx::init(init)) {
       LOGE("bgfx::init(init) failed!");
@@ -178,7 +186,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     auto r1 = SDL_GetRenderer(window);
     auto n2 = SDL_GetRendererName(r1);
 
-    // bgfx_reset( 1280, 720, BGFX_RESET_VSYNC );
+    // bgfx_reset( ge.meta.screenSize.x, ge.meta.screenSize.y, BGFX_RESET_VSYNC );
     bgfx::setDebug(BGFX_DEBUG_TEXT);
     // bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f, 0);
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR, 0x303030FF, 1.0f, 0);
@@ -192,7 +200,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 SDL_AppResult SDL_AppIterate(void* appstate) {
   static int counter = 0;
 
-  bgfx::setViewRect(0, 0, 0, (u16)1280, (u16)720);
+  bgfx::setViewRect(0, 0, 0, (u16)ge.meta.screenSize.x, (u16)ge.meta.screenSize.y);
   bgfx::touch(0);
 
   switch (GameUpdate()) {
@@ -222,8 +230,19 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     int height = {};
     SDL_GetWindowSize(window, &width, &height);
     bgfx::reset(width, height, BGFX_RESET_VSYNC);
-    bgfx::setViewRect(0, 0, 0, width, height);
     ge.meta.screenSize = {width, height};
+  } break;
+  case SDL_EVENT_KEY_DOWN: {
+    switch (event->key.key) {
+#if defined(SDL_PLATFORM_DESKTOP)
+    case SDLK_F11: {
+      auto window     = SDL_GetWindowFromID(event->key.windowID);
+      auto mode       = SDL_GetWindowFullscreenMode(window);
+      auto fullscreen = SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN;
+      SDL_SetWindowFullscreen(window, !fullscreen);
+    } break;
+#endif
+    }
   } break;
   }
 
