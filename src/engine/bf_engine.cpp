@@ -20,7 +20,7 @@ constexpr Vector2 Vector2One() {
   return Vector2{1, 1};
 }
 
-struct Rectangle {
+struct Rect {
   Vector2 pos  = {};
   Vector2 size = {};
 };
@@ -234,7 +234,7 @@ void DrawTexture(DrawTextureData data) {
 
   auto tex = glib->atlas_textures()->Get(data.texId);
 
-  Rectangle sourceRec{
+  Rect sourceRec{
     .pos{
       (f32)tex->atlas_x() + (f32)tex->size_x() * (1 - data.sourceSize.x),
       (f32)tex->atlas_y() + (f32)tex->size_y() * (1 - data.sourceSize.y),
@@ -244,7 +244,7 @@ void DrawTexture(DrawTextureData data) {
       (f32)tex->size_y() * data.sourceSize.y * SIGN(data.scale.y),
     },
   };
-  Rectangle destRec{
+  Rect destRec{
     .pos{
       data.pos.x
         + (f32)tex->size_x() * (1 - data.sourceSize.x) * abs(data.scale.x)

@@ -191,10 +191,14 @@ f32 GetLesserAngle(f32 aa, f32 bb) {
   return aa;
 }
 
+bool FloatEquals(f32 v1, f32 v2) {
+  return abs(v1 - v2) < 0.00001f;
+}
+
 TEST_CASE ("GetLesserAngle") {
-  ASSERT(GetLesserAngle(PI * 1 / 2, PI) == PI * 1 / 2);
-  ASSERT(GetLesserAngle(-PI * 1 / 2, PI) == -PI * 1 / 2);
-  ASSERT(GetLesserAngle(PI / 2, PI * 15 / 8) == PI * 15 / 8);
+  ASSERT(FloatEquals(GetLesserAngle(PI * 1 / 2, PI), PI * 1 / 2));
+  ASSERT(FloatEquals(GetLesserAngle(-PI * 1 / 2, PI), -PI * 1 / 2));
+  ASSERT(FloatEquals(GetLesserAngle(PI / 2, PI * 15 / 8), PI * 15 / 8));
 }
 
 inline f32 Clamp(f32 value, f32 min, f32 max) {

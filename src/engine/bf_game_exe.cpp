@@ -192,8 +192,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 
     // bgfx_reset( ge.meta.screenSize.x, ge.meta.screenSize.y, BGFX_RESET_VSYNC );
     bgfx::setDebug(BGFX_DEBUG_TEXT);
-    // bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f,
-    0);
+    // bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f, 0);
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR, 0x303030FF, 1.0f, 0);
   }
 
