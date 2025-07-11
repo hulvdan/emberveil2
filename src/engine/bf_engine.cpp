@@ -249,11 +249,21 @@ void DrawTexture(DrawTextureData data) {
   // }
   auto color = *(u32*)&data.color;
 
+  auto sx0 = sourceRec.pos.x;
+  auto sx1 = sx0 + sourceRec.size.x;
+  auto sy0 = sourceRec.pos.y;
+  auto sy1 = sy0 + sourceRec.size.y;
+  sx0 /= sourceRec.size.x;
+  sx1 /= sourceRec.size.x;
+  sy0 /= sourceRec.size.y;
+  sy1 /= sourceRec.size.y;
+
+  // TODO TRANSFORM destRec
   const PosColorTexVertex quadVertices[] = {
-    {-1.0f, 1.0f, 0.0f, color, 0.0f, 0.0f},   // Top-left
-    {1.0f, 1.0f, 0.0f, color, 1.0f, 0.0f},    // Top-right
-    {-1.0f, -1.0f, 0.0f, color, 0.0f, 1.0f},  // Bottom-left
-    {1.0f, -1.0f, 0.0f, color, 1.0f, 1.0f},   // Bottom-right
+    {-1.0f, 1.0f, 0.0f, color, sx0, sy0},   // Top-left
+    {1.0f, 1.0f, 0.0f, color, sx1, sy0},    // Top-right
+    {-1.0f, -1.0f, 0.0f, color, sx0, sy1},  // Bottom-left
+    {1.0f, -1.0f, 0.0f, color, sx1, sy1},   // Bottom-right
   };
 
   const uint16_t quadIndices[] = {0, 1, 2, 1, 3, 2};
