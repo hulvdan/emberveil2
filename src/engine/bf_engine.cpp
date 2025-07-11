@@ -7,12 +7,15 @@ using Vector2Int = glm::ivec2;
 using Vector3Int = glm::ivec3;
 using Vector4Int = glm::ivec4;
 
+///
 constexpr Vector2 Vector2Zero() {
   return Vector2{0, 0};
 }
+///
 constexpr Vector2 Vector2Half() {
   return Vector2{0.5f, 0.5f};
 }
+///
 constexpr Vector2 Vector2One() {
   return Vector2{1, 1};
 }
@@ -50,7 +53,8 @@ struct Texture2D {
 
 const BFGame::GameLibrary* glib = nullptr;
 
-struct PosColorTexVertex {
+///
+struct _PosColorTexVertex {
   float    x, y, z;
   uint32_t abgr;
   float    u, v;
@@ -58,34 +62,34 @@ struct PosColorTexVertex {
   static bgfx::VertexLayout layout;
 };
 
-bgfx::VertexLayout PosColorTexVertex::layout;
+bgfx::VertexLayout _PosColorTexVertex::layout;
 
-void initPosColorTexVertexLayout() {
-  PosColorTexVertex::layout.begin()
-    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-    .end();
-}
+struct Camera {
+  f32     zoom = 1;
+  Vector2 pos  = {};
+};
 
 struct EngineData {
   struct Meta {
     Texture2D           atlas        = {};
     void*               gamelibBytes = {};
     bgfx::ProgramHandle program      = {};
-    Vector2Int          screenSize   = {};
+
+    Camera     camera     = {};
+    Vector2Int screenSize = {};
   } meta;
 } ge = {};
 
-bgfx::ShaderHandle _LoadShaderFromMemory(const u8* data, u32 size) {
+///
+bgfx::ShaderHandle _LoadShader(const u8* data, u32 size) {
   return bgfx::createShader(bgfx::makeRef(data, size));
 }
 
-bgfx::ProgramHandle
-LoadProgramFromMemory(const u8* vsh, u32 sizeVsh, const u8* fsh, u32 sizeFsh) {
+///
+bgfx::ProgramHandle LoadProgram(const u8* vsh, u32 sizeVsh, const u8* fsh, u32 sizeFsh) {
   return bgfx::createProgram(
-    _LoadShaderFromMemory(vsh, sizeVsh),
-    _LoadShaderFromMemory(fsh, sizeFsh),
+    _LoadShader(vsh, sizeVsh),
+    _LoadShader(fsh, sizeFsh),
     /* destroyShaders */ true
   );
 }
@@ -125,6 +129,7 @@ void UnloadTexture(Texture2D* texture) {
   *texture = {};
 }
 
+///
 void* LoadFileData(const char* filepath, int* out_size = nullptr) {
   auto fp = fopen(filepath, "rb");
   ASSERT(fp);
@@ -164,21 +169,31 @@ void* LoadFileData(const char* filepath, int* out_size = nullptr) {
   return buffer;
 }
 
+///
 void UnloadFileData(void* ptr) {
   free(ptr);
 }
 
+///
 void InitializeEngine() {
   ge.meta.atlas        = LoadTexture("resources/atlas.png");
   ge.meta.gamelibBytes = LoadFileData("resources/gamelib.bin");
   glib                 = BFGame::GetGameLibrary(ge.meta.gamelibBytes);
-  ge.meta.program      = LoadProgramFromMemory(
+  ge.meta.program      = LoadProgram(
     quad_vs_100_es,
     ARRAY_COUNT(quad_vs_100_es),
     quad_fs_100_es,
     ARRAY_COUNT(quad_fs_100_es)
   );
-  initPosColorTexVertexLayout();
+
+  {
+    _PosColorTexVertex::layout.begin()
+      .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+      .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+      .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+      .end();
+  }
+
   LOGI("Initialized engine!");
 }
 
@@ -190,11 +205,11 @@ struct DrawTextureData {
   Vector2 scale      = {1, 1};
   Vector2 sourceSize = {1, 1};
   Color   color      = WHITE;
-
-  // Shader* shader               = nullptr;
-  // int     materialsBufferStart = -1;
+  // bgfx::ProgramHandle program = {};
+  // int materialsBufferStart = -1;
 };
 
+///
 void DrawTexture(DrawTextureData data) {
   ASSERT(data.texId >= 0);
 
@@ -225,28 +240,6 @@ void DrawTexture(DrawTextureData data) {
     },
   };
 
-  // DrawTexturePro(
-  //   ge.meta.atlas,
-  //   sourceRec,
-  //   destRec,
-  //   destRec.size * data.anchor,
-  //   data.rotation,
-  //   data.color
-  // );
-
-  // const u16                      numVertices = 3;
-  // bgfx_transient_vertex_buffer_t tvb{};
-  // if (bgfx_alloc_transient_vertex_buffer(&tvb, numVertices, PosColorVertex::layout)) {
-  //   PosColorVertex* verts = (PosColorVertex*)tvb.data;
-  //
-  //   verts[0] = {-0.5f, -0.5f, 0.0f, 0xff0000ff};  // Red
-  //   verts[1] = {0.5f, -0.5f, 0.0f, 0xff00ff00};   // Green
-  //   verts[2] = {0.0f, 0.5f, 0.0f, 0xffff0000};    // Blue
-  //
-  //   bgfx::setVertexBuffer(0, &tvb);
-  //   bgfx::setState(BGFX_STATE_DEFAULT);
-  //   bgfx::submit(0, program);
-  // }
   auto color = *(u32*)&data.color;
 
   auto sx0 = sourceRec.pos.x;
@@ -258,12 +251,17 @@ void DrawTexture(DrawTextureData data) {
   sy0 /= sourceRec.size.y;
   sy1 /= sourceRec.size.y;
 
+  auto dx0 = destRec.pos.x;
+  auto dx1 = destRec.pos.x + destRec.size.x;
+  auto dy0 = destRec.pos.y;
+  auto dy1 = destRec.pos.y + destRec.size.y;
+
   // TODO TRANSFORM destRec
-  const PosColorTexVertex quadVertices[] = {
-    {-1.0f, 1.0f, 0.0f, color, sx0, sy0},   // Top-left
-    {1.0f, 1.0f, 0.0f, color, sx1, sy0},    // Top-right
-    {-1.0f, -1.0f, 0.0f, color, sx0, sy1},  // Bottom-left
-    {1.0f, -1.0f, 0.0f, color, sx1, sy1},   // Bottom-right
+  const _PosColorTexVertex quadVertices[] = {
+    {dx0, dy0, 0.0f, color, sx0, sy0},  // Top-left
+    {dx1, dy0, 0.0f, color, sx1, sy0},  // Top-right
+    {dx0, dy1, 0.0f, color, sx0, sy1},  // Bottom-left
+    {dx1, dy1, 0.0f, color, sx1, sy1},  // Bottom-right
   };
 
   const uint16_t quadIndices[] = {0, 1, 2, 1, 3, 2};
@@ -273,7 +271,7 @@ void DrawTexture(DrawTextureData data) {
 
   bgfx::TransientVertexBuffer tvb{};
   bgfx::TransientIndexBuffer  tib{};
-  bgfx::allocTransientVertexBuffer(&tvb, 4, PosColorTexVertex::layout);
+  bgfx::allocTransientVertexBuffer(&tvb, 4, _PosColorTexVertex::layout);
   bgfx::allocTransientIndexBuffer(&tib, 6);
   {
     memcpy(tvb.data, quadVertices, sizeof(quadVertices));
@@ -295,6 +293,7 @@ u64 GetTime() {
   return SDL_GetTicks();
 }
 
+///
 enum UpdateFunctionResult {
   UpdateFunctionResult_CONTINUE,
   UpdateFunctionResult_SUCCESS,
