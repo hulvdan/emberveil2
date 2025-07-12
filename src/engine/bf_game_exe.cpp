@@ -200,23 +200,19 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
-  static int counter = 0;
-
   bgfx::setViewRect(0, 0, 0, (u16)ge.meta.screenSize.x, (u16)ge.meta.screenSize.y);
   bgfx::touch(0);
 
-  switch (GameUpdate()) {
-  case UpdateFunctionResult_SUCCESS:
-    return SDL_APP_SUCCESS;
-  case UpdateFunctionResult_FAILURE:
-    return SDL_APP_FAILURE;
+  auto result = GameUpdate();
+
+  if (result == SDL_APP_CONTINUE) {
+    LOCAL_PERSIST u64 frame = 0;
+    bgfx::dbgTextClear(0, false);
+    bgfx::dbgTextPrintf(0, 1, 0x4f, "Counter: %d", frame++);
+    bgfx::frame(false);
   }
 
-  bgfx::dbgTextClear(0, false);
-  bgfx::dbgTextPrintf(0, 1, 0x4f, "Counter: %d", counter++);
-  bgfx::frame(false);
-
-  return SDL_APP_CONTINUE;
+  return result;
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {

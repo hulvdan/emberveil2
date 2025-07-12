@@ -107,6 +107,8 @@ bgfx::ProgramHandle LoadProgram(const u8* vsh, u32 sizeVsh, const u8* fsh, u32 s
 
 ///
 Texture2D LoadTexture(const char* filepath) {
+  LOGI("Loading texture %s...", filepath);
+
   Texture2D result{};
 
   int channels = 0;
@@ -129,6 +131,8 @@ Texture2D LoadTexture(const char* filepath) {
     memory
   );
 
+  LOGI("Loaded texture %s!", filepath);
+
   return result;
 }
 
@@ -142,6 +146,8 @@ void UnloadTexture(Texture2D* texture) {
 
 ///
 void* LoadFileData(const char* filepath, int* out_size = nullptr) {
+  LOGI("Loading file data %s...", filepath);
+
   auto fp = fopen(filepath, "rb");
   ASSERT(fp);
   if (!fp) {
@@ -176,6 +182,8 @@ void* LoadFileData(const char* filepath, int* out_size = nullptr) {
 
   if (out_size)
     *out_size = size;
+
+  LOGI("Loaded file data %s!", filepath);
 
   return buffer;
 }
@@ -238,7 +246,7 @@ TEST_CASE ("ScaleToCover") {
   ASSERT(FloatEquals(ScaleToCover({3, 3}, {2, 3}), 1));
 }
 
-constexpr Vector2Int LOGICAL_RESOLUTION = {1280, 720};
+// constexpr Vector2Int LOGICAL_RESOLUTION = {1280, 720};
 
 struct DrawTextureData {
   int     texId      = -1;
@@ -299,10 +307,14 @@ void DrawTexture(DrawTextureData data) {
   auto dx1 = destRec.pos.x + destRec.size.x;
   auto dy0 = destRec.pos.y;
   auto dy1 = destRec.pos.y + destRec.size.y;
-  dx0 /= (LOGICAL_RESOLUTION.x / 2);
-  dx1 /= (LOGICAL_RESOLUTION.x / 2);
-  dy0 /= (LOGICAL_RESOLUTION.y / 2);
-  dy1 /= (LOGICAL_RESOLUTION.y / 2);
+  // dx0 /= (LOGICAL_RESOLUTION.x / 2);
+  // dx1 /= (LOGICAL_RESOLUTION.x / 2);
+  // dy0 /= (LOGICAL_RESOLUTION.y / 2);
+  // dy1 /= (LOGICAL_RESOLUTION.y / 2);
+  // dx0 /= (f32)tex->size_x() / 2;
+  // dx1 /= (f32)tex->size_x() / 2;
+  // dy0 /= (f32)tex->size_y() / 2;
+  // dy1 /= (f32)tex->size_y() / 2;
 
   dx0 -= 1;
   dx1 -= 1;
@@ -318,17 +330,6 @@ void DrawTexture(DrawTextureData data) {
     {dx0, dy1, 0.0f, color, sx0, sy1},  // Bottom-left
     {dx1, dy1, 0.0f, color, sx1, sy1},  // Bottom-right
   };
-
-  // auto ratio
-  //   = ScaleToFit({(f32)tex->size_x(), (f32)tex->size_y()}, ge.meta.screenSize);
-  // ratio /= ge.meta.screenSize;
-  //
-  // const _PosColorTexVertex quadVertices[] = {
-  //   {-ratio.x, -ratio.y, 0.0f, color, sx0, sy0},  // Top-left
-  //   {ratio.x, -ratio.y, 0.0f, color, sx1, sy0},   // Top-right
-  //   {-ratio.x, ratio.y, 0.0f, color, sx0, sy1},   // Bottom-left
-  //   {ratio.x, ratio.y, 0.0f, color, sx1, sy1},    // Bottom-right
-  // };
 
   const uint16_t quadIndices[] = {0, 1, 2, 1, 3, 2};
 
@@ -358,12 +359,5 @@ void DrawTexture(DrawTextureData data) {
 u64 GetTime() {
   return SDL_GetTicks();
 }
-
-///
-enum UpdateFunctionResult {
-  UpdateFunctionResult_CONTINUE,
-  UpdateFunctionResult_SUCCESS,
-  UpdateFunctionResult_FAILURE,
-};
 
 ///
