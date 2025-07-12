@@ -23,7 +23,7 @@ SDL_AppResult GameUpdate() {
 
   DrawTexture({
     .texId = glib->player_texture_id(),
-    .pos   = LOGICAL_RESOLUTION / 2,
+    .pos   = Vector2((f32)LOGICAL_RESOLUTION.x / 2, 0),
   });
 
   // .rotation   =0,

@@ -337,10 +337,10 @@ void DrawTexture(DrawTextureData data) {
   auto color = *(u32*)&data.color;
 
   const _PosColorTexVertex quadVertices[] = {
-    {dx0, dy0, 0.0f, color, sx0, sy0},  // Top-left
-    {dx1, dy0, 0.0f, color, sx1, sy0},  // Top-right
-    {dx0, dy1, 0.0f, color, sx0, sy1},  // Bottom-left
-    {dx1, dy1, 0.0f, color, sx1, sy1},  // Bottom-right
+    {dx0, dy0, 0.0f, color, sx0, sy1},  // Top-left
+    {dx1, dy0, 0.0f, color, sx1, sy1},  // Top-right
+    {dx0, dy1, 0.0f, color, sx0, sy0},  // Bottom-left
+    {dx1, dy1, 0.0f, color, sx1, sy0},  // Bottom-right
   };
 
   const uint16_t quadIndices[] = {0, 1, 2, 1, 3, 2};
