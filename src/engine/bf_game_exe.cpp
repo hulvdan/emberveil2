@@ -123,7 +123,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
   flags |= SDL_WINDOW_RESIZABLE;
 #endif
 
-  ge.meta.screenSize = {1280, 820};
+  ge.meta.screenSize = LOGICAL_RESOLUTION;
   auto window        = SDL_CreateWindow(
     GetWindowTitle(), ge.meta.screenSize.x, ge.meta.screenSize.y, flags
   );

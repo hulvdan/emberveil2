@@ -24,6 +24,19 @@ SDL_AppResult GameUpdate() {
   DrawTexture({
     .texId = glib->player_texture_id(),
     .pos   = Vector2((f32)LOGICAL_RESOLUTION.x / 2, 0),
+    .anchor{0.5f, 0},
+  });
+  DrawTexture({
+    .texId = glib->player_texture_id(),
+    .pos   = Vector2(0, (f32)LOGICAL_RESOLUTION.y / 2),
+  });
+  DrawTexture({
+    .texId = glib->player_texture_id(),
+    .pos   = Vector2((f32)LOGICAL_RESOLUTION.x / 2, (f32)LOGICAL_RESOLUTION.y),
+  });
+  DrawTexture({
+    .texId = glib->player_texture_id(),
+    .pos   = Vector2((f32)LOGICAL_RESOLUTION.x, (f32)LOGICAL_RESOLUTION.y / 2),
   });
 
   // .rotation   =0,
