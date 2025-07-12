@@ -324,12 +324,12 @@ void DrawTexture(DrawTextureData data) {
 
   auto r = ge.meta.screenToLogicalRatio;
   if (r >= 1) {
-    auto d = (dx1 - dx0) / 2 - (dx1 - dx0) / r / 2;
+    auto d = (dx1 - dx0) / 2 * (1 - 1 / r);
     dx0 += d;
     dx1 -= d;
   }
   else {
-    auto d = (dy1 - dy0) / 2 - (dy1 - dy0) * r / 2;
+    auto d = (dy1 - dy0) / 2 * (1 - r);
     dy0 += d;
     dy1 -= d;
   }
