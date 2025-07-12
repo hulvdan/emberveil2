@@ -18,7 +18,6 @@ SDL_AppResult GameUpdate() {
   DrawTexture({
     .texId = backgroundTexId,
     .pos   = LOGICAL_RESOLUTION / 2,
-    .scale = Vector2One() * scale,
   });
 
   DrawTexture({

@@ -89,6 +89,7 @@ struct EngineData {
     Vector2Int screenSize = {};
 
     f32 screenToLogicalRatio = {};
+    f32 screenScale          = {};
   } meta;
 } ge = {};
 
@@ -283,14 +284,14 @@ void DrawTexture(DrawTextureData data) {
     .pos{
       data.pos.x
         + (f32)tex->size_x() * (1 - data.sourceSize.x) * abs(data.scale.x)
-            * data.anchor.x,
+            * ge.meta.screenScale * data.anchor.x,
       data.pos.y
         + (f32)tex->size_y() * (1 - data.sourceSize.y) * abs(data.scale.y)
-            * data.anchor.y,
+            * ge.meta.screenScale * data.anchor.y,
     },
     .size{
-      (f32)tex->size_x() * data.sourceSize.x * abs(data.scale.x),
-      (f32)tex->size_y() * data.sourceSize.y * abs(data.scale.y),
+      (f32)tex->size_x() * data.sourceSize.x * abs(data.scale.x) * ge.meta.screenScale,
+      (f32)tex->size_y() * data.sourceSize.y * abs(data.scale.y) * ge.meta.screenScale,
     },
   };
   destRec.pos -= LOGICAL_RESOLUTION / 2;
@@ -376,6 +377,7 @@ void EngineOnFrameStart() {
   auto ratioLogical            = (f32)LOGICAL_RESOLUTION.x / (f32)LOGICAL_RESOLUTION.y;
   auto ratioActual             = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
   ge.meta.screenToLogicalRatio = ratioActual / ratioLogical;
+  ge.meta.screenScale          = ScaleToFit({1920, 1080}, LOGICAL_RESOLUTION);
 }
 
 ///
