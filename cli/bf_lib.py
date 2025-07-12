@@ -169,6 +169,7 @@ LOG_FILE_POSITION = False
 
 PROJECT_DIR = Path(__file__).parent.parent
 TEMP_DIR = PROJECT_DIR / ".temp"
+TEMP_ART_DIR = TEMP_DIR / "art"
 CLI_DIR = Path("cli")
 SRC_DIR = Path("src")
 ASSETS_DIR = PROJECT_DIR / "assets"

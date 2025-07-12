@@ -9,7 +9,6 @@ import pyjson5 as json
 import yaml
 from bf_lib import (
     ART_DIR,
-    ASSETS_DIR,
     FLATBUFFERS_GENERATED_DIR,
     FLATC_PATH,
     GAME_DIR,
@@ -18,6 +17,7 @@ from bf_lib import (
     RESOURCES_DIR,
     SHADERC_PATH,
     SRC_DIR,
+    TEMP_ART_DIR,
     TEMP_DIR,
     BuildPlatform,
     log,
@@ -273,7 +273,7 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
 
     copy_from_base_dir = ART_DIR / "textures"
     for filepath in copy_from_base_dir.rglob("*.png"):
-        to_path = TEMP_DIR / "art" / filepath.relative_to(copy_from_base_dir)
+        to_path = TEMP_ART_DIR / filepath.relative_to(copy_from_base_dir)
         recursive_mkdir(to_path.parent)
         shutil.copy(filepath, to_path)
 
@@ -284,7 +284,7 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
         old_cache_value = int(cache_filepath.read_text())
 
     cache_value = 0
-    for filepath in Path(TEMP_DIR / "art").rglob("*.png"):
+    for filepath in Path(TEMP_ART_DIR).rglob("*.png"):
         cache_value = hash(cache_value + filepath.stat().st_mtime_ns)
 
     if cache_value == old_cache_value:
@@ -343,6 +343,28 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
         "atlas_size_x": json_data["meta"]["size"]["w"],
         "atlas_size_y": json_data["meta"]["size"]["h"],
     }
+
+
+@timing
+def check_no_excessive_images_in_temp_art_dir() -> None:
+    temp_filepaths = [
+        filepath.relative_to(TEMP_ART_DIR) for filepath in TEMP_ART_DIR.rglob("*.png")
+    ]
+    art_filepaths = [
+        filepath.relative_to(ART_DIR / "textures")
+        for filepath in (ART_DIR / "textures").rglob("*.png")
+    ]
+
+    excessive_images = []
+    for temp_filepath in temp_filepaths:
+        if temp_filepath not in art_filepaths:
+            excessive_images.append(temp_filepath.as_posix())
+
+    if excessive_images:
+        message = "Excessive images found!\n{}".format(
+            "\n".join("{}) {}".format(i + 1, v) for i, v in enumerate(excessive_images))
+        )
+        raise AssertionError(message)
 
 
 @timing
@@ -521,6 +543,8 @@ def do_generate() -> None:
 
         remove_intermediate_generation_files()
 
-        texture_name_2_id, atlas_data = make_atlas(ASSETS_DIR / "art" / "atlas.ftpp")
+        check_no_excessive_images_in_temp_art_dir()
+
+        texture_name_2_id, atlas_data = make_atlas(ART_DIR / "atlas.ftpp")
 
         convert_gamelib_json_to_binary(texture_name_2_id, genline, atlas_data)
