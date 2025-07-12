@@ -37,10 +37,8 @@ SDL_AppResult GameUpdate() {
     .texId = glib->player_texture_id(),
     .pos   = Vector2((f32)LOGICAL_RESOLUTION.x, (f32)LOGICAL_RESOLUTION.y / 2),
   });
-  DrawTexture({
-    .texId = glib->vignette_texture_id(),
-    .pos   = LOGICAL_RESOLUTION / 2,
-  });
+
+  EngineApplyVignetteAndBlackStrips();
 
   // .rotation   =0,
   // .pos        ={},

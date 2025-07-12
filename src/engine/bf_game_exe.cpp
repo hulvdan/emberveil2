@@ -26,6 +26,8 @@
 
 #include "shaders/quad_fs_100_es.bin"
 #include "shaders/quad_vs_100_es.bin"
+#include "shaders/quad_tex_fs_100_es.bin"
+#include "shaders/quad_tex_vs_100_es.bin"
 
 #include "bf_lib.cpp"
 

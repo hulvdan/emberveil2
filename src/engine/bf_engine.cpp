@@ -53,6 +53,9 @@ constexpr Color YELLOW  = Color{u8_max / 2, u8_max / 2, 0, u8_max};
 constexpr Color CYAN    = Color{0, u8_max / 2, u8_max / 2, u8_max};
 constexpr Color MAGENTA = Color{u8_max / 2, 0, u8_max / 2, u8_max};
 
+constexpr Vector2Int ASSETS_REFERENCE_RESOLUTION = {1920, 1080};
+constexpr Vector2Int LOGICAL_RESOLUTION          = {1280, 720};
+
 struct Texture2D {
   Vector2Int size = {};
   void*      data = {};
@@ -64,14 +67,24 @@ const BFGame::GameLibrary* glib = nullptr;
 
 ///
 struct _PosColorTexVertex {
-  float    x, y, z;
-  uint32_t abgr;
-  float    u, v;
+  f32 x, y, z;
+  u32 abgr;
+  f32 u, v;
 
   static bgfx::VertexLayout layout;
 };
 
 bgfx::VertexLayout _PosColorTexVertex::layout;
+
+///
+struct _PosColorVertex {
+  f32 x, y, z;
+  u32 abgr;
+
+  static bgfx::VertexLayout layout;
+};
+
+bgfx::VertexLayout _PosColorVertex::layout;
 
 struct Camera {
   f32     zoom = 1;
@@ -80,10 +93,10 @@ struct Camera {
 
 struct EngineData {
   struct Meta {
-    Texture2D           atlas        = {};
-    Vector2Int          atlasSize    = {};
-    void*               gamelibBytes = {};
-    bgfx::ProgramHandle program      = {};
+    Texture2D           atlas                 = {};
+    Vector2Int          atlasSize             = {};
+    bgfx::ProgramHandle programDefaultTexture = {};
+    bgfx::ProgramHandle programDefaultQuad    = {};
 
     Camera     camera     = {};
     Vector2Int screenSize = {};
@@ -196,29 +209,6 @@ void UnloadFileData(void* ptr) {
 }
 
 ///
-void InitializeEngine() {
-  ge.meta.atlas        = LoadTexture("resources/atlas.png");
-  ge.meta.gamelibBytes = LoadFileData("resources/gamelib.bin");
-  glib                 = BFGame::GetGameLibrary(ge.meta.gamelibBytes);
-  ge.meta.program      = LoadProgram(
-    quad_vs_100_es,
-    ARRAY_COUNT(quad_vs_100_es),
-    quad_fs_100_es,
-    ARRAY_COUNT(quad_fs_100_es)
-  );
-
-  {
-    _PosColorTexVertex::layout.begin()
-      .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-      .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-      .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-      .end();
-  }
-
-  LOGI("Initialized engine");
-}
-
-///
 constexpr f32 ScaleToFit(Vector2 inner, Vector2 container) {
   f32 scaleX = container.x / inner.x;
   f32 scaleY = container.y / inner.y;
@@ -250,7 +240,39 @@ TEST_CASE ("ScaleToCover") {
   ASSERT(FloatEquals(ScaleToCover({3, 3}, {2, 3}), 1));
 }
 
-constexpr Vector2Int LOGICAL_RESOLUTION = {1280, 720};
+///
+void InitializeEngine() {
+  ge.meta.atlas = LoadTexture("resources/atlas.png");
+  glib          = BFGame::GetGameLibrary(LoadFileData("resources/gamelib.bin"));
+  ge.meta.programDefaultTexture = LoadProgram(
+    quad_tex_vs_100_es,
+    ARRAY_COUNT(quad_tex_vs_100_es),
+    quad_tex_fs_100_es,
+    ARRAY_COUNT(quad_tex_fs_100_es)
+  );
+  ge.meta.programDefaultQuad = LoadProgram(
+    quad_vs_100_es,
+    ARRAY_COUNT(quad_vs_100_es),
+    quad_fs_100_es,
+    ARRAY_COUNT(quad_fs_100_es)
+  );
+
+  // Remove Z?
+  _PosColorTexVertex::layout.begin()
+    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+    .end();
+
+  _PosColorVertex::layout.begin()
+    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+    .end();
+
+  ge.meta.screenScale = ScaleToFit(ASSETS_REFERENCE_RESOLUTION, LOGICAL_RESOLUTION);
+
+  LOGI("Initialized engine");
+}
 
 struct DrawTextureData {
   int     texId      = -1;
@@ -311,12 +333,10 @@ void DrawTexture(DrawTextureData data) {
   auto dy0 = destRec.pos.y;
   auto dy1 = destRec.pos.y + destRec.size.y;
 
-  auto diffX = (dx1 - dx0);
-  auto diffY = (dy1 - dy0);
-  dx0 -= data.anchor.x * diffX;
-  dx1 -= data.anchor.x * diffX;
-  dy0 -= data.anchor.y * diffY;
-  dy1 -= data.anchor.y * diffY;
+  dx0 -= data.anchor.x * destRec.size.x;
+  dx1 -= data.anchor.x * destRec.size.x;
+  dy0 -= data.anchor.y * destRec.size.y;
+  dy1 -= data.anchor.y * destRec.size.y;
 
   dx0 /= LOGICAL_RESOLUTION.x / 2;
   dx1 /= LOGICAL_RESOLUTION.x / 2;
@@ -324,28 +344,29 @@ void DrawTexture(DrawTextureData data) {
   dy1 /= LOGICAL_RESOLUTION.y / 2;
 
   auto r = ge.meta.screenToLogicalRatio;
-  if (r >= 1) {
-    auto c = 1 - 1 / r;
+  if (r >= 1) {  // Window is too wide.
+    const auto c = 1 - 1 / r;
     dx0 -= dx0 * c;
     dx1 -= dx1 * c;
   }
-  else {
-    auto c = 1 - r;
+  else {  // Window is too high.
+    const auto c = 1 - r;
     dy0 -= dy0 * c;
     dy1 -= dy1 * c;
   }
 
-  auto color = *(u32*)&data.color;
+  const auto color = *(u32*)&data.color;
 
   const _PosColorTexVertex quadVertices[] = {
-    {dx0, dy0, 0.0f, color, sx0, sy1},  // Top-left
-    {dx1, dy0, 0.0f, color, sx1, sy1},  // Top-right
-    {dx0, dy1, 0.0f, color, sx0, sy0},  // Bottom-left
-    {dx1, dy1, 0.0f, color, sx1, sy0},  // Bottom-right
+    {dx0, dy0, 0.0f, color, sx0, sy1},  // Top-left.
+    {dx1, dy0, 0.0f, color, sx1, sy1},  // Top-right.
+    {dx0, dy1, 0.0f, color, sx0, sy0},  // Bottom-left.
+    {dx1, dy1, 0.0f, color, sx1, sy0},  // Bottom-right.
   };
 
-  const uint16_t quadIndices[] = {0, 1, 2, 1, 3, 2};
+  const u16 quadIndices[] = {0, 1, 2, 1, 3, 2};
 
+  // TODO: move to enginedata?
   bgfx::UniformHandle u_texture
     = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
 
@@ -362,7 +383,7 @@ void DrawTexture(DrawTextureData data) {
     bgfx::setTexture(0, u_texture, ge.meta.atlas.handle);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
-    bgfx::submit(0, ge.meta.program);
+    bgfx::submit(0, ge.meta.programDefaultTexture);
   }
 
   bgfx::destroy(u_texture);
@@ -377,7 +398,66 @@ void EngineOnFrameStart() {
   auto ratioLogical            = (f32)LOGICAL_RESOLUTION.x / (f32)LOGICAL_RESOLUTION.y;
   auto ratioActual             = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
   ge.meta.screenToLogicalRatio = ratioActual / ratioLogical;
-  ge.meta.screenScale          = ScaleToFit({1920, 1080}, LOGICAL_RESOLUTION);
+}
+
+///
+void EngineApplyVignetteAndBlackStrips() {
+  DrawTexture({
+    .texId = glib->vignette_texture_id(),
+    .pos   = LOGICAL_RESOLUTION / 2,
+  });
+
+  f32 stripWidth  = 2;
+  f32 stripHeight = 2;
+
+  const auto color = *(u32*)&BLACK;
+
+  _PosColorVertex quadVertices[8];
+
+  const auto r = ge.meta.screenToLogicalRatio;
+  if (r > 1) {
+    // Window is too wide. Draw left and right strips.
+    stripWidth = 1 - 1 / r;
+
+    quadVertices[0] = {-1, -1, 0, color};               // Top-left.
+    quadVertices[1] = {-1 + stripWidth, -1, 0, color};  // Top-right.
+    quadVertices[2] = {-1, 1, 0, color};                // Bottom-left.
+    quadVertices[3] = {-1 + stripWidth, 1, 0, color};   // Bottom-right.
+    quadVertices[4] = {1 - stripWidth, -1, 0, color};   // Top-left.
+    quadVertices[5] = {1, -1, 0, color};                // Top-right.
+    quadVertices[6] = {1 - stripWidth, 1, 0, color};    // Bottom-left.
+    quadVertices[7] = {1, 1, 0, color};                 // Bottom-right.
+  }
+  else if (r < 1) {
+    // Window is too high. Draw bottom and top strips.
+    stripHeight = 1 - r;
+
+    quadVertices[0] = {-1, -1, 0, color};                // Top-left.
+    quadVertices[1] = {1, -1, 0, color};                 // Top-right.
+    quadVertices[2] = {-1, -1 + stripHeight, 0, color};  // Bottom-left.
+    quadVertices[3] = {1, -1 + stripHeight, 0, color};   // Bottom-right.
+    quadVertices[4] = {-1, 1, 0, color};                 // Top-left.
+    quadVertices[5] = {1, 1, 0, color};                  // Top-right.
+    quadVertices[6] = {-1, 1 - stripHeight, 0, color};   // Bottom-left.
+    quadVertices[7] = {1, 1 - stripHeight, 0, color};    // Bottom-right.
+  }
+
+  const u16 quadIndices[] = {0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6};
+
+  bgfx::TransientVertexBuffer tvb{};
+  bgfx::TransientIndexBuffer  tib{};
+  bgfx::allocTransientVertexBuffer(&tvb, 8, _PosColorVertex::layout);
+  bgfx::allocTransientIndexBuffer(&tib, 12);
+  {
+    memcpy(tvb.data, quadVertices, sizeof(quadVertices));
+    memcpy(tib.data, quadIndices, sizeof(quadIndices));
+
+    bgfx::setVertexBuffer(0, &tvb);
+    bgfx::setIndexBuffer(&tib);
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+
+    bgfx::submit(0, ge.meta.programDefaultQuad);
+  }
 }
 
 ///
