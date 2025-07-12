@@ -271,7 +271,11 @@ def convert_gamelib_json_to_binary(
 def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
     assert str(path).endswith(".ftpp")
 
-    shutil.copytree(ART_DIR / "textures", TEMP_DIR / "art", dirs_exist_ok=True)
+    copy_from_base_dir = ART_DIR / "textures"
+    for filepath in copy_from_base_dir.rglob("*.png"):
+        to_path = TEMP_DIR / "art" / filepath.relative_to(copy_from_base_dir)
+        recursive_mkdir(to_path.parent)
+        shutil.copy(filepath, to_path)
 
     cache_filepath = TEMP_DIR / ".atlas.cache"
 
