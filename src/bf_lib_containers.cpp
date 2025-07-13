@@ -184,9 +184,9 @@ struct View {
   }
 };
 
-#define VIEW_FROM_ARRAY_DANGER(name, array)                 \
-  View<std::remove_reference_t<decltype(*(array))>>(name) { \
-    .count = ARRAY_COUNT(array), .base = (array),           \
+#define VIEW_FROM_ARRAY_DANGER(name)                          \
+  View<std::remove_reference_t<decltype(*(name##_))>>(name) { \
+    .count = ARRAY_COUNT(name##_), .base = (name##_),         \
   }
 
 template <typename T>
@@ -367,7 +367,6 @@ struct VectorIterator : public IteratorFacade<VectorIterator<T>> {
   Vector<T>* _container;
   int        _current = 0;
 };
-
 
 template <typename T>
 auto Iter(Vector<T>* container) {
