@@ -322,8 +322,21 @@ def run_in_debugger(target, build_type: BuildType):
 @command
 def update_template():
     subprocess.run("git fetch template", check=True, shell=True)
+    git_status_process = subprocess.run(
+        "git status --porcelain", check=True, shell=True, capture_output=True
+    )
+    git_status_text = git_status_process.stdout.decode("utf-8").strip()
+    should_stash = bool(git_status_text)
+
+    if should_stash:
+        stash_message = datetime.now().strftime("%Y%m%d-%H%M%S template-update autostash")
+        subprocess.run(f'git stash push -u -m "{stash_message}"', check=True, shell=True)
+
     subprocess.run("git rebase template/template", check=True, shell=True)
     subprocess.run("poetry install", check=True, shell=True)
+
+    if should_stash:
+        subprocess.run("git stash apply", check=True, shell=True)
 
 
 @command
