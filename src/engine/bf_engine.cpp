@@ -412,7 +412,9 @@ void EngineApplyVignetteAndBlackStrips() {
 
   const auto color = *(u32*)&BLACK;
 
-  _PosColorVertex quadVertices[8];
+  _PosColorVertex quadVertices[8]{};
+
+  auto shouldDrawStrips = true;
 
   const auto r = ge.meta.screenToLogicalRatio;
   if (r > 1) {
@@ -441,22 +443,26 @@ void EngineApplyVignetteAndBlackStrips() {
     quadVertices[6] = {-1.001f, 1.001f - stripHeight, 0, color};   // Bottom-left.
     quadVertices[7] = {1.001f, 1.001f - stripHeight, 0, color};    // Bottom-right.
   }
+  else
+    shouldDrawStrips = false;
 
-  const u16 quadIndices[] = {0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6};
+  if (shouldDrawStrips) {
+    const u16 quadIndices[] = {0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6};
 
-  bgfx::TransientVertexBuffer tvb{};
-  bgfx::TransientIndexBuffer  tib{};
-  bgfx::allocTransientVertexBuffer(&tvb, 8, _PosColorVertex::layout);
-  bgfx::allocTransientIndexBuffer(&tib, 12);
-  {
-    memcpy(tvb.data, quadVertices, sizeof(quadVertices));
-    memcpy(tib.data, quadIndices, sizeof(quadIndices));
+    bgfx::TransientVertexBuffer tvb{};
+    bgfx::TransientIndexBuffer  tib{};
+    bgfx::allocTransientVertexBuffer(&tvb, 8, _PosColorVertex::layout);
+    bgfx::allocTransientIndexBuffer(&tib, 12);
+    {
+      memcpy(tvb.data, quadVertices, sizeof(quadVertices));
+      memcpy(tib.data, quadIndices, sizeof(quadIndices));
 
-    bgfx::setVertexBuffer(0, &tvb);
-    bgfx::setIndexBuffer(&tib);
-    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+      bgfx::setVertexBuffer(0, &tvb);
+      bgfx::setIndexBuffer(&tib);
+      bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
-    bgfx::submit(0, ge.meta.programDefaultQuad);
+      bgfx::submit(0, ge.meta.programDefaultQuad);
+    }
   }
 }
 
