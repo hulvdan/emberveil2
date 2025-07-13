@@ -1,5 +1,3 @@
-#pragma once
-
 #include "doctest.h"
 
 #define SDL_MAIN_USE_CALLBACKS

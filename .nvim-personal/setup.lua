@@ -48,6 +48,18 @@ function rebuild_tasks()
         { "u_update_template", cli_command("update_template") },
         { "t_test", cli_command("test") },
         { "r_build_all_and_test", cli_command("build_all_and_test") },
+        {
+            "z_serve_web_debug",
+            function()
+                vim.fn.execute([[term python -m http.server -d .cmake\Web_Debug 8000]])
+            end,
+        },
+        {
+            "x_serve_web_release",
+            function()
+                vim.fn.execute([[term python -m http.server -d .cmake\Web_Release 8001]])
+            end,
+        },
         -- { "t_test", cli_command("test") },
         -- { "p_test_python", [[.venv\Scripts\pytest.exe]] },
         -- -- { "killall", [[start .nvim-personal\cli.ahk killall]] },
