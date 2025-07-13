@@ -271,7 +271,10 @@ def remove_spaces(string: str) -> str:
 
 
 def run_command(
-    cmd: list[str | Path] | str, stdin_input: str | None = None, cwd=None
+    cmd: list[str | Path] | str,
+    stdin_input: str | None = None,
+    cwd=None,
+    timeout_seconds: int | None = None,
 ) -> None:
     if isinstance(cmd, str):
         cmd = replace_double_spaces(cmd.replace("\n", " ").strip())
@@ -291,6 +294,7 @@ def run_command(
         encoding="utf-8",
         input=stdin_input,
         cwd=cwd,
+        timeout=timeout_seconds,
     )
 
     if p.returncode:
