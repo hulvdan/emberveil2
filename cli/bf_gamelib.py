@@ -27,6 +27,7 @@ from bf_lib import (
     timing,
     timing_mark,
 )
+from PIL import Image
 
 
 def texture_ids_recursive_transform(
@@ -333,11 +334,9 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
 
     recursive_mkdir(RESOURCES_DIR)
 
-    # Копируем в resources.
-    shutil.copyfile(
-        TEMP_DIR / (path.stem + ".png"),
-        RESOURCES_DIR / (path.stem + ".png"),
-    )
+    # Compressing and saving to 'resources/'.
+    picture = Image.open(TEMP_DIR / (path.stem + ".png"))
+    picture.save(RESOURCES_DIR / (path.stem + ".png"), optimize=True)
 
     return texture_name_2_id, {
         "atlas_textures": textures,

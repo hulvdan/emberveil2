@@ -328,17 +328,8 @@ def deploy_itch():
     zip_path = TEMP_DIR / "itch.zip"
 
     with zipfile.ZipFile(zip_path, "w") as archive:
-        base_dir = Path(".cmake/Web_Release")
-
-        for files_pattern in (
-            "index.data",
-            "index.html",
-            "index.js",
-            "index.wasm",
-            "resources/*",
-        ):
-            for filepath in base_dir.rglob(files_pattern):
-                archive.write(filepath, filepath.relative_to(base_dir))
+        for filepath in ("index.data", "index.html", "index.js", "index.wasm"):
+            archive.write(Path(".cmake/Web_Release") / filepath, filepath)
 
     target = "{}:html".format(data_values.itch_target)
     run_command([BUTLER_PATH, "push", zip_path, target])
