@@ -29,42 +29,76 @@ target_include_directories(vendor_and_codegen
 # bgfx
 #-----------------------------------------------------------------------------------
 add_library(bgfx STATIC IMPORTED)
-target_include_directories(bgfx INTERFACE "${CMAKE_SOURCE_DIR}/vendor/bgfx/include")
+target_include_directories(bgfx
+    INTERFACE
+        "${CMAKE_SOURCE_DIR}/vendor/bgfx/include"
+)
 add_library(bx STATIC IMPORTED)
-target_include_directories(bx INTERFACE "${CMAKE_SOURCE_DIR}/vendor/bx/include")
+target_include_directories(bx
+    INTERFACE
+        "${CMAKE_SOURCE_DIR}/vendor/bx/include"
+)
 add_library(bimg STATIC IMPORTED)
-target_link_libraries(bgfx INTERFACE bx bimg)
+target_link_libraries(bgfx
+    INTERFACE
+        bx
+        bimg
+)
 if ("${PLATFORM}" STREQUAL "Win")
     if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
-        set_target_properties(bgfx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bgfxDebug.lib")
-        set_target_properties(bx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bxDebug.lib")
-        set_target_properties(bimg PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bimgDebug.lib")
+        set_target_properties(bgfx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bgfxDebug.lib
+        )
+        set_target_properties(bx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bxDebug.lib"
+        )
+        set_target_properties(bimg
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bimgDebug.lib"
+        )
     else()
-        set_target_properties(bgfx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bgfxRelease.lib")
-        set_target_properties(bx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bxRelease.lib")
-        set_target_properties(bimg PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bimgRelease.lib")
+        set_target_properties(bgfx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bgfxRelease.lib"
+        )
+        set_target_properties(bx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bxRelease.lib"
+        )
+        set_target_properties(bimg
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bimgRelease.lib"
+        )
     endif()
 elseif ("${PLATFORM}" STREQUAL "Web")
     if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
-        set_target_properties(bgfx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bgfxDebug.a")
-        set_target_properties(bx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bxDebug.a")
-        set_target_properties(bimg PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bimgDebug.a")
+        set_target_properties(bgfx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bgfxDebug.a"
+        )
+        set_target_properties(bx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bxDebug.a"
+        )
+        set_target_properties(bimg
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bimgDebug.a"
+        )
     else()
-        set_target_properties(bgfx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bgfxRelease.a")
-        set_target_properties(bx PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bxRelease.a")
-        set_target_properties(bimg PROPERTIES IMPORTED_LOCATION
-            "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bimgRelease.a")
+        set_target_properties(bgfx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bgfxRelease.a"
+        )
+        set_target_properties(bx
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bxRelease.a"
+        )
+        set_target_properties(bimg
+            PROPERTIES
+                IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/wasm/bin/bimgRelease.a"
+        )
     endif()
 else()
     message(FATAL_ERROR "bgfx: Not supported platform: ${PLATFORM}")
@@ -77,9 +111,20 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/sdl")
 # game
 #-----------------------------------------------------------------------------------
 add_executable(game "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
-target_link_libraries(game PRIVATE SDL3-static bgfx vendor_and_codegen)
-target_include_directories(game PRIVATE "${CMAKE_SOURCE_DIR}/src")
-target_compile_definitions(game PRIVATE DOCTEST_CONFIG_DISABLE)
+target_link_libraries(game
+    PRIVATE
+        SDL3-static
+        bgfx
+        vendor_and_codegen
+)
+target_include_directories(game
+    PRIVATE
+        "${CMAKE_SOURCE_DIR}/src"
+)
+target_compile_definitions(game
+    PRIVATE
+        DOCTEST_CONFIG_DISABLE
+)
 
 if ("${PLATFORM}" STREQUAL "Win")
 elseif ("${PLATFORM}" STREQUAL "Web")
@@ -154,7 +199,8 @@ target_link_libraries(tests
 )
 target_include_directories(tests
     PRIVATE
-        "${CMAKE_SOURCE_DIR}/src")
+        "${CMAKE_SOURCE_DIR}/src"
+)
 target_compile_definitions(tests
     PRIVATE
         TESTS
