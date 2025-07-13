@@ -117,6 +117,7 @@ elseif ("${PLATFORM}" STREQUAL "Web")
             "-O3"
             "-sASSERTIONS=0"
             "-sEXIT_RUNTIME=0"
+            "-sEXPORTED_RUNTIME_METHODS=['ccall']"
             "--closure 1"
             "--shell-file=${CMAKE_SOURCE_DIR}/vendor/shell_release.html"
         )

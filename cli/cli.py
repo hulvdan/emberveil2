@@ -290,6 +290,9 @@ def build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType):
 def build_all_and_test():
     test()
     for platform, build_type in product(BuildPlatform, BuildType):
+        if (platform == BuildPlatform.Web) and (build_type == BuildType.RelWithDebInfo):
+            continue
+
         build(BuildTarget.game, platform, build_type)
 
 

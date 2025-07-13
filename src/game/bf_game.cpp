@@ -38,7 +38,7 @@ SDL_AppResult GameUpdate() {
     .pos   = Vector2((f32)LOGICAL_RESOLUTION.x, (f32)LOGICAL_RESOLUTION.y / 2),
   });
 
-  EngineApplyVignetteAndBlackStrips();
+  EngineApplyVignette();
 
   // .rotation   =0,
   // .pos        ={},

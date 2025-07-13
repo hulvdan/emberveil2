@@ -401,12 +401,15 @@ void EngineOnFrameStart() {
 }
 
 ///
-void EngineApplyVignetteAndBlackStrips() {
+void EngineApplyVignette() {
   DrawTexture({
     .texId = glib->vignette_texture_id(),
     .pos   = LOGICAL_RESOLUTION / 2,
   });
+}
 
+///
+void EngineApplyBlackStrips() {
   f32 stripWidth  = 2.002f;
   f32 stripHeight = 2.002f;
 

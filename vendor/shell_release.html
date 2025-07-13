@@ -34,9 +34,9 @@
     <link rel="shortcut icon" href="https://www.raylib.com/favicon.ico">
 
     <style>
-        body { 
-          margin: 0px; 
-          overflow: hidden; 
+        body {
+          margin: 0px;
+          overflow: hidden;
           background-color: black;
         }
         canvas.emscripten { border: 0px none; background-color: black;}
@@ -83,6 +83,15 @@
                     return canvas;
                 })()
             };
+
+            function onResize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                Module.ccall('resize_from_js', null, ['number', 'number'], [window.innerWidth, window.innerHeight]);
+            }
+
+            window.addEventListener('resize', onResize);
+            window.addEventListener('load', onResize);
         </script>
         {{{ SCRIPT }}}
     </body>

@@ -34,11 +34,22 @@
 
 struct EngineAppState {
   SDL_Window* window = {};
-};
+} g_appstate;
 
 #if defined(SDL_PLATFORM_EMSCRIPTEN)
+extern "C" {
 ///
-EM_JS(void, log_webgl_version, (), {
+EMSCRIPTEN_KEEPALIVE void resize_from_js(int w, int h) {
+  if (g_appstate.window)
+    SDL_SetWindowSize(g_appstate.window, w, h);
+}
+}
+
+///
+EM_JS(void, js_TriggerOnResize, (), { onResize(); });
+
+///
+EM_JS(void, js_LogWebGLVersion, (), {
   let canvas = document.createElement('canvas');
   let gl     = canvas.getContext('webgl2') || canvas.getContext('webgl');
   if (gl) {
@@ -104,24 +115,17 @@ class BGFXCallbackHandler : public bgfx::CallbackI {
 };
 
 ///
-SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
+SDL_AppResult SDL_AppInit(void** /* appstate */, int argc, char** argv) {
 #if defined(SDL_PLATFORM_EMSCRIPTEN)
-  log_webgl_version();
+  js_LogWebGLVersion();
 #endif
-
-  auto appstate_ = new EngineAppState();
-  *appstate      = (void*)appstate_;
 
   if (!SDL_Init(0)) {
     LOGE("SDL_Init failed!");
     return SDL_APP_FAILURE;
   }
 
-  SDL_WindowFlags flags = 0;
-
-#if defined(SDL_PLATFORM_DESKTOP)
-  flags |= SDL_WINDOW_RESIZABLE;
-#endif
+  SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE;
 
   ge.meta.screenSize = LOGICAL_RESOLUTION;
   auto window        = SDL_CreateWindow(
@@ -131,7 +135,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     LOGE("SDL_CreateWindow failed!");
     return SDL_APP_FAILURE;
   }
-  appstate_->window = window;
+  g_appstate.window = window;
 
   {
     bgfx::PlatformData pd{};
@@ -203,12 +207,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR, color, 1.0f, 0);
   }
 
+#if defined(SDL_PLATFORM_EMSCRIPTEN)
+  js_TriggerOnResize();
+#endif
   InitializeEngine();
 
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppIterate(void* appstate) {
+SDL_AppResult SDL_AppIterate(void* /* appstate */) {
   bgfx::setViewRect(0, 0, 0, (u16)ge.meta.screenSize.x, (u16)ge.meta.screenSize.y);
   bgfx::touch(0);
 
@@ -216,6 +223,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
   auto result = GameUpdate();
 
   if (result == SDL_APP_CONTINUE) {
+    EngineApplyBlackStrips();
+
     LOCAL_PERSIST u64 frame = 0;
     bgfx::dbgTextClear(0, false);
     bgfx::dbgTextPrintf(0, 1, 0x4f, "Counter: %d", frame++);
@@ -225,7 +234,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
   return result;
 }
 
-SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
+SDL_AppResult SDL_AppEvent(void* /* appstate */, SDL_Event* event) {
   switch (event->type) {
   case SDL_EVENT_QUIT:
   case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
@@ -235,9 +244,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
   case SDL_EVENT_WINDOW_RESIZED: {
     auto window = SDL_GetWindowFromID(event->window.windowID);
 
-    int width  = {};
-    int height = {};
-    SDL_GetWindowSize(window, &width, &height);
+    auto width  = event->window.data1;
+    auto height = event->window.data2;
+    LOGI("Window resized %d %d", width, height);
+
     bgfx::reset(width, height, BGFX_RESET_VSYNC);
     ge.meta.screenSize = {width, height};
   } break;
@@ -261,15 +271,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 }
 
 ///
-void SDL_AppQuit(void* appstate, SDL_AppResult result) {
+void SDL_AppQuit(void* /* appstate */, SDL_AppResult result) {
   bgfx::shutdown();
 
-  if (appstate)
-    delete (EngineAppState*)appstate;
-
-  auto appstate_ = (EngineAppState*)appstate;
-
-  SDL_DestroyWindow(appstate_->window);
+  SDL_DestroyWindow(g_appstate.window);
   SDL_Quit();
 }
 
