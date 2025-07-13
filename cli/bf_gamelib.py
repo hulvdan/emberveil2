@@ -21,6 +21,7 @@ from bf_lib import (
     TEMP_ART_DIR,
     TEMP_DIR,
     BuildPlatform,
+    gamelib_processing_functions,
     log,
     recursive_mkdir,
     run_command,
@@ -238,7 +239,8 @@ def convert_gamelib_json_to_binary(
 
     gamelib |= atlas_data
 
-    genline("// REMOVE ME")
+    for gamelib_processing_function in gamelib_processing_functions:
+        gamelib_processing_function(genline, gamelib)
 
     transform_texture_id = lambda data, key: transform_to_texture_index(
         data, key, texture_name_2_index=texture_name_2_id

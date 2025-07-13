@@ -21,6 +21,19 @@ class _DataValues:
 
 data_values = _DataValues()
 
+gamelib_processing_functions = []
+
+
+def gamelib_processor(func):
+    @wraps(func)
+    def wrapper(genline, gamelib):
+        func(genline, gamelib)
+
+    gamelib_processing_functions.append(wrapper)
+
+    return wrapper
+
+
 from bf_game import *  # noqa
 
 
