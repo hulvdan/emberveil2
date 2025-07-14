@@ -97,6 +97,7 @@ struct EngineData {
     Vector2Int          atlasSize             = {};
     bgfx::ProgramHandle programDefaultTexture = {};
     bgfx::ProgramHandle programDefaultQuad    = {};
+    bgfx::UniformHandle uniformTexture        = {};
 
     Camera     camera     = {};
     Vector2Int screenSize = {};
@@ -273,6 +274,8 @@ void InitializeEngine() {
     .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
     .end();
 
+  ge.meta.uniformTexture = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
+
   ge.meta.screenScale = ScaleToFit(ASSETS_REFERENCE_RESOLUTION, LOGICAL_RESOLUTION);
 
   LOGI("Initialized engine");
@@ -332,47 +335,84 @@ void DrawTexture(DrawTextureData data) {
   sy0 /= (f32)ge.meta.atlas.size.y;
   sy1 /= (f32)ge.meta.atlas.size.y;
 
-  auto dx0 = destRec.pos.x;
-  auto dx1 = destRec.pos.x + destRec.size.x;
-  auto dy0 = destRec.pos.y;
-  auto dy1 = destRec.pos.y + destRec.size.y;
+  Vector2 topLeft{};
+  Vector2 topRight{};
+  Vector2 bottomLeft{};
+  Vector2 bottomRight{};
 
-  dx0 -= data.anchor.x * destRec.size.x;
-  dx1 -= data.anchor.x * destRec.size.x;
-  dy0 -= data.anchor.y * destRec.size.y;
-  dy1 -= data.anchor.y * destRec.size.y;
+  if (data.rotation == 0.0f) {
+    auto dx0 = destRec.pos.x;
+    auto dx1 = destRec.pos.x + destRec.size.x;
+    auto dy0 = destRec.pos.y;
+    auto dy1 = destRec.pos.y + destRec.size.y;
 
-  dx0 /= LOGICAL_RESOLUTION.x / 2;
-  dx1 /= LOGICAL_RESOLUTION.x / 2;
-  dy0 /= LOGICAL_RESOLUTION.y / 2;
-  dy1 /= LOGICAL_RESOLUTION.y / 2;
+    dx0 -= data.anchor.x * destRec.size.x;
+    dx1 -= data.anchor.x * destRec.size.x;
+    dy0 -= data.anchor.y * destRec.size.y;
+    dy1 -= data.anchor.y * destRec.size.y;
+
+    topLeft     = {dx0, dy0};
+    topRight    = {dx1, dy0};
+    bottomLeft  = {dx0, dy1};
+    bottomRight = {dx1, dy1};
+  }
+  else {
+    auto sinRotation = sinf(data.rotation);
+    auto cosRotation = cosf(data.rotation);
+
+    auto dx = -data.anchor.x * destRec.size.x;
+    auto dy = -data.anchor.y * destRec.size.y;
+
+    topLeft.x = destRec.pos.x + dx * cosRotation - dy * sinRotation;
+    topLeft.y = destRec.pos.y + dx * sinRotation + dy * cosRotation;
+
+    topRight.x = destRec.pos.x + (dx + destRec.size.x) * cosRotation - dy * sinRotation;
+    topRight.y = destRec.pos.y + (dx + destRec.size.x) * sinRotation + dy * cosRotation;
+
+    bottomLeft.x = destRec.pos.x + dx * cosRotation - (dy + destRec.size.y) * sinRotation;
+    bottomLeft.y = destRec.pos.y + dx * sinRotation + (dy + destRec.size.y) * cosRotation;
+
+    bottomRight.x = destRec.pos.x + (dx + destRec.size.x) * cosRotation
+                    - (dy + destRec.size.y) * sinRotation;
+    bottomRight.y = destRec.pos.y + (dx + destRec.size.x) * sinRotation
+                    + (dy + destRec.size.y) * cosRotation;
+  }
+
+  topLeft.x /= LOGICAL_RESOLUTION.x / 2;
+  topRight.x /= LOGICAL_RESOLUTION.x / 2;
+  bottomLeft.x /= LOGICAL_RESOLUTION.x / 2;
+  bottomRight.x /= LOGICAL_RESOLUTION.x / 2;
+  topLeft.y /= LOGICAL_RESOLUTION.y / 2;
+  topRight.y /= LOGICAL_RESOLUTION.y / 2;
+  bottomLeft.y /= LOGICAL_RESOLUTION.y / 2;
+  bottomRight.y /= LOGICAL_RESOLUTION.y / 2;
 
   auto r = ge.meta.screenToLogicalRatio;
   if (r >= 1) {  // Window is too wide.
     const auto c = 1 - 1 / r;
-    dx0 -= dx0 * c;
-    dx1 -= dx1 * c;
+    topLeft.x -= topLeft.x * c;
+    topRight.x -= topRight.x * c;
+    bottomLeft.x -= bottomLeft.x * c;
+    bottomRight.x -= bottomRight.x * c;
   }
   else {  // Window is too high.
     const auto c = 1 - r;
-    dy0 -= dy0 * c;
-    dy1 -= dy1 * c;
+    topLeft.y -= topLeft.y * c;
+    topRight.y -= topRight.y * c;
+    bottomLeft.y -= bottomLeft.y * c;
+    bottomRight.y -= bottomRight.y * c;
   }
 
   const auto color = *(u32*)&data.color;
 
   const _PosColorTexVertex quadVertices[] = {
-    {dx0, dy0, 0.0f, color, sx0, sy1},  // Top-left.
-    {dx1, dy0, 0.0f, color, sx1, sy1},  // Top-right.
-    {dx0, dy1, 0.0f, color, sx0, sy0},  // Bottom-left.
-    {dx1, dy1, 0.0f, color, sx1, sy0},  // Bottom-right.
+    {topLeft.x, topLeft.y, 0.0f, color, sx0, sy1},
+    {topRight.x, topRight.y, 0.0f, color, sx1, sy1},
+    {bottomLeft.x, bottomLeft.y, 0.0f, color, sx0, sy0},
+    {bottomRight.x, bottomRight.y, 0.0f, color, sx1, sy0},
   };
 
   const u16 quadIndices[] = {0, 1, 2, 1, 3, 2};
-
-  // TODO: move to enginedata?
-  bgfx::UniformHandle u_texture
-    = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
 
   bgfx::TransientVertexBuffer tvb{};
   bgfx::TransientIndexBuffer  tib{};
@@ -384,13 +424,11 @@ void DrawTexture(DrawTextureData data) {
 
     bgfx::setVertexBuffer(0, &tvb);
     bgfx::setIndexBuffer(&tib);
-    bgfx::setTexture(0, u_texture, ge.meta.atlas.handle);
+    bgfx::setTexture(0, ge.meta.uniformTexture, ge.meta.atlas.handle);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
 
     bgfx::submit(0, ge.meta.programDefaultTexture);
   }
-
-  bgfx::destroy(u_texture);
 }
 
 u64 GetTime() {
