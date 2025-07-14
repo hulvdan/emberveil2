@@ -2,19 +2,23 @@
 
 #pragma once
 
-// Based off splitMix32
-GLOBAL_VAR u32 g_frandState = 0;
+GLOBAL_VAR u32 g_randState = 0;
 
-// [0; 1)
-f32 FRand() {
-  u32 z = g_frandState + 0x9e3779b9;
+// Based off splitMix32
+u32 Rand() {
+  u32 z = g_randState + 0x9e3779b9;
   z ^= z >> 15;
   z *= 0x85ebca6b;
   z ^= z >> 13;
   z *= 0xc2b2ae35;
-  g_frandState = z;  // NOTE: Added by me. Should i just increment g_frandState?
-  u32 result   = z ^ (z >> 16);
-  return (f32)((f64)result / (f64)((u64)u32_max + 1));
+  g_randState = z;  // NOTE: Added by me. Should i just increment g_randState?
+  u32 result  = z ^ (z >> 16);
+  return result;
+}
+
+// [0; 1)
+f32 FRand() {
+  return (f32)((f64)Rand() / (f64)((u64)u32_max + 1));
 }
 
 // [a; b]
