@@ -454,6 +454,18 @@ void DrawCircleLines(f32 centerX, f32 centerY, f32 radius, Color color_) {
     point /= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
   }
 
+  auto r = ge.meta.screenToLogicalRatio;
+  if (r >= 1) {  // Window is too wide.
+    const auto c = 1 - 1 / r;
+    for (auto& point : points)
+      point.x -= point.x * c;
+  }
+  else {  // Window is too high.
+    const auto c = 1 - r;
+    for (auto& point : points)
+      point.y -= point.y * c;
+  }
+
   bgfx::TransientVertexBuffer tvb{};
   bgfx::allocTransientVertexBuffer(&tvb, 9, _PosColorVertex::layout);
   {
