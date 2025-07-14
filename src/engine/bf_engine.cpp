@@ -46,7 +46,7 @@ struct Color {
 constexpr Color WHITE   = Color{};
 constexpr Color BLACK   = Color{0, 0, 0, u8_max};
 constexpr Color GRAY    = Color{u8_max / 2, u8_max / 2, u8_max / 2, u8_max};
-constexpr Color RED     = Color{u8_max / 2, 0, 0, 1};
+constexpr Color RED     = Color{u8_max / 2, 0, 0, u8_max};
 constexpr Color GREEN   = Color{0, u8_max / 2, 0, u8_max};
 constexpr Color BLUE    = Color{0, 0, u8_max / 2, u8_max};
 constexpr Color YELLOW  = Color{u8_max / 2, u8_max / 2, 0, u8_max};
