@@ -233,7 +233,7 @@ SDL_AppResult SDL_AppIterate(void* /* appstate */) {
   auto result = GameUpdate();
 
   if (result == SDL_APP_CONTINUE) {
-    EngineApplyBlackStrips();
+    EngineApplyStrips();
 
     LOCAL_PERSIST u64 frame = 0;
     bgfx::dbgTextClear(0, false);

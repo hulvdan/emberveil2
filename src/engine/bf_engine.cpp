@@ -104,6 +104,10 @@ struct EngineData {
     f32 screenToLogicalRatio = {};
     f32 screenScale          = {};
   } meta;
+
+  struct Settings {
+    Color vignetteAndStripsColor = BLACK;
+  } settings;
 } ge = {};
 
 void BeginMode2D(Camera camera) {}
@@ -405,15 +409,16 @@ void EngineApplyVignette() {
   DrawTexture({
     .texId = glib->vignette_texture_id(),
     .pos   = LOGICAL_RESOLUTION / 2,
+    .color = ge.settings.vignetteAndStripsColor,
   });
 }
 
 ///
-void EngineApplyBlackStrips() {
+void EngineApplyStrips() {
   f32 stripWidth  = 2.002f;
   f32 stripHeight = 2.002f;
 
-  const auto color = *(u32*)&BLACK;
+  const auto color = *(u32*)&ge.settings.vignetteAndStripsColor;
 
   _PosColorVertex quadVertices[8]{};
 
