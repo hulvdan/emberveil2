@@ -230,13 +230,15 @@ SDL_AppResult SDL_AppIterate(void* /* appstate */) {
   bgfx::touch(0);
 
   EngineOnFrameStart();
+
+  bgfx::dbgTextClear(0, false);
+
   auto result = GameUpdate();
 
   if (result == SDL_APP_CONTINUE) {
     EngineApplyStrips();
 
     LOCAL_PERSIST u64 frame = 0;
-    bgfx::dbgTextClear(0, false);
     bgfx::dbgTextPrintf(0, 1, 0x4f, "Counter: %d", frame++);
     bgfx::frame(false);
   }
