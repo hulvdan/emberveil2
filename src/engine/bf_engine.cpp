@@ -102,8 +102,12 @@ struct EngineData {
     Camera     camera     = {};
     Vector2Int screenSize = {};
 
-    f32 screenToLogicalRatio = {};
-    f32 screenScale          = {};
+    f32         screenToLogicalRatio = {};
+    f32         screenScale          = {};
+    const bool* keyboardState        = {};
+
+    f64 prevFrameTime = {};
+    f64 frameTime     = {};
   } meta;
 
   struct Settings {
@@ -146,10 +150,10 @@ Texture2D LoadTexture(const char* filepath) {
     false /* _hasMips*/,
     1,
     bgfx::TextureFormat::RGBA8,
-    BGFX_SAMPLER_MIN_POINT      //
-      | BGFX_SAMPLER_MAG_POINT  //
-      | BGFX_SAMPLER_MIP_POINT  //
-      | BGFX_SAMPLER_U_CLAMP    //
+    BGFX_SAMPLER_MIN_ANISOTROPIC      //
+      | BGFX_SAMPLER_MAG_ANISOTROPIC  //
+      | BGFX_SAMPLER_MIP_POINT        //
+      | BGFX_SAMPLER_U_CLAMP          //
       | BGFX_SAMPLER_V_CLAMP,
     memory
   );
@@ -431,16 +435,27 @@ void DrawTexture(DrawTextureData data) {
   }
 }
 
-u64 GetTime() {
-  return SDL_GetTicks();
+f64 GetTime() {
+  return (f64)SDL_GetTicks() / 1000.0;
+}
+
+f32 FrameTime() {
+  return (f32)(ge.meta.frameTime - ge.meta.prevFrameTime);
 }
 
 ///
 void EngineOnFrameStart() {
+  ge.meta.prevFrameTime = ge.meta.frameTime;
+  ge.meta.frameTime     = GetTime();
+
   auto ratioLogical            = (f32)LOGICAL_RESOLUTION.x / (f32)LOGICAL_RESOLUTION.y;
   auto ratioActual             = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
   ge.meta.screenToLogicalRatio = ratioActual / ratioLogical;
+
+  ge.meta.keyboardState = SDL_GetKeyboardState(NULL);
 }
+
+#define IsKeyDown(key) (ge.meta.keyboardState[SDL_SCANCODE_##key])
 
 ///
 void EngineApplyVignette() {
