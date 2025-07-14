@@ -46,12 +46,12 @@ struct Color {
 constexpr Color WHITE   = Color{};
 constexpr Color BLACK   = Color{0, 0, 0, u8_max};
 constexpr Color GRAY    = Color{u8_max / 2, u8_max / 2, u8_max / 2, u8_max};
-constexpr Color RED     = Color{u8_max / 2, 0, 0, u8_max};
-constexpr Color GREEN   = Color{0, u8_max / 2, 0, u8_max};
-constexpr Color BLUE    = Color{0, 0, u8_max / 2, u8_max};
-constexpr Color YELLOW  = Color{u8_max / 2, u8_max / 2, 0, u8_max};
-constexpr Color CYAN    = Color{0, u8_max / 2, u8_max / 2, u8_max};
-constexpr Color MAGENTA = Color{u8_max / 2, 0, u8_max / 2, u8_max};
+constexpr Color RED     = Color{u8_max, 0, 0, u8_max};
+constexpr Color GREEN   = Color{0, u8_max, 0, u8_max};
+constexpr Color BLUE    = Color{0, 0, u8_max, u8_max};
+constexpr Color YELLOW  = Color{u8_max, u8_max, 0, u8_max};
+constexpr Color CYAN    = Color{0, u8_max, u8_max, u8_max};
+constexpr Color MAGENTA = Color{u8_max, 0, u8_max, u8_max};
 
 constexpr Vector2Int ASSETS_REFERENCE_RESOLUTION = {1920, 1080};
 constexpr Vector2Int LOGICAL_RESOLUTION          = {1280, 720};
@@ -433,6 +433,56 @@ void DrawTexture(DrawTextureData data) {
 
     bgfx::submit(0, ge.meta.programDefaultTexture);
   }
+}
+
+///
+void DrawCircleLines(f32 centerX, f32 centerY, f32 radius, Color color_) {
+  const auto s = 0.70710678f;
+  Vector2    points[8]{
+    {centerX, centerY - radius},
+    {centerX + radius * s, centerY - radius * s},
+    {centerX + radius, centerY},
+    {centerX + radius * s, centerY + radius * s},
+    {centerX, centerY + radius},
+    {centerX - radius * s, centerY + radius * s},
+    {centerX - radius, centerY},
+    {centerX - radius * s, centerY - radius * s},
+  };
+
+  for (auto& point : points) {
+    point -= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
+    point /= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
+  }
+
+  bgfx::TransientVertexBuffer tvb{};
+  bgfx::allocTransientVertexBuffer(&tvb, 9, _PosColorVertex::layout);
+  {
+    auto                  color          = *(u32*)&color_;
+    const _PosColorVertex quadVertices[] = {
+      {points[0].x, points[0].y, 0.0f, color},
+      {points[1].x, points[1].y, 0.0f, color},
+      {points[2].x, points[2].y, 0.0f, color},
+      {points[3].x, points[3].y, 0.0f, color},
+      {points[4].x, points[4].y, 0.0f, color},
+      {points[5].x, points[5].y, 0.0f, color},
+      {points[6].x, points[6].y, 0.0f, color},
+      {points[7].x, points[7].y, 0.0f, color},
+      {points[0].x, points[0].y, 0.0f, color},
+    };
+
+    memcpy(tvb.data, quadVertices, sizeof(quadVertices));
+
+    bgfx::setVertexBuffer(0, &tvb);
+    bgfx::setState(
+      BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_PT_LINESTRIP
+    );
+
+    bgfx::submit(0, ge.meta.programDefaultQuad);
+  }
+}
+
+void DrawCircleLines(Vector2 center, f32 radius, Color color) {
+  DrawCircleLines(center.x, center.y, radius, color);
 }
 
 f64 GetTime() {
