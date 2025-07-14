@@ -307,7 +307,7 @@ def build_all_and_test():
 
 
 @command
-def run_in_debugger(target, build_type: BuildType):
+def run_in_debugger(target: BuildTarget, build_type: BuildType):
     platform = BuildPlatform.Win
 
     do_stop_debugger_ahk()
