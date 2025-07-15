@@ -1,6 +1,8 @@
 # The Game
 
-```
+```shell
+# Создать репозиторий в Github
+# Переименовать NEWGAME в github-название репозитория
 mkdir NEWGAME
 cd NEWGAME
 git init
@@ -25,4 +27,5 @@ msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Release
 cd ..
 cd ..
 
+# В github desktop поставить alias
 ```
