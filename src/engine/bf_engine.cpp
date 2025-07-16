@@ -11,6 +11,10 @@ using Vector2Int = glm::ivec2;
 using Vector3Int = glm::ivec3;
 using Vector4Int = glm::ivec4;
 
+bool Vector2Length(Vector2 v) {
+  return glm::length(v);
+}
+
 bool Vector2Equals(Vector2 v1, Vector2 v2) {
   return FloatEquals(v1.x, v2.x) && FloatEquals(v1.y, v2.y);
 }
