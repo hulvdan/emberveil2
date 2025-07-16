@@ -1,3 +1,4 @@
+import os
 import shutil
 import tempfile
 from collections import defaultdict
@@ -277,9 +278,18 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
 
     copy_from_base_dir = ART_DIR / "textures"
     for filepath in copy_from_base_dir.rglob("*.png"):
+        s1 = filepath.stat()
         to_path = TEMP_ART_DIR / filepath.relative_to(copy_from_base_dir)
+
+        if to_path.exists():
+            s2 = to_path.stat()
+            if s1.st_mtime_ns == s2.st_mtime_ns:
+                continue
+
         recursive_mkdir(to_path.parent)
+
         shutil.copy(filepath, to_path)
+        os.utime(to_path, ns=(s1.st_atime_ns, s1.st_mtime_ns))
 
     cache_filepath = TEMP_DIR / ".atlas.cache"
 
@@ -291,7 +301,10 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
     for filepath in Path(TEMP_ART_DIR).rglob("*.png"):
         cache_value = hash(cache_value + filepath.stat().st_mtime_ns)
 
-    if cache_value == old_cache_value:
+    should_regenerate_atlas = False
+    temp_atlas_path = TEMP_DIR / (path.stem + ".png")
+
+    if (cache_value == old_cache_value) and temp_atlas_path.exists():
         log.info("Skipped atlas generation - no images changed")
         timing_mark("skipped png generation")
     else:
@@ -300,6 +313,8 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
         run_command("free-tex-packer-cli --project {}".format(path))
 
         cache_filepath.write_text(str(cache_value))
+
+        should_regenerate_atlas = True
 
     # Подгоняем спецификацию под наш формат.
     json_path = TEMP_DIR / (path.stem + ".json")
@@ -336,9 +351,13 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
 
     recursive_mkdir(RESOURCES_DIR)
 
-    # Compressing and saving to 'resources/'.
-    picture = Image.open(TEMP_DIR / (path.stem + ".png"))
-    picture.save(RESOURCES_DIR / (path.stem + ".png"), optimize=True)
+    out_atlas_path = RESOURCES_DIR / (path.stem + ".png")
+    if not out_atlas_path.exists() or should_regenerate_atlas:
+        # Compressing and saving 'atlas.png' to 'resources/'.
+        picture = Image.open(temp_atlas_path)
+        picture.save(out_atlas_path, optimize=True)
+    else:
+        timing_mark("skipped optimized copying")
 
     return texture_name_2_id, {
         "atlas_textures": textures,
