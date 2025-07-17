@@ -11,6 +11,8 @@ using Vector2Int = glm::ivec2;
 using Vector3Int = glm::ivec3;
 using Vector4Int = glm::ivec4;
 
+const auto SQRT_2_OVER_2 = 0.70710678f;
+
 ///
 f32 Vector2Length(Vector2 v) {
   return glm::length(v);
@@ -62,7 +64,7 @@ Vector2 Vector2Reflect(Vector2 v, Vector2 normal) {
 Vector2 Vector2Rotate(Vector2 v, f32 angle) {
   auto c = cosf(angle);
   auto s = sinf(angle);
-  return {v.x * c + v.y * s, v.x * s + v.y * c};
+  return {v.x * c - v.y * s, v.x * s + v.y * c};
 }
 
 ///
@@ -523,7 +525,7 @@ void DrawTexture(DrawTextureData data) {
 
 ///
 void DrawCircleLines(f32 centerX, f32 centerY, f32 radius, Color color_) {
-  const auto s = 0.70710678f;
+  const auto s = SQRT_2_OVER_2;
   Vector2    points[8]{
     {centerX, centerY - radius},
     {centerX + radius * s, centerY - radius * s},
