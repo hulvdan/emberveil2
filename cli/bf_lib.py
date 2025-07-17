@@ -9,7 +9,7 @@ from enum import Enum
 from functools import wraps
 from pathlib import Path
 from time import time
-from typing import Any, Callable, Iterator, NoReturn, ParamSpec, TypeVar
+from typing import Any, Callable, Iterator, NoReturn, ParamSpec, Sequence, TypeVar
 
 import fnvhash
 
@@ -346,3 +346,70 @@ def generate_binary_file_header(genline, source_path: Path, variable_name: str) 
         chunk = ", ".join(f"0x{b:02x}" for b in data[i : i + 12])
         genline(f"    {chunk},")
     genline("};\n")
+
+
+def genenum(
+    genline,
+    name: str,
+    values: Sequence[str],
+    *,
+    enum_type: str | None = None,
+    add_count: bool = False,
+    hex_values: bool = False,
+    override_values: Sequence[Any] | None = None,
+    enumerate_values: bool = False,
+    add_to_string: bool = False,
+    comments: list[str] | None = None,
+) -> None:
+    assert not (hex_values and enumerate_values)
+    assert not (override_values and enumerate_values)
+
+    if add_count or hex_values:
+        assert add_count != hex_values
+
+    string = f"enum {name}"
+    if enum_type:
+        string += f" : {enum_type}"
+    string += " {"
+    genline(string)
+
+    def genline_with_comment(line: str, i: int) -> None:
+        if comments and comments[i]:
+            line += "  // " + comments[i]
+        genline(line)
+
+    if hex_values:
+        for i, value in enumerate(values):
+            genline_with_comment("  {}_{} = {},".format(name, value, hex(2**i)), i)
+    elif override_values:
+        i = 0
+        for value, value2 in zip(values, override_values):
+            genline_with_comment("  {}_{} = {},".format(name, value, value2), i)
+            i += 1
+    else:
+        for i, value in enumerate(values):
+            if enumerate_values:
+                genline_with_comment("  {}_{} = {},".format(name, value, i), i)
+            else:
+                genline_with_comment("  {}_{},".format(name, value), i)
+
+    if add_count:
+        genline("  {}_COUNT,".format(name))
+
+    genline("};\n")
+
+    if add_to_string:
+        genline(f"const char* {name}ToString({name} type) {{")
+        genline("  ASSERT(type >= 0);")
+        if add_count:
+            genline(f"  ASSERT(type <= {len(values)});")
+        else:
+            genline(f"  ASSERT(type < {len(values)});")
+        genline("  static constexpr const char* strings[] = {")
+        for value in values:
+            genline(f'    "{name}_{value}",')
+        if add_count:
+            genline(f'    "{name}_COUNT",')
+        genline("  };")
+        genline("  return strings[type];")
+        genline("};\n")
