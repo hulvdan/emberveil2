@@ -258,7 +258,6 @@ SDL_AppResult SDL_AppEvent(void* /* appstate */, SDL_Event* event) {
 
     auto width  = event->window.data1;
     auto height = event->window.data2;
-    LOGI("Window resized %d %d", width, height);
 
     bgfx::reset(width, height, BGFX_RESET_VSYNC);
     ge.meta.screenSize = {width, height};
