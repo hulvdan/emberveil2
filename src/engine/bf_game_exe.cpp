@@ -237,9 +237,6 @@ SDL_AppResult SDL_AppIterate(void* /* appstate */) {
 
   if (result == SDL_APP_CONTINUE) {
     EngineApplyStrips();
-
-    static u64 frame = 0;
-    bgfx::dbgTextPrintf(0, 1, 0x4f, "frame: %d", frame++);
     bgfx::frame(false);
   }
 
