@@ -189,13 +189,20 @@ struct EngineData {
     Camera     camera     = {};
     Vector2Int screenSize = {};
 
-    f32         screenToLogicalRatio = {};
-    f32         screenScale          = {};
-    const bool* keyboardState        = {};
+    f32 screenToLogicalRatio = {};
+    f32 screenScale          = {};
+
+    int         keyboardStateCount    = {};
+    const bool* keyboardState         = {};
+    bool*       keyboardStatePrev     = {};
+    bool*       keyboardStatePressed  = {};
+    bool*       keyboardStateReleased = {};
 
     u64 ticks         = {};
     f64 prevFrameTime = {};
     f64 frameTime     = {};
+
+    Arena _trashArena = {};
   } meta;
 
   struct Settings {
@@ -339,6 +346,15 @@ TEST_CASE ("ScaleToCover") {
 
 ///
 void InitializeEngine() {
+  ge.meta.keyboardState = SDL_GetKeyboardState(&ge.meta.keyboardStateCount);
+  ge.meta._trashArena   = MakeArena(3 * sizeof(bool) * ge.meta.keyboardStateCount);
+  ge.meta.keyboardStatePrev
+    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta.keyboardStateCount);
+  ge.meta.keyboardStatePressed
+    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta.keyboardStateCount);
+  ge.meta.keyboardStateReleased
+    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta.keyboardStateCount);
+
   ge.meta.atlas = LoadTexture("resources/atlas.png");
   glib          = BFGame::GetGameLibrary(LoadFileData("resources/gamelib.bin"));
   ge.meta.programDefaultTexture = LoadProgram(
@@ -664,10 +680,23 @@ void EngineOnFrameStart() {
   auto ratioActual             = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
   ge.meta.screenToLogicalRatio = ratioActual / ratioLogical;
 
-  ge.meta.keyboardState = SDL_GetKeyboardState(NULL);
+  FOR_RANGE (int, i, ge.meta.keyboardStateCount) {
+    ge.meta.keyboardStatePressed[i]
+      = !ge.meta.keyboardStatePrev[i] && ge.meta.keyboardState[i];
+    ge.meta.keyboardStateReleased[i]
+      = ge.meta.keyboardStatePrev[i] && !ge.meta.keyboardState[i];
+  }
+
+  memcpy(
+    (void*)ge.meta.keyboardStatePrev,
+    (void*)ge.meta.keyboardState,
+    sizeof(bool) * ge.meta.keyboardStateCount
+  );
 }
 
 #define IsKeyDown(key) (ge.meta.keyboardState[SDL_SCANCODE_##key])
+#define IsKeyPressed(key) (ge.meta.keyboardStatePressed[SDL_SCANCODE_##key])
+#define IsKeyReleased(key) (ge.meta.keyboardStateReleased[SDL_SCANCODE_##key])
 
 ///
 void EngineApplyVignette() {
