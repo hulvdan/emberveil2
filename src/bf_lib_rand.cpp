@@ -75,12 +75,25 @@ TEST_CASE ("RandInt") {
   }
 }
 
+template <typename T>
+void Shuffle(T* array, size_t n) {
+  if (n > 1) {
+    for (size_t i = n - 1; i > 0; i--) {
+      size_t j = Rand() % (i + 1);
+
+      T temp   = array[i];
+      array[i] = array[j];
+      array[j] = temp;
+    }
+  }
+}
+
+/*
 struct PerlinParams {
   int octaves    = {};
   f32 smoothness = {};
 };
 
-/*
 void CycledPerlin2D(
   View<u16>    output,
   Arena*       trashArena,

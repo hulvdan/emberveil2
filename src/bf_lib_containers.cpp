@@ -17,15 +17,15 @@ T ARRAY_POP(T* array, auto* arrayCount) {
   return result;
 }
 
-#define ARRAY_REVERSE(array, count)    \
-  STATEMENT({                          \
-    ASSERT((count) >= 0);              \
-    FOR_RANGE (int, l, (count) / 2) {  \
-      auto r         = (count)-l - 1;  \
-      auto t         = *((array) + l); \
-      *((array) + l) = *((array) + r); \
-      *((array) + r) = t;              \
-    }                                  \
+#define ARRAY_REVERSE(array, count)     \
+  STATEMENT({                           \
+    ASSERT((count) >= 0);               \
+    FOR_RANGE (int, l, (count) / 2) {   \
+      auto r         = (count) - l - 1; \
+      auto t         = *((array) + l);  \
+      *((array) + l) = *((array) + r);  \
+      *((array) + r) = t;               \
+    }                                   \
   })
 
 template <typename T>
@@ -181,6 +181,17 @@ struct View {
 
   T* end() {
     return base + count;
+  }
+
+  T ProgressToValue(f32 progress) {
+    ASSERT(progress >= 0);
+    ASSERT(progress < 1);
+
+    auto index = (int)((f32)count * progress);
+    ASSERT(index >= 0);
+    ASSERT(index < count);
+
+    return base[index];
   }
 };
 
