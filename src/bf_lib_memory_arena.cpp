@@ -12,6 +12,11 @@ Arena MakeArena(size_t size) {
   return {.size = size, .base = (u8*)malloc(size)};
 }
 
+void DeinitArena(Arena* arena) {
+  free(arena->base);
+  *arena = {};
+}
+
 #define ALLOCATE_FOR(arena, type) RCAST<type*>(Allocate_(arena, sizeof(type)))
 #define ALLOCATE_ARRAY(arena, type, count) \
   RCAST<type*>(Allocate_(arena, sizeof(type) * (count)))
