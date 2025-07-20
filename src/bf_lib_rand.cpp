@@ -88,6 +88,17 @@ void Shuffle(T* array, size_t n) {
   }
 }
 
+TEST_CASE ("Shuffle") {
+  int values_[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  VIEW_FROM_ARRAY_DANGER(values);
+
+  Shuffle(values.base, values.count);
+
+  FOR_RANGE (int, i, values.count) {
+    ASSERT(values.Contains(i));
+  }
+}
+
 /*
 struct PerlinParams {
   int octaves    = {};
