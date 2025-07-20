@@ -38,6 +38,25 @@ int ArrayFind(const T* base, int count, const T& value) {
 }
 
 template <typename T>
+int ArrayBinaryFind(const T* base, int count, const T& value) {
+  int low  = 0;
+  int high = count - 1;
+  while (low <= high) {
+    int mid = low + (high - low) / 2;
+
+    if (base[mid] == value)
+      return mid;
+
+    if (base[mid] < value)
+      low = mid + 1;
+    else
+      high = mid - 1;
+  }
+
+  return -1;
+}
+
+template <typename T>
 BF_FORCE_INLINE bool ArrayContains(const T* base, int count, const T& value) {
   return ArrayFind(base, count, value) != -1;
 }

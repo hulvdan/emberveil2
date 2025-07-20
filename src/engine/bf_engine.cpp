@@ -1,5 +1,10 @@
 #pragma once
 
+#if BF_DEBUG
+#  define STB_IMAGE_WRITE_IMPLEMENTATION
+#  include "stb_image_write.h"
+#endif
+
 #define LOGI(...) SDL_Log(__VA_ARGS__)
 #define LOGW(...) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 #define LOGE(...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
@@ -11,7 +16,8 @@ using Vector2Int = glm::ivec2;
 using Vector3Int = glm::ivec3;
 using Vector4Int = glm::ivec4;
 
-const auto SQRT_2_OVER_2 = 0.70710678f;
+constexpr auto SQRT_2        = 1.41421356237f;
+constexpr auto SQRT_2_OVER_2 = 0.70710678f;
 
 ///
 f32 Vector2Length(Vector2 v) {
@@ -539,6 +545,418 @@ void DrawTexture(DrawTextureData data) {
   }
 }
 
+struct Font {
+  bool loaded = false;
+
+  int size = {};
+
+  // Used for scaling font size.
+  // Specifying `size` 30 doesn't guarantee
+  // that letter `M` would be 30 px high.
+  f32 FIXME_sizeScale = {};
+
+  Texture2D atlasTexture = {};
+
+  const u8*         fileData = {};
+  stbtt_packedchar* chars    = {};
+  stbtt_fontinfo    info     = {};
+
+  int* codepoints      = {};
+  int  codepointsCount = {};
+  int  outlineWidth    = {};
+};
+
+///
+void UnloadFont(Font* font) {
+  ASSERT(font->loaded);
+  font->loaded = false;
+
+  UnloadFileData((void*)font->fileData);
+  font->fileData = nullptr;
+
+  free(font->chars);
+  font->chars = nullptr;
+
+  bgfx::destroy(font->atlasTexture.handle);
+  font->atlasTexture.handle = {};
+}
+
+struct LoadFontData {
+  const char* filepath = {};
+
+  int size            = {};
+  f32 FIXME_sizeScale = {};
+
+  int* codepoints      = {};
+  int  codepointsCount = {};
+
+  int outlineWidth = 0;  // Optional.
+};
+
+///
+Font LoadFont(LoadFontData data) {
+  ASSERT(data.filepath);
+  ASSERT(data.size >= 0);
+  ASSERT(data.codepoints);
+  ASSERT(data.codepointsCount > 0);
+  ASSERT(data.outlineWidth >= 0);
+
+  const Vector2Int atlasSize{1024, 1024};
+
+  auto oneChannelAtlasData = (u8*)malloc(atlasSize.x * atlasSize.y * 1);
+
+  Font font{
+    .loaded          = true,
+    .size            = data.size,
+    .FIXME_sizeScale = data.FIXME_sizeScale,
+    .atlasTexture{.size = atlasSize},
+    .fileData = (u8*)LoadFileData(data.filepath),
+    .chars = (stbtt_packedchar*)malloc(sizeof(stbtt_packedchar) * data.codepointsCount),
+    .codepoints      = data.codepoints,
+    .codepointsCount = data.codepointsCount,
+    .outlineWidth    = data.outlineWidth,
+  };
+
+  stbtt_InitFont(&font.info, font.fileData, 0);
+
+  stbtt_pack_context context{};
+
+  if (!stbtt_PackBegin(
+        &context,
+        oneChannelAtlasData,
+        atlasSize.x,
+        atlasSize.y,
+        0,
+        1 + 2 * data.outlineWidth,
+        nullptr
+      ))
+  {
+    LOGE("stbtt_PackBegin failed");
+    INVALID_PATH;
+    return {};
+  }
+
+  stbtt_pack_range range{
+    .font_size                   = (f32)data.size * data.FIXME_sizeScale,
+    .array_of_unicode_codepoints = data.codepoints,
+    .num_chars                   = data.codepointsCount,
+    .chardata_for_range          = font.chars,
+  };
+  if (!stbtt_PackFontRanges(&context, font.fileData, 0, &range, 1)) {
+    LOGE("stbtt_PackFontRanges failed");
+    INVALID_PATH;
+    return {};
+  }
+
+  stbtt_PackEnd(&context);
+
+  auto atlasData = (u8*)malloc(atlasSize.x * atlasSize.y * 4);
+
+  FOR_RANGE (int, i, atlasSize.x * atlasSize.y) {
+    atlasData[i * 4 + 0] = 255;
+    atlasData[i * 4 + 1] = 255;
+    atlasData[i * 4 + 2] = 255;
+    atlasData[i * 4 + 3] = oneChannelAtlasData[i];
+  }
+
+  if (data.outlineWidth) {
+    auto      dist_ = (f32*)malloc(atlasSize.x * atlasSize.y * sizeof(f32));
+    View<f32> dist{
+      .count = atlasSize.x * atlasSize.y,
+      .base  = dist_,
+    };
+
+    for (int i = 0; i < atlasSize.x * atlasSize.y; i++) {
+      if (oneChannelAtlasData[i])
+        dist[i] = 1 - (f32)oneChannelAtlasData[i] / 255.0f;
+      else
+        dist[i] = f32_inf;
+    }
+
+#define INDEX(y_, x_) ((y_) * atlasSize.x + (x_))
+
+    // First pass: top-left to bottom-right
+    for (int y = 0; y < atlasSize.y; y++) {
+      for (int x = 0; x < atlasSize.x; x++) {
+        int idx = INDEX(y, x);
+        // Check neighbor above
+        if (y > 0) {
+          auto t    = INDEX(y - 1, x);
+          f32  val  = dist[t] + 1;
+          dist[idx] = MIN(dist[idx], val);
+        }
+        // Check neighbor to the left
+        if (x > 0) {
+          auto t    = INDEX(y, x - 1);
+          f32  val  = dist[t] + 1;
+          dist[idx] = MIN(dist[idx], val);
+        }
+        // Check neighbor diagonally above-left
+        if ((y > 0) && (x > 0)) {
+          auto t    = INDEX(y - 1, x - 1);
+          f32  val  = dist[t] + SQRT_2;
+          dist[idx] = MIN(dist[idx], val);
+        }
+        // Check neighbor diagonally above-right
+        if ((y > 0) && (x < atlasSize.x - 1)) {
+          auto t    = INDEX(y - 1, x + 1);
+          f32  val  = dist[t] + SQRT_2;
+          dist[idx] = MIN(dist[idx], val);
+        }
+      }
+    }
+
+    // Second pass: bottom-right to top-left
+    for (int y = atlasSize.y - 1; y >= 0; y--) {
+      for (int x = atlasSize.x - 1; x >= 0; x--) {
+        int idx = INDEX(y, x);
+        // Check neighbor below
+        if (y + 1 < atlasSize.y) {
+          auto t    = INDEX(y + 1, x);
+          f32  val  = dist[t] + 1;
+          dist[idx] = MIN(dist[idx], val);
+        }
+        // Check neighbor to the right
+        if (x + 1 < atlasSize.x) {
+          auto t    = INDEX(y, x + 1);
+          f32  val  = dist[t] + 1;
+          dist[idx] = MIN(dist[idx], val);
+        }
+        // Check neighbor diagonally below-right
+        if ((y + 1 < atlasSize.y) && (x + 1 < atlasSize.x)) {
+          auto t    = INDEX(y + 1, x + 1);
+          f32  val  = dist[t] + SQRT_2;
+          dist[idx] = MIN(dist[idx], val);
+        }
+        // Check neighbor diagonally below-left
+        if ((y + 1 < atlasSize.y) && (x > 0)) {
+          auto t    = INDEX(y + 1, x - 1);
+          f32  val  = dist[t] + SQRT_2;
+          dist[idx] = MIN(dist[idx], val);
+        }
+      }
+    }
+
+#undef INDEX
+
+    FOR_RANGE (int, y, atlasSize.y) {
+      FOR_RANGE (int, x, atlasSize.x) {
+        auto t = y * atlasSize.x + x;
+
+        auto v               = oneChannelAtlasData[t];
+        atlasData[t * 4 + 0] = v;
+        atlasData[t * 4 + 1] = v;
+        atlasData[t * 4 + 2] = v;
+
+        if (dist[t] > 0) {
+          u8 alpha = 255;
+          if (dist[t] > (f32)data.outlineWidth - 1)
+            alpha = (u8)(255.0f * MAX((f32)data.outlineWidth - dist[t], 0));
+          atlasData[t * 4 + 3] = alpha;
+        }
+      }
+    }
+
+    FOR_RANGE (int, i, data.codepointsCount) {
+      auto& c = font.chars[i];
+      c.x0 -= data.outlineWidth;
+      c.x1 += data.outlineWidth;
+      c.y0 -= data.outlineWidth;
+      c.y1 += data.outlineWidth;
+    }
+
+    free(dist_);
+  }
+
+#if BF_DEBUG & !defined(SDL_PLATFORM_EMSCRIPTEN)
+  stbi_write_png("debugFontAtlas.png", atlasSize.x, atlasSize.y, 4, atlasData, 0);
+#endif
+  // TODO: Rework as bgfx::TextureFormat::A8 + appropriate fragment shader.
+  font.atlasTexture.handle = bgfx::createTexture2D(
+    atlasSize.x,
+    atlasSize.y,
+    false /* _hasMips*/,
+    1,
+    bgfx::TextureFormat::RGBA8,
+    BGFX_SAMPLER_MIN_ANISOTROPIC      //
+      | BGFX_SAMPLER_MAG_ANISOTROPIC  //
+      | BGFX_SAMPLER_MIP_POINT        //
+      | BGFX_SAMPLER_U_CLAMP          //
+      | BGFX_SAMPLER_V_CLAMP,
+    bgfx::copy(atlasData, atlasSize.x * atlasSize.y * 4)
+  );
+
+  free(oneChannelAtlasData);
+  free(atlasData);
+
+  return font;
+}
+
+// clang-format off
+static const u8 s_utf8d[364]{
+	// The first part of the table maps bytes to character classes that
+	// to reduce the size of the transition table and create bitmasks.
+	 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,  9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+	 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,  7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+	 8,8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+	10,3,3,3,3,3,3,3,3,3,3,3,3,4,3,3, 11,6,6,6,5,8,8,8,8,8,8,8,8,8,8,8,
+
+	// The second part is a transition table that maps a combination
+	// of a state of the automaton and a character class to a state.
+	 0,12,24,36,60,96,84,12,12,12,48,72, 12,12,12,12,12,12,12,12,12,12,12,12,
+	12, 0,12,12,12,12,12, 0,12, 0,12,12, 12,24,12,12,12,12,12,24,12,24,12,12,
+	12,12,12,12,12,12,12,24,12,12,12,12, 12,24,12,12,12,12,12,12,12,24,12,12,
+	12,12,12,12,12,12,12,36,12,36,12,12, 12,36,12,12,12,12,12,36,12,36,12,12,
+	12,36,12,12,12,12,12,12,12,12,12,12
+};
+// clang-format on
+
+///
+u32 utf8_decode(u32* _state, u8 _ch, u32* _codep) {
+  u32 byte = _ch;
+  u32 type = s_utf8d[byte];
+  *_codep  = (*_state != 0) ? (byte & 0x3fu) | (*_codep << 6) : (0xff >> type) & (byte);
+  *_state  = s_utf8d[256 + *_state + type];
+  return *_state;
+}
+
+struct DrawTextData {
+  Vector2 pos = {};
+  // TODO: Vector2 scale = {1, 1};
+  // TODO: Vector2 anchor = {0.5f, 0.5f};
+  const Font* font  = {};
+  const char* text  = {};
+  int         count = {};
+  Color       color = WHITE;
+  // TODO: Color outlineColor = BLACK + shader.
+};
+
+///
+void DrawText(DrawTextData data) {
+  ASSERT(data.count > 0);
+  ASSERT(data.font);
+  if (!data.font->loaded) {
+    LOGE("DrawText: font is not loaded!");
+    INVALID_PATH;
+    return;
+  }
+
+  auto& font = data.font;
+  auto  p    = data.text;
+
+  u32  codepoint{};
+  u32  state{};
+  auto remaining = data.count;
+
+  auto y = LOGICAL_RESOLUTION.y - data.pos.y;
+
+  for (; *p; ++p) {
+    if (utf8_decode(&state, *(u8*)p, &codepoint))
+      continue;
+
+    auto glyphIndex
+      = ArrayBinaryFind(font->codepoints, font->codepointsCount, (int)codepoint);
+    ASSERT(glyphIndex >= 0);
+
+    stbtt_aligned_quad q{};
+    stbtt_GetPackedQuad(
+      font->chars,
+      font->atlasTexture.size.x,
+      font->atlasTexture.size.y,
+      glyphIndex,
+      &data.pos.x,
+      // &data.pos.y,
+      &y,
+      &q,
+      1  // 1=opengl & d3d10+,0=d3d9
+    );
+
+    q.x0 -= font->outlineWidth;
+    q.x1 += font->outlineWidth;
+    q.y0 -= font->outlineWidth;
+    q.y1 += font->outlineWidth;
+
+    {
+      auto sx0 = q.s0;
+      auto sx1 = q.s1;
+      auto sy0 = q.t0;
+      auto sy1 = q.t1;
+
+      Vector2 topLeft{};
+      Vector2 topRight{};
+      Vector2 bottomLeft{};
+      Vector2 bottomRight{};
+
+      auto lrh    = (Vector2)LOGICAL_RESOLUTION / 2.0f;
+      topLeft     = Vector2{q.x0, q.y1} / lrh - Vector2One();
+      topRight    = Vector2{q.x1, q.y1} / lrh - Vector2One();
+      bottomLeft  = Vector2{q.x0, q.y0} / lrh - Vector2One();
+      bottomRight = Vector2{q.x1, q.y0} / lrh - Vector2One();
+
+      auto dy       = -(f32)font->size * 2.0f / (f32)LOGICAL_RESOLUTION.y;
+      topLeft.y     = dy - topLeft.y;
+      topRight.y    = dy - topRight.y;
+      bottomLeft.y  = dy - bottomLeft.y;
+      bottomRight.y = dy - bottomRight.y;
+
+      auto r = ge.meta.screenToLogicalRatio;
+      if (r >= 1) {  // Window is too wide.
+        const auto c = 1 - 1 / r;
+        topLeft.x -= topLeft.x * c;
+        topRight.x -= topRight.x * c;
+        bottomLeft.x -= bottomLeft.x * c;
+        bottomRight.x -= bottomRight.x * c;
+      }
+      else {  // Window is too high.
+        const auto c = 1 - r;
+        topLeft.y -= topLeft.y * c;
+        topRight.y -= topRight.y * c;
+        bottomLeft.y -= bottomLeft.y * c;
+        bottomRight.y -= bottomRight.y * c;
+      }
+
+      const auto color = *(u32*)&data.color;
+
+      const _PosColorTexVertex quadVertices[] = {
+        {topLeft.x, topLeft.y, 0.0f, color, sx0, sy1},
+        {topRight.x, topRight.y, 0.0f, color, sx1, sy1},
+        {bottomLeft.x, bottomLeft.y, 0.0f, color, sx0, sy0},
+        {bottomRight.x, bottomRight.y, 0.0f, color, sx1, sy0},
+      };
+
+      const u16 quadIndices[] = {0, 1, 2, 1, 3, 2};
+
+      bgfx::TransientVertexBuffer tvb{};
+      bgfx::TransientIndexBuffer  tib{};
+      bgfx::allocTransientVertexBuffer(&tvb, 4, _PosColorTexVertex::layout);
+      bgfx::allocTransientIndexBuffer(&tib, 6);
+      {
+        memcpy(tvb.data, quadVertices, sizeof(quadVertices));
+        memcpy(tib.data, quadIndices, sizeof(quadIndices));
+
+        bgfx::setVertexBuffer(0, &tvb);
+        bgfx::setIndexBuffer(&tib);
+        bgfx::setTexture(0, ge.meta.uniformTexture, font->atlasTexture.handle);
+        bgfx::setState(
+          BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA
+        );
+
+        bgfx::submit(0, ge.meta.programDefaultTexture);
+      }
+    }
+
+    remaining--;
+    if (!remaining)
+      break;
+  }
+
+  ASSERT_FALSE(state);  // The string is not well-formed.
+}
+
 ///
 void DrawCircleLines(f32 centerX, f32 centerY, f32 radius, Color color_) {
   const auto s = SQRT_2_OVER_2;
@@ -766,6 +1184,46 @@ void EngineApplyStrips() {
       bgfx::submit(0, ge.meta.programDefaultQuad);
     }
   }
+}
+
+///
+const char* TextFormat(const char* text, ...) {
+  // Maximum number of static buffers for text formatting.
+#ifndef MAX_TEXTFORMAT_BUFFERS
+#  define MAX_TEXTFORMAT_BUFFERS 4
+#endif
+
+// Maximum size of static text buffer.
+#ifndef MAX_TEXT_BUFFER_LENGTH
+#  define MAX_TEXT_BUFFER_LENGTH 1024
+#endif
+
+  // We create an array of buffers so strings
+  // don't expire until MAX_TEXTFORMAT_BUFFERS invocations.
+  static char buffers[MAX_TEXTFORMAT_BUFFERS][MAX_TEXT_BUFFER_LENGTH] = {0};
+  static int  index                                                   = 0;
+
+  char* currentBuffer = buffers[index];
+  memset(currentBuffer, 0, MAX_TEXT_BUFFER_LENGTH);  // Clear buffer before using.
+
+  va_list args;
+  va_start(args, text);
+  int requiredByteCount = vsnprintf(currentBuffer, MAX_TEXT_BUFFER_LENGTH, text, args);
+  va_end(args);
+
+  // If requiredByteCount is larger than the MAX_TEXT_BUFFER_LENGTH, then overflow occured
+  if (requiredByteCount >= MAX_TEXT_BUFFER_LENGTH) {
+    // Inserting "..." at the end of the string to mark as truncated
+    char* truncBuffer
+      = buffers[index] + MAX_TEXT_BUFFER_LENGTH - 4;  // Adding 4 bytes = "...\0"
+    sprintf(truncBuffer, "...");
+  }
+
+  index += 1;  // Move to next buffer for next function call
+  if (index >= MAX_TEXTFORMAT_BUFFERS)
+    index = 0;
+
+  return currentBuffer;
 }
 
 ///
