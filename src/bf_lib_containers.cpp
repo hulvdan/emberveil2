@@ -201,23 +201,53 @@ struct View {
   T* end() {
     return base + count;
   }
-
-  T ProgressToValue(f32 progress) {
-    ASSERT(progress >= 0);
-    ASSERT(progress < 1);
-
-    auto index = (int)((f32)count * progress);
-    ASSERT(index >= 0);
-    ASSERT(index < count);
-
-    return base[index];
-  }
 };
 
 #define VIEW_FROM_ARRAY_DANGER(name)                          \
   View<std::remove_reference_t<decltype(*(name##_))>>(name) { \
     .count = ARRAY_COUNT(name##_), .base = (name##_),         \
   }
+
+template <typename T, int _count>
+struct Array {
+  T                base[_count] = {};
+  static const int count        = _count;
+
+  T& operator[](int index) {
+    ASSERT(base != nullptr);
+    ASSERT(index >= 0);
+    ASSERT(index < _count);
+    return base[index];
+  }
+
+  void Zeroify() {
+    ASSERT(base != nullptr);
+    ASSERT(_count > 0);
+    memset(base, 0, sizeof(T) * _count);
+  }
+
+  int IndexOf(const T& value) const {
+    FOR_RANGE (int, i, _count) {
+      auto& v = base[i];
+      if (v == value)
+        return i;
+    }
+
+    return -1;
+  }
+
+  bool Contains(const T& value) const {
+    return IndexOf(value) != -1;
+  }
+
+  T* begin() {
+    return base;
+  }
+
+  T* end() {
+    return base + _count;
+  }
+};
 
 template <typename T>
 struct Vector {
