@@ -47,6 +47,12 @@ EMSCRIPTEN_KEEPALIVE void resize_from_js(int w, int h) {
   if (g_appstate.window)
     SDL_SetWindowSize(g_appstate.window, w, h);
 }
+
+///
+EMSCRIPTEN_KEEPALIVE void set_device_type_from_js(int type) {
+  ge.meta.deviceType = (DeviceType)type;
+  LOGI("Set device %d", type);
+}
 }
 
 ///

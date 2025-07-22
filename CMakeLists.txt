@@ -149,6 +149,7 @@ elseif ("${PLATFORM}" STREQUAL "Web")
             "-sMIN_WEBGL_VERSION=1"
             "-sMAX_WEBGL_VERSION=2"
             "-sALLOW_MEMORY_GROWTH=1"
+            "-sEXPORTED_RUNTIME_METHODS=['ccall']"
             --preload-file resources
     )
     set_target_properties(game
@@ -182,7 +183,6 @@ elseif ("${PLATFORM}" STREQUAL "Web")
                 "-O3"
                 "-sASSERTIONS=0"
                 "-sEXIT_RUNTIME=0"
-                "-sEXPORTED_RUNTIME_METHODS=['ccall']"
                 "--closure 1"
                 "--shell-file=${CMAKE_SOURCE_DIR}/vendor/shell_release.html"
         )

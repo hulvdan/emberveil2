@@ -179,9 +179,14 @@ struct _PosColorVertex {
 
 bgfx::VertexLayout _PosColorVertex::layout;
 
-struct Camera {
-  f32     zoom = 1;
-  Vector2 pos  = {};
+// struct Camera {
+//   f32     zoom = 1;
+//   Vector2 pos  = {};
+// };
+
+enum DeviceType {
+  DeviceType_DESKTOP,
+  DeviceType_MOBILE,
 };
 
 struct EngineData {
@@ -192,23 +197,34 @@ struct EngineData {
     bgfx::ProgramHandle programDefaultQuad    = {};
     bgfx::UniformHandle uniformTexture        = {};
 
-    Camera     camera     = {};
+    // Camera     camera     = {};
     Vector2Int screenSize = {};
 
     f32 screenToLogicalRatio = {};
     f32 screenScale          = {};
 
-    int         keyboardStateCount    = {};
-    const bool* keyboardState         = {};
-    bool*       keyboardStatePrev     = {};
-    bool*       keyboardStatePressed  = {};
-    bool*       keyboardStateReleased = {};
+    int         _keyboardStateCount    = {};
+    const bool* _keyboardState         = {};
+    bool*       _keyboardStatePrev     = {};
+    bool*       _keyboardStatePressed  = {};
+    bool*       _keyboardStateReleased = {};
+
+    u32     _mouseState         = {};
+    u32     _mouseStatePrev     = {};
+    u32     _mouseStatePressed  = {};
+    u32     _mouseStateReleased = {};
+    Vector2 _mousePos           = {};
 
     i64 ticks         = {};
     f64 prevFrameTime = {};
     f64 frameTime     = {};
 
     Arena _trashArena = {};
+
+    DeviceType deviceType = DeviceType_DESKTOP;
+
+    Vector2 _screenToLogicalScale = {};
+    Vector2 _screenToLogicalAdd   = {};
   } meta;
 
   struct Settings {
@@ -216,9 +232,9 @@ struct EngineData {
   } settings;
 } ge = {};
 
-void BeginMode2D(Camera camera) {}
-
-void EndMode2D() {}
+// void BeginMode2D(Camera camera) {}
+//
+// void EndMode2D() {}
 
 bgfx::ShaderHandle _LoadShader(const u8* data, u32 size) {
   return bgfx::createShader(bgfx::makeRef(data, size));
@@ -352,14 +368,14 @@ TEST_CASE ("ScaleToCover") {
 
 ///
 void InitializeEngine() {
-  ge.meta.keyboardState = SDL_GetKeyboardState(&ge.meta.keyboardStateCount);
-  ge.meta._trashArena   = MakeArena(3 * sizeof(bool) * ge.meta.keyboardStateCount);
-  ge.meta.keyboardStatePrev
-    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta.keyboardStateCount);
-  ge.meta.keyboardStatePressed
-    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta.keyboardStateCount);
-  ge.meta.keyboardStateReleased
-    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta.keyboardStateCount);
+  ge.meta._keyboardState = SDL_GetKeyboardState(&ge.meta._keyboardStateCount);
+  ge.meta._trashArena    = MakeArena(3 * sizeof(bool) * ge.meta._keyboardStateCount);
+  ge.meta._keyboardStatePrev
+    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta._keyboardStateCount);
+  ge.meta._keyboardStatePressed
+    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta._keyboardStateCount);
+  ge.meta._keyboardStateReleased
+    = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta._keyboardStateCount);
 
   ge.meta.atlas = LoadTexture("resources/atlas.png");
   glib          = BFGame::GetGameLibrary(LoadFileData("resources/gamelib.bin"));
@@ -501,7 +517,7 @@ void DrawTexture(DrawTextureData data) {
   bottomLeft.y /= LOGICAL_RESOLUTION.y / 2;
   bottomRight.y /= LOGICAL_RESOLUTION.y / 2;
 
-  auto r = ge.meta.screenToLogicalRatio;
+  const auto r = ge.meta.screenToLogicalRatio;
   if (r >= 1) {  // Window is too wide.
     const auto c = 1 - 1 / r;
     topLeft.x -= topLeft.x * c;
@@ -903,7 +919,7 @@ void DrawText(DrawTextData data) {
       bottomLeft.y  = dy - bottomLeft.y;
       bottomRight.y = dy - bottomRight.y;
 
-      auto r = ge.meta.screenToLogicalRatio;
+      const auto r = ge.meta.screenToLogicalRatio;
       if (r >= 1) {  // Window is too wide.
         const auto c = 1 - 1 / r;
         topLeft.x -= topLeft.x * c;
@@ -976,7 +992,7 @@ void DrawCircleLines(f32 centerX, f32 centerY, f32 radius, Color color_) {
     point /= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
   }
 
-  auto r = ge.meta.screenToLogicalRatio;
+  const auto r = ge.meta.screenToLogicalRatio;
   if (r >= 1) {  // Window is too wide.
     const auto c = 1 - 1 / r;
     for (auto& point : points)
@@ -1041,7 +1057,7 @@ void DrawRect(DrawRectData data) {
     point /= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
   }
 
-  auto r = ge.meta.screenToLogicalRatio;
+  const auto r = ge.meta.screenToLogicalRatio;
   if (r >= 1) {  // Window is too wide.
     const auto c = 1 - 1 / r;
     for (auto& point : points)
@@ -1095,7 +1111,7 @@ void DrawRectLines(DrawRectData data) {
     point /= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
   }
 
-  auto r = ge.meta.screenToLogicalRatio;
+  const auto r = ge.meta.screenToLogicalRatio;
   if (r >= 1) {  // Window is too wide.
     const auto c = 1 - 1 / r;
     for (auto& point : points)
@@ -1142,6 +1158,15 @@ f32 FrameTime() {
   return (f32)(ge.meta.frameTime - ge.meta.prevFrameTime);
 }
 
+void ResetPressedReleasedStates() {
+  ge.meta._mouseStatePressed  = 0;
+  ge.meta._mouseStateReleased = 0;
+  FOR_RANGE (int, i, ge.meta._keyboardStateCount) {
+    ge.meta._keyboardStatePressed[i]  = false;
+    ge.meta._keyboardStateReleased[i] = false;
+  }
+}
+
 ///
 void EngineOnFrameStart() {
   ge.meta.ticks         = (i64)SDL_GetTicks();
@@ -1152,23 +1177,73 @@ void EngineOnFrameStart() {
   auto ratioActual             = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
   ge.meta.screenToLogicalRatio = ratioActual / ratioLogical;
 
-  FOR_RANGE (int, i, ge.meta.keyboardStateCount) {
-    ge.meta.keyboardStatePressed[i]
-      = !ge.meta.keyboardStatePrev[i] && ge.meta.keyboardState[i];
-    ge.meta.keyboardStateReleased[i]
-      = ge.meta.keyboardStatePrev[i] && !ge.meta.keyboardState[i];
+  FOR_RANGE (int, i, ge.meta._keyboardStateCount) {
+    ge.meta._keyboardStatePressed[i]
+      = !ge.meta._keyboardStatePrev[i] && ge.meta._keyboardState[i];
+    ge.meta._keyboardStateReleased[i]
+      = ge.meta._keyboardStatePrev[i] && !ge.meta._keyboardState[i];
   }
 
   memcpy(
-    (void*)ge.meta.keyboardStatePrev,
-    (void*)ge.meta.keyboardState,
-    sizeof(bool) * ge.meta.keyboardStateCount
+    (void*)ge.meta._keyboardStatePrev,
+    (void*)ge.meta._keyboardState,
+    sizeof(bool) * ge.meta._keyboardStateCount
   );
+
+  ge.meta._mouseState = SDL_GetMouseState(&ge.meta._mousePos.x, &ge.meta._mousePos.y);
+  ge.meta._mousePos.y = ge.meta.screenSize.y - ge.meta._mousePos.y;
+
+  int mouseButtons[]{
+    SDL_BUTTON_LMASK,
+    SDL_BUTTON_MMASK,
+    SDL_BUTTON_RMASK,
+    SDL_BUTTON_X1MASK,
+    SDL_BUTTON_X2MASK,
+  };
+  ge.meta._mouseStatePressed  = 0;
+  ge.meta._mouseStateReleased = 0;
+  for (auto v : mouseButtons) {
+    ge.meta._mouseStatePressed
+      |= ((~(ge.meta._mouseStatePrev & v)) & (ge.meta._mouseState & v));
+    ge.meta._mouseStateReleased
+      |= ((ge.meta._mouseStatePrev & v) & (~(ge.meta._mouseState & v)));
+  }
+
+  ge.meta._mouseStatePrev = ge.meta._mouseState;
+
+  {
+    const auto r = ge.meta.screenToLogicalRatio;
+    const auto s = (Vector2)ge.meta.screenSize;
+
+    if (r >= 1) {
+      auto m = (f32)LOGICAL_RESOLUTION.x * (r - 1) / 2.0f;
+      ge.meta._screenToLogicalScale
+        = {(f32)(LOGICAL_RESOLUTION.x + 2 * m) / s.x, (f32)LOGICAL_RESOLUTION.y / s.y};
+      ge.meta._screenToLogicalAdd = {-m, 0};
+    }
+    else {
+      auto m = (f32)LOGICAL_RESOLUTION.y * (1.0f / r - 1) / 2.0f;
+      ge.meta._screenToLogicalScale
+        = {(f32)LOGICAL_RESOLUTION.x / s.x, ((f32)LOGICAL_RESOLUTION.y + 2 * m) / s.y};
+      ge.meta._screenToLogicalAdd = {0, -m};
+    }
+  }
 }
 
-#define IsKeyDown(key) (ge.meta.keyboardState[SDL_SCANCODE_##key])
-#define IsKeyPressed(key) (ge.meta.keyboardStatePressed[SDL_SCANCODE_##key])
-#define IsKeyReleased(key) (ge.meta.keyboardStateReleased[SDL_SCANCODE_##key])
+#define IsKeyDown(key_) (ge.meta._keyboardState[(SDL_SCANCODE_##key_)])
+#define IsKeyPressed(key_) (ge.meta._keyboardStatePressed[(SDL_SCANCODE_##key_)])
+#define IsKeyReleased(key_) (ge.meta._keyboardStateReleased[(SDL_SCANCODE_##key_)])
+
+// Values: L, M, R, X1, X2.
+#define IsMouseDown(button_) (ge.meta._mouseState & (SDL_BUTTON_##button_##MASK))
+#define IsMousePressed(button_) \
+  (ge.meta._mouseStatePressed & (SDL_BUTTON_##button_##MASK))
+#define IsMouseReleased(button_) \
+  (ge.meta._mouseStateReleased & (SDL_BUTTON_##button_##MASK))
+
+Vector2 GetMousePos() {
+  return ge.meta._mousePos;
+}
 
 ///
 void EngineApplyVignette() {

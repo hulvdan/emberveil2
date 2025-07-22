@@ -214,14 +214,12 @@ struct Array {
   static const int count        = _count;
 
   T& operator[](int index) {
-    ASSERT(base != nullptr);
     ASSERT(index >= 0);
     ASSERT(index < _count);
     return base[index];
   }
 
   void Zeroify() {
-    ASSERT(base != nullptr);
     ASSERT(_count > 0);
     memset(base, 0, sizeof(T) * _count);
   }
