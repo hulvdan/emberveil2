@@ -30,7 +30,7 @@ f32 Vector2LengthSqr(Vector2 v) {
 }
 
 ///
-f32 Vector2DotProduct(Vector2 v1, Vector2 v2) {
+f32 Vector2Dot(Vector2 v1, Vector2 v2) {
   return glm::dot(v1, v2);
 }
 
@@ -179,14 +179,40 @@ struct _PosColorVertex {
 
 bgfx::VertexLayout _PosColorVertex::layout;
 
-// struct Camera {
-//   f32     zoom = 1;
-//   Vector2 pos  = {};
-// };
-
 enum DeviceType {
   DeviceType_DESKTOP,
   DeviceType_MOBILE,
+};
+
+struct TouchID {
+  SDL_TouchID  _touchID  = {};
+  SDL_FingerID _fingerID = {};
+
+  bool operator==(const TouchID& other) const {
+    return (_touchID == other._touchID) && (_fingerID == other._fingerID);
+  }
+};
+
+constexpr TouchID InvalidTouchID = {};
+
+struct Touch {
+  TouchID _id         = {};
+  Vector2 _screenPos  = {};
+  Vector2 _screenDPos = {};
+};
+
+enum _TouchDataState : u32 {
+  _TouchDataState_DOWN     = 0x1,
+  _TouchDataState_PREV     = 0x2,
+  _TouchDataState_PRESSED  = 0x4,
+  _TouchDataState_RELEASED = 0x8,
+};
+
+struct _TouchData {
+  Vector2 _screenPos  = {};
+  Vector2 _screenDPos = {};
+  u64     _userData   = {};
+  u32     _state      = {};
 };
 
 struct EngineData {
@@ -197,7 +223,6 @@ struct EngineData {
     bgfx::ProgramHandle programDefaultQuad    = {};
     bgfx::UniformHandle uniformTexture        = {};
 
-    // Camera     camera     = {};
     Vector2Int screenSize = {};
 
     f32 screenToLogicalRatio = {};
@@ -214,6 +239,9 @@ struct EngineData {
     u32     _mouseStatePressed  = {};
     u32     _mouseStateReleased = {};
     Vector2 _mousePos           = {};
+
+    Vector<TouchID>    _touchIDs = {};
+    Vector<_TouchData> _touches  = {};
 
     i64 ticks         = {};
     f64 prevFrameTime = {};
@@ -232,12 +260,186 @@ struct EngineData {
   } settings;
 } ge = {};
 
-// void BeginMode2D(Camera camera) {}
-//
-// void EndMode2D() {}
+///
+void _OnTouchDown(Touch touch) {
+  for (auto id : ge.meta._touchIDs)
+    ASSERT(id != touch._id);
+
+  _TouchData d{
+    ._screenPos  = touch._screenPos,
+    ._screenDPos = touch._screenDPos,
+    ._state      = _TouchDataState_PRESSED | _TouchDataState_DOWN,
+  };
+  *ge.meta._touchIDs.Add() = touch._id;
+  *ge.meta._touches.Add()  = d;
+}
+
+///
+void _OnTouchUp(Touch touch) {
+  auto found = false;
+  // Marking as released. It will be removed on calling `ResetPressedReleasedStates`.
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    auto id = ge.meta._touchIDs[i];
+    if (id == touch._id) {
+      found        = true;
+      auto& t      = ge.meta._touches[i];
+      t._screenPos = touch._screenPos;
+      t._state |= _TouchDataState_RELEASED;
+      t._state &= ~_TouchDataState_DOWN;
+      break;
+    }
+  }
+  ASSERT(found);
+}
+
+///
+void _OnTouchMoved(Touch touch) {
+  auto found = false;
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == touch._id) {
+      found         = true;
+      auto& t       = ge.meta._touches[i];
+      t._screenPos  = touch._screenPos;
+      t._screenDPos = touch._screenDPos;
+      break;
+    }
+  }
+  ASSERT(found);
+}
+
+///
+void ResetPressedReleasedStates() {
+  ge.meta._mouseStatePressed  = 0;
+  ge.meta._mouseStateReleased = 0;
+  FOR_RANGE (int, i, ge.meta._keyboardStateCount) {
+    ge.meta._keyboardStatePressed[i]  = false;
+    ge.meta._keyboardStateReleased[i] = false;
+  }
+
+  // Removing previously released touches.
+  {
+    auto total = ge.meta._touches.count;
+    auto off   = 0;
+    FOR_RANGE (int, i, total) {
+      if (ge.meta._touches[i - off]._state & _TouchDataState_RELEASED) {
+        auto id = ge.meta._touchIDs[i - off];
+        ge.meta._touchIDs.UnstableRemoveAt(i - off);
+        ge.meta._touches.UnstableRemoveAt(i - off);
+        off++;
+      }
+    }
+  }
+
+  for (auto& t : ge.meta._touches)
+    t._state &= ~_TouchDataState_PRESSED;
+}
+
+///
+bool IsTouchPressed(TouchID id) {
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == id) {
+      auto& t = ge.meta._touches[i];
+      return t._state & _TouchDataState_PRESSED;
+    }
+  }
+  INVALID_PATH;  // Not found.
+  return false;
+}
+
+///
+bool IsTouchReleased(TouchID id) {
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == id) {
+      auto& t = ge.meta._touches[i];
+      return t._state & _TouchDataState_RELEASED;
+    }
+  }
+  INVALID_PATH;  // Not found.
+  return false;
+}
+
+///
+bool IsTouchDown(TouchID id) {
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == id) {
+      auto& t = ge.meta._touches[i];
+      return t._state & _TouchDataState_DOWN;
+    }
+  }
+  return false;
+}
+
+///
+TEST_CASE ("Touch controls") {
+  LAMBDA (TouchID, id, (SDL_TouchID i)) {
+    return {._touchID = i, ._fingerID = i};
+  };
+  LAMBDA (Touch, touch, (SDL_TouchID _id)) {
+    return {._id = id(_id)};
+  };
+
+  {
+    _OnTouchDown(touch(1));
+    _OnTouchMoved(touch(1));
+
+    ASSERT(IsTouchPressed(id(1)));
+    ASSERT(IsTouchDown(id(1)));
+    ASSERT(!IsTouchReleased(id(1)));
+    ResetPressedReleasedStates();
+
+    ASSERT(!IsTouchPressed(id(1)));
+    ASSERT(IsTouchDown(id(1)));
+    ASSERT(!IsTouchReleased(id(1)));
+    ResetPressedReleasedStates();
+
+    _OnTouchUp(touch(1));
+    ASSERT(!IsTouchPressed(id(1)));
+    ASSERT(!IsTouchDown(id(1)));
+    ASSERT(IsTouchReleased(id(1)));
+    ResetPressedReleasedStates();
+
+    ASSERT(ge.meta._touches.count == 0);
+  }
+
+  {
+    _OnTouchDown(touch(3));
+    _OnTouchDown(touch(4));
+    ASSERT(ge.meta._touches.count == 2);
+    ASSERT(ge.meta._touchIDs.count == 2);
+
+    ResetPressedReleasedStates();
+
+    _OnTouchUp(touch(4));
+    _OnTouchUp(touch(3));
+
+    ResetPressedReleasedStates();
+
+    ASSERT(ge.meta._touches.count == 0);
+    ASSERT(ge.meta._touchIDs.count == 0);
+  }
+
+  {
+    _OnTouchDown(touch(5));
+    _OnTouchDown(touch(6));
+
+    ResetPressedReleasedStates();
+
+    _OnTouchUp(touch(5));
+    _OnTouchUp(touch(6));
+
+    ResetPressedReleasedStates();
+
+    ASSERT(ge.meta._touches.count == 0);
+    ASSERT(ge.meta._touchIDs.count == 0);
+  }
+}
 
 bgfx::ShaderHandle _LoadShader(const u8* data, u32 size) {
   return bgfx::createShader(bgfx::makeRef(data, size));
+}
+
+View<TouchID> GetTouchIDs() {
+  return {.count = ge.meta._touchIDs.count, .base = ge.meta._touchIDs.base};
 }
 
 ///
@@ -368,6 +570,8 @@ TEST_CASE ("ScaleToCover") {
 
 ///
 void InitializeEngine() {
+  ge.meta._touches.Reserve(8);
+  ge.meta._touchIDs.Reserve(8);
   ge.meta._keyboardState = SDL_GetKeyboardState(&ge.meta._keyboardStateCount);
   ge.meta._trashArena    = MakeArena(3 * sizeof(bool) * ge.meta._keyboardStateCount);
   ge.meta._keyboardStatePrev
@@ -1158,16 +1362,6 @@ f32 FrameTime() {
   return (f32)(ge.meta.frameTime - ge.meta.prevFrameTime);
 }
 
-void ResetPressedReleasedStates() {
-  ge.meta._mouseStatePressed  = 0;
-  ge.meta._mouseStateReleased = 0;
-  FOR_RANGE (int, i, ge.meta._keyboardStateCount) {
-    ge.meta._keyboardStatePressed[i]  = false;
-    ge.meta._keyboardStateReleased[i] = false;
-  }
-}
-
-///
 void EngineOnFrameStart() {
   ge.meta.ticks         = (i64)SDL_GetTicks();
   ge.meta.prevFrameTime = ge.meta.frameTime;
@@ -1177,40 +1371,47 @@ void EngineOnFrameStart() {
   auto ratioActual             = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
   ge.meta.screenToLogicalRatio = ratioActual / ratioLogical;
 
-  FOR_RANGE (int, i, ge.meta._keyboardStateCount) {
-    ge.meta._keyboardStatePressed[i]
-      = !ge.meta._keyboardStatePrev[i] && ge.meta._keyboardState[i];
-    ge.meta._keyboardStateReleased[i]
-      = ge.meta._keyboardStatePrev[i] && !ge.meta._keyboardState[i];
+  /// Controls. Keyboard.
+  {
+    FOR_RANGE (int, i, ge.meta._keyboardStateCount) {
+      ge.meta._keyboardStatePressed[i]
+        = !ge.meta._keyboardStatePrev[i] && ge.meta._keyboardState[i];
+      ge.meta._keyboardStateReleased[i]
+        = ge.meta._keyboardStatePrev[i] && !ge.meta._keyboardState[i];
+    }
+
+    memcpy(
+      (void*)ge.meta._keyboardStatePrev,
+      (void*)ge.meta._keyboardState,
+      sizeof(bool) * ge.meta._keyboardStateCount
+    );
   }
 
-  memcpy(
-    (void*)ge.meta._keyboardStatePrev,
-    (void*)ge.meta._keyboardState,
-    sizeof(bool) * ge.meta._keyboardStateCount
-  );
+  /// Controls. Mouse.
+  {
+    ge.meta._mouseState = SDL_GetMouseState(&ge.meta._mousePos.x, &ge.meta._mousePos.y);
+    ge.meta._mousePos.y = ge.meta.screenSize.y - ge.meta._mousePos.y;
 
-  ge.meta._mouseState = SDL_GetMouseState(&ge.meta._mousePos.x, &ge.meta._mousePos.y);
-  ge.meta._mousePos.y = ge.meta.screenSize.y - ge.meta._mousePos.y;
+    int mouseButtons[]{
+      SDL_BUTTON_LMASK,
+      SDL_BUTTON_MMASK,
+      SDL_BUTTON_RMASK,
+      SDL_BUTTON_X1MASK,
+      SDL_BUTTON_X2MASK,
+    };
+    ge.meta._mouseStatePressed  = 0;
+    ge.meta._mouseStateReleased = 0;
+    for (auto v : mouseButtons) {
+      auto isDown  = ge.meta._mouseState & v;
+      auto wasDown = ge.meta._mouseStatePrev & v;
+      ge.meta._mouseStatePressed |= (~wasDown & isDown);
+      ge.meta._mouseStateReleased |= (wasDown & ~isDown);
+    }
 
-  int mouseButtons[]{
-    SDL_BUTTON_LMASK,
-    SDL_BUTTON_MMASK,
-    SDL_BUTTON_RMASK,
-    SDL_BUTTON_X1MASK,
-    SDL_BUTTON_X2MASK,
-  };
-  ge.meta._mouseStatePressed  = 0;
-  ge.meta._mouseStateReleased = 0;
-  for (auto v : mouseButtons) {
-    ge.meta._mouseStatePressed
-      |= ((~(ge.meta._mouseStatePrev & v)) & (ge.meta._mouseState & v));
-    ge.meta._mouseStateReleased
-      |= ((ge.meta._mouseStatePrev & v) & (~(ge.meta._mouseState & v)));
+    ge.meta._mouseStatePrev = ge.meta._mouseState;
   }
 
-  ge.meta._mouseStatePrev = ge.meta._mouseState;
-
+  /// Caching ScreenToLogical data.
   {
     const auto r = ge.meta.screenToLogicalRatio;
     const auto s = (Vector2)ge.meta.screenSize;
@@ -1241,7 +1442,49 @@ void EngineOnFrameStart() {
 #define IsMouseReleased(button_) \
   (ge.meta._mouseStateReleased & (SDL_BUTTON_##button_##MASK))
 
-Vector2 GetMousePos() {
+///
+Vector2 GetTouchScreenPos(TouchID id) {
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == id) {
+      return ge.meta._touches[i]._screenPos;
+    }
+  }
+  INVALID_PATH;  // Not found.
+  return {};
+}
+
+///
+Vector2 GetTouchScreenDPos(TouchID id) {
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == id)
+      return ge.meta._touches[i]._screenDPos;
+  }
+  INVALID_PATH;  // Not found.
+  return {};
+}
+
+///
+void SetTouchUserData(TouchID id, u64 userData) {
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == id) {
+      ge.meta._touches[i]._userData = userData;
+      return;
+    }
+  }
+  INVALID_PATH;  // Not found.
+}
+
+///
+u64 GetTouchUserData(TouchID id) {
+  FOR_RANGE (int, i, ge.meta._touches.count) {
+    if (ge.meta._touchIDs[i] == id)
+      return ge.meta._touches[i]._userData;
+  }
+  INVALID_PATH;  // Not found.
+  return 0;
+}
+
+Vector2 GetMouseScreenPos() {
   return ge.meta._mousePos;
 }
 

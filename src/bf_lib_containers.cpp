@@ -362,7 +362,8 @@ struct Vector {
     }
 
     if (maxCount < elementsCount) {
-      base     = (T*)REALLOC(sizeof(T) * elementsCount, sizeof(T) * maxCount, base);
+      // TODO test realloc
+      base     = (T*)realloc(base, sizeof(T) * elementsCount);
       maxCount = elementsCount;
     }
   }
