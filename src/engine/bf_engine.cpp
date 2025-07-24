@@ -150,9 +150,7 @@ constexpr Vector2Int ASSETS_REFERENCE_RESOLUTION = {1920, 1080};
 constexpr Vector2Int LOGICAL_RESOLUTION          = {1280, 720};
 
 struct Texture2D {
-  Vector2Int size = {};
-  void*      data = {};
-
+  Vector2Int          size   = {};
   bgfx::TextureHandle handle = {};
 };
 
@@ -457,9 +455,9 @@ Texture2D LoadTexture(const char* filepath) {
 
   Texture2D result{};
 
-  int channels = 0;
-  auto data  = stbi_load(filepath, &result.size.x, &result.size.y, &channels, 4);
-  ASSERT(result.data);
+  int  channels = 0;
+  auto data     = stbi_load(filepath, &result.size.x, &result.size.y, &channels, 4);
+  ASSERT(data);
 
   auto memory = bgfx::makeRef(data, result.size.x * result.size.y * 4);
 
@@ -477,7 +475,7 @@ Texture2D LoadTexture(const char* filepath) {
     memory
   );
 
-  stbi_image_free(result.data);
+  stbi_image_free(data);
 
   LOGI("Loaded texture '%s'!", filepath);
 
@@ -486,9 +484,7 @@ Texture2D LoadTexture(const char* filepath) {
 
 ///
 void UnloadTexture(Texture2D* texture) {
-  ASSERT(texture->data);
   bgfx::destroy(texture->handle);
-  stbi_image_free(texture->data);
   *texture = {};
 }
 
