@@ -117,6 +117,30 @@ set_target_properties(box2d
         COMPILE_WARNING_AS_ERROR OFF
 )
 
+# basisu_transcoder
+#-----------------------------------------------------------------------------------
+add_library(zstd STATIC
+    "${CMAKE_SOURCE_DIR}/vendor/basis_universal/zstd/zstd.h"
+    "${CMAKE_SOURCE_DIR}/vendor/basis_universal/zstd/zstd.c"
+)
+target_include_directories(zstd PUBLIC "${CMAKE_SOURCE_DIR}/vendor/basis_universal/zstd")
+add_library(basisu_transcoder STATIC
+    "${CMAKE_SOURCE_DIR}/vendor/basis_universal/transcoder/basisu_transcoder.h"
+    "${CMAKE_SOURCE_DIR}/vendor/basis_universal/transcoder/basisu_transcoder.cpp"
+)
+target_include_directories(basisu_transcoder
+    PUBLIC
+        "${CMAKE_SOURCE_DIR}/vendor/basis_universal/transcoder"
+)
+target_link_libraries(basisu_transcoder PRIVATE zstd)
+
+if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
+    target_compile_definitions(basisu_transcoder
+        PRIVATE
+            BASISU_FORCE_DEVEL_MESSAGES=1
+    )
+endif()
+
 # game
 #-----------------------------------------------------------------------------------
 add_executable(game "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
@@ -126,6 +150,7 @@ target_link_libraries(game
         bgfx
         box2d
         vendor_and_codegen
+        basisu_transcoder
 )
 target_include_directories(game
     PRIVATE
@@ -149,6 +174,7 @@ elseif ("${PLATFORM}" STREQUAL "Web")
             "-sMIN_WEBGL_VERSION=1"
             "-sMAX_WEBGL_VERSION=2"
             "-sALLOW_MEMORY_GROWTH=1"
+            "-sINITIAL_MEMORY=56426496"
             "-sEXPORTED_RUNTIME_METHODS=['ccall']"
             --preload-file resources
     )
@@ -229,6 +255,7 @@ target_link_libraries(tests
         bgfx
         box2d
         vendor_and_codegen
+        basisu_transcoder
 )
 target_include_directories(tests
     PRIVATE

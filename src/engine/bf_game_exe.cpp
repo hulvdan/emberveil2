@@ -1,3 +1,5 @@
+#include "basisu_transcoder.h"
+
 #include "doctest.h"
 
 #define SDL_MAIN_USE_CALLBACKS
@@ -30,6 +32,10 @@
 #include "shaders/quad_vs_100_es.bin"
 #include "shaders/quad_tex_fs_100_es.bin"
 #include "shaders/quad_tex_vs_100_es.bin"
+
+#define LOGI(...) SDL_Log(__VA_ARGS__)
+#define LOGW(...) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+#define LOGE(...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 
 #include "bf_lib.cpp"
 

@@ -7,6 +7,8 @@
 /.temp/
 /codegen/
 /compile_commands.json
+/resources/*.basis
 /resources/atlas.png
 /resources/gamelib.bin
+/vendor/basis_universal/bin/
 __pycache__/

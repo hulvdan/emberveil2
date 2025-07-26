@@ -161,6 +161,12 @@ int Ceilf(f32 value) {
   return result;
 }
 
+u64 CeilDivisionU64(u64 value, u64 divisor) {
+  ASSERT(value >= 0);
+  ASSERT(divisor > 0);
+  return value / divisor + ((value % divisor) != 0);
+}
+
 int CeilDivision(int value, int divisor) {
   ASSERT(value >= 0);
   ASSERT(divisor > 0);

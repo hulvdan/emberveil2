@@ -5,10 +5,6 @@
 #  include "stb_image_write.h"
 #endif
 
-#define LOGI(...) SDL_Log(__VA_ARGS__)
-#define LOGW(...) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
-#define LOGE(...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
-
 using Vector2    = glm::vec2;
 using Vector3    = glm::vec3;
 using Vector4    = glm::vec4;
@@ -432,62 +428,6 @@ TEST_CASE ("Touch controls") {
   }
 }
 
-bgfx::ShaderHandle _LoadShader(const u8* data, u32 size) {
-  return bgfx::createShader(bgfx::makeRef(data, size));
-}
-
-View<TouchID> GetTouchIDs() {
-  return {.count = ge.meta._touchIDs.count, .base = ge.meta._touchIDs.base};
-}
-
-///
-bgfx::ProgramHandle LoadProgram(const u8* vsh, u32 sizeVsh, const u8* fsh, u32 sizeFsh) {
-  return bgfx::createProgram(
-    _LoadShader(vsh, sizeVsh),
-    _LoadShader(fsh, sizeFsh),
-    /* destroyShaders */ true
-  );
-}
-
-///
-Texture2D LoadTexture(const char* filepath) {
-  LOGI("Loading texture '%s'...", filepath);
-
-  Texture2D result{};
-
-  int  channels = 0;
-  auto data     = stbi_load(filepath, &result.size.x, &result.size.y, &channels, 4);
-  ASSERT(data);
-
-  auto memory = bgfx::copy(data, result.size.x * result.size.y * 4);
-
-  result.handle = bgfx::createTexture2D(
-    result.size.x,
-    result.size.y,
-    false /* _hasMips*/,
-    1,
-    bgfx::TextureFormat::RGBA8,
-    BGFX_SAMPLER_MIN_ANISOTROPIC      //
-      | BGFX_SAMPLER_MAG_ANISOTROPIC  //
-      | BGFX_SAMPLER_MIP_POINT        //
-      | BGFX_SAMPLER_U_CLAMP          //
-      | BGFX_SAMPLER_V_CLAMP,
-    memory
-  );
-
-  stbi_image_free(data);
-
-  LOGI("Loaded texture '%s'!", filepath);
-
-  return result;
-}
-
-///
-void UnloadTexture(Texture2D* texture) {
-  bgfx::destroy(texture->handle);
-  *texture = {};
-}
-
 ///
 void* LoadFileData(const char* filepath, int* out_size = nullptr) {
   LOGI("Loading file data '%s'...", filepath);
@@ -534,6 +474,148 @@ void UnloadFileData(void* ptr) {
   free(ptr);
 }
 
+bgfx::ShaderHandle _LoadShader(const u8* data, u32 size) {
+  return bgfx::createShader(bgfx::makeRef(data, size));
+}
+
+View<TouchID> GetTouchIDs() {
+  return {.count = ge.meta._touchIDs.count, .base = ge.meta._touchIDs.base};
+}
+
+///
+bgfx::ProgramHandle LoadProgram(const u8* vsh, u32 sizeVsh, const u8* fsh, u32 sizeFsh) {
+  return bgfx::createProgram(
+    _LoadShader(vsh, sizeVsh),
+    _LoadShader(fsh, sizeFsh),
+    /* destroyShaders */ true
+  );
+}
+
+///
+Texture2D LoadTexture(const char* filepath, Vector2Int size) {
+  LOGI("Loading texture '%s'...", filepath);
+
+  Texture2D result{.size = size};
+
+  int  channels = 0;
+  int  dataSize = 0;
+  auto data     = LoadFileData(filepath, &dataSize);
+  ASSERT(data);
+
+  struct {
+    basist::transcoder_texture_format from                = {};
+    bgfx::TextureFormat::Enum         to                  = {};
+    int                               bytesPerPixel       = 1;
+    int                               divideBytesPerPixel = 1;
+  } formatPairs[]{
+    {
+      .from = basist::transcoder_texture_format::cTFBC7_RGBA,
+      .to   = bgfx::TextureFormat::BC7,
+    },
+    {
+      .from = basist::transcoder_texture_format::cTFBC3_RGBA,
+      .to   = bgfx::TextureFormat::BC3,
+    },
+    {
+      .from                = basist::transcoder_texture_format::cTFPVRTC1_4_RGBA,
+      .to                  = bgfx::TextureFormat::PTC14A,
+      .divideBytesPerPixel = 2,
+    },
+    {
+      .from                = basist::transcoder_texture_format::cTFPVRTC1_4_RGBA,
+      .to                  = bgfx::TextureFormat::PTC14A,
+      .divideBytesPerPixel = 2,
+    },
+    {
+      .from = basist::transcoder_texture_format::cTFETC2_RGBA,
+      .to   = bgfx::TextureFormat::ETC2A,
+    },
+    {
+      .from          = basist::transcoder_texture_format::cTFRGBA32,
+      .to            = bgfx::TextureFormat::RGBA8,
+      .bytesPerPixel = 4,
+    },
+  };
+
+  auto success = false;
+
+  for (const auto pair : formatPairs) {
+    LOGI(
+      "Trying to transcode '%s' to '%s' format...",
+      filepath,
+      basist::basis_get_format_name(pair.from)
+    );
+
+    if (!bgfx::isTextureValid(1, false, 1, pair.to, 0)) {
+      LOGI(
+        "'%s' is not supported on this platform", basist::basis_get_format_name(pair.from)
+      );
+      continue;
+    }
+
+    basist::ktx2_transcoder transcoder{};
+    transcoder.init(data, dataSize);
+
+    // if (!transcoder.validate_file_checksums(data, dataSize, false))
+    //   INVALID_PATH;
+    // if (!transcoder.validate_header(data, dataSize))
+    //   INVALID_PATH;
+    if (!transcoder.start_transcoding())
+      INVALID_PATH;
+
+    ASSERT_FALSE(transcoder.is_video());
+
+    basist::ktx2_image_level_info levelInfo{};
+    if (!transcoder.get_image_level_info(levelInfo, 0, 0, 0))
+      INVALID_PATH;
+
+    auto outDataSize = (size_t)levelInfo.m_total_blocks * (size_t)levelInfo.m_block_width
+                       * (size_t)levelInfo.m_block_height * (size_t)pair.bytesPerPixel
+                       / (size_t)pair.divideBytesPerPixel;
+    auto outData = (u8*)unmapped_alloc(outDataSize);
+
+    // Transcode to BC7 (basis_transcoder_format::cTFR_BC7)
+    bool ok = transcoder.transcode_image_level(
+      0,  // level_index
+      0,  // layer_index
+      0,  // face_index
+      (void*)outData,
+      (u32)outDataSize,
+      pair.from
+    );
+    ASSERT(ok);
+
+    if (ok) {
+      success       = true;
+      result.handle = bgfx::createTexture2D(
+        size.x,
+        size.y,
+        false /* _hasMips*/,
+        1,
+        pair.to,
+        BGFX_TEXTURE_NONE,
+        bgfx::copy(outData, outDataSize)
+      );
+      break;
+    }
+    unmapped_free(outData);
+  }
+
+  ASSERT(success);
+
+  UnloadFileData(data);
+
+  LOGI("Loaded texture '%s'!", filepath);
+
+  return result;
+}
+
+///
+void UnloadTexture(Texture2D* texture) {
+  bgfx::destroy(texture->handle);
+  *texture = {};
+}
+
 ///
 constexpr f32 ScaleToFit(Vector2 inner, Vector2 container) {
   f32 scaleX = container.x / inner.x;
@@ -568,6 +650,8 @@ TEST_CASE ("ScaleToCover") {
 
 ///
 void InitializeEngine() {
+  basist::basisu_transcoder_init();
+
   ge.meta._touches.Reserve(8);
   ge.meta._touchIDs.Reserve(8);
   ge.meta._keyboardState = SDL_GetKeyboardState(&ge.meta._keyboardStateCount);
@@ -579,8 +663,9 @@ void InitializeEngine() {
   ge.meta._keyboardStateReleased
     = ALLOCATE_ZEROS_ARRAY(&ge.meta._trashArena, bool, ge.meta._keyboardStateCount);
 
-  ge.meta.atlas = LoadTexture("resources/atlas.png");
-  glib          = BFGame::GetGameLibrary(LoadFileData("resources/gamelib.bin"));
+  glib = BFGame::GetGameLibrary(LoadFileData("resources/gamelib.bin"));
+  ge.meta.atlas
+    = LoadTexture("resources/atlas.basis", {glib->atlas_size_x(), glib->atlas_size_y()});
   ge.meta.programDefaultTexture = LoadProgram(
     quad_tex_vs_100_es,
     ARRAY_COUNT(quad_tex_vs_100_es),

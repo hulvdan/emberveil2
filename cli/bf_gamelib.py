@@ -29,7 +29,6 @@ from bf_lib import (
     timing,
     timing_mark,
 )
-from PIL import Image
 
 
 def texture_ids_recursive_transform(
@@ -212,11 +211,23 @@ def make_atlas(path: Path) -> tuple[dict[str, int], dict]:
 
     recursive_mkdir(RESOURCES_DIR)
 
-    out_atlas_path = RESOURCES_DIR / (path.stem + ".png")
+    out_atlas_path = RESOURCES_DIR / (path.stem + ".basis")
     if not out_atlas_path.exists() or should_regenerate_atlas:
-        # Compressing and saving 'atlas.png' to 'resources/'.
-        picture = Image.open(temp_atlas_path)
-        picture.save(out_atlas_path, optimize=True)
+        run_command(
+            [
+                PROJECT_DIR / "cli" / "basisu.exe",
+                "-uastc",
+                "-slower",
+                "-file",
+                temp_atlas_path,
+                "-output_file",
+                out_atlas_path,
+            ]
+        )
+
+        run_command(
+            [PROJECT_DIR / "cli" / "basisu.exe", "-validate", "-file", out_atlas_path]
+        )
     else:
         timing_mark("skipped optimized copying")
 

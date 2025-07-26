@@ -2,6 +2,9 @@
 
 #pragma once
 
+// Arena.
+// ============================================================
+
 struct Arena {
   size_t used = 0;
   size_t size = 0;
@@ -97,3 +100,71 @@ inline void Deallocate_(Arena* arena, size_t size) {
   };
 #define TEMP_USAGE_(arena, counter) TEMP_USAGE_WITH_COUNTER_(arena, counter)
 #define TEMP_USAGE(arena) TEMP_USAGE_(arena, __COUNTER__)
+
+// Unmapping allocator.
+// ============================================================
+
+#if BF_DEBUG && defined(SDL_PLATFORM_WINDOWS)
+#  define UNMAPPED_PAGES_MARGIN 4
+#  define UNMAPPING_ALLOCATOR_ERROR_ON_RIGHT 1
+
+#  include <windows.h>
+#  include <stdio.h>
+
+struct UnmappedAllocation {
+  void* result = {};
+  void* base   = {};
+};
+
+Vector<UnmappedAllocation> _g_unmappedAllocations = {};
+size_t                     _g_pageSize            = {};
+
+void* unmapped_alloc(size_t size) {
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    SYSTEM_INFO si{};
+    GetSystemInfo(&si);
+    _g_pageSize = si.dwPageSize;
+  }
+
+  auto pages  = CeilDivisionU64(size, _g_pageSize) + 2 * UNMAPPED_PAGES_MARGIN;
+  auto base   = VirtualAlloc(0, pages * _g_pageSize, MEM_RESERVE, PAGE_NOACCESS);
+  auto addr   = (void*)((u8*)base + UNMAPPED_PAGES_MARGIN * _g_pageSize);
+  auto result = VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
+
+  auto baseOffset = _g_pageSize * UNMAPPED_PAGES_MARGIN;
+#  if UNMAPPING_ALLOCATOR_ERROR_ON_RIGHT
+  baseOffset += pages * _g_pageSize - size;
+#  endif
+
+  *_g_unmappedAllocations.Add() = {
+    .result = (void*)((u8*)base + baseOffset),
+    .base   = base,
+  };
+  return result;
+}
+
+void unmapped_free(void* ptr) {
+  FOR_RANGE (int, i, _g_unmappedAllocations.count) {
+    auto& v = _g_unmappedAllocations[i];
+    if (v.result == ptr) {
+      VirtualFree((void*)v.base, 0, MEM_RELEASE);
+      _g_unmappedAllocations.UnstableRemoveAt(i);
+      return;
+    }
+  }
+  INVALID_PATH;
+}
+
+#else
+
+BF_FORCE_INLINE void* unmapped_alloc(size_t size) {
+  return malloc(size);
+}
+
+BF_FORCE_INLINE void unmapped_free(void* ptr) {
+  return free(ptr);
+}
+
+#endif
