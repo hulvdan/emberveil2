@@ -230,19 +230,6 @@ else()
     message(FATAL_ERROR "Not supported platform: ${PLATFORM}")
 endif()
 
-if ("${PLATFORM}" STREQUAL "Win")
-    add_custom_command(
-        TARGET game PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/curl/lib/win64
-            ${CMAKE_BINARY_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/openssl/1.1.1d/libs/win64
-            ${CMAKE_BINARY_DIR}
-        DEPENDS GameAnalytics
-    )
-endif()
-
 if (0)
     # TODO: ASAN
     if (NOT CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
@@ -294,6 +281,31 @@ target_compile_definitions(tests
 
 # GameAnalytics post setup.
 #-----------------------------------------------------------------------------------
+if ("${PLATFORM}" STREQUAL "Win")
+    add_custom_command(
+        TARGET game PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/curl/lib/win64
+            ${CMAKE_BINARY_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/openssl/1.1.1d/libs/win64
+            ${CMAKE_BINARY_DIR}
+        DEPENDS GameAnalytics
+    )
+    add_custom_command(
+        TARGET tests PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/curl/lib/win64
+            ${CMAKE_BINARY_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/openssl/1.1.1d/libs/win64
+            ${CMAKE_BINARY_DIR}
+        DEPENDS GameAnalytics
+    )
+endif()
+
+# Copying resources/.
+#-----------------------------------------------------------------------------------
 add_custom_command(
     TARGET game PRE_BUILD
     COMMAND ${CMAKE_COMMAND}
@@ -306,6 +318,7 @@ add_custom_command(
       -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:tests>/resources
     DEPENDS GameAnalytics
 )
+
 
 # Windows. Startup project in Visual Studio.
 #-----------------------------------------------------------------------------------

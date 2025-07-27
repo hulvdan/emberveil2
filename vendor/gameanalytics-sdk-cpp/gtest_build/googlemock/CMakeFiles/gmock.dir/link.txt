@@ -1,2 +1,0 @@
-C:\Users\user\dev\home\emsdk\upstream\emscripten\emar.bat qc C:\Users\user\dev\home\game-template\.cmake\Web_Debug\lib\libgmock.a "CMakeFiles/gmock.dir/src/gmock-all.cc.o"
-C:\Users\user\dev\home\emsdk\upstream\emscripten\emranlib.bat C:\Users\user\dev\home\game-template\.cmake\Web_Debug\lib\libgmock.a

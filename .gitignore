@@ -11,4 +11,5 @@
 /resources/atlas.png
 /resources/gamelib.bin
 /vendor/basis_universal/bin/
+/vendor/gameanalytics-sdk-cpp/gtest_build/
 __pycache__/
