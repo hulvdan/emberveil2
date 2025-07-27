@@ -187,7 +187,8 @@ elseif ("${PLATFORM}" STREQUAL "Web")
             "-sMIN_WEBGL_VERSION=1"
             "-sMAX_WEBGL_VERSION=2"
             "-sALLOW_MEMORY_GROWTH=1"
-            "-sINITIAL_MEMORY=56426496"
+            "-sINITIAL_MEMORY=56426496" # 63MB heap.
+            "-sSTACK_SIZE=1048576" # 1MB stack.
             "-sEXPORTED_RUNTIME_METHODS=['ccall']"
             --preload-file resources
     )
