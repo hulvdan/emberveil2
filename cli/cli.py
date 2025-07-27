@@ -102,23 +102,6 @@ def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType
             assert False, f"Not supported platform: {platform}"
 
 
-@timing
-def do_build_tests() -> None:
-    run_command(
-        rf"""
-        "{MSBUILD_PATH}" .cmake\vs17\game.sln
-        -v:minimal
-        -property:WarningLevel=3
-        -t:tests
-        """
-    )
-
-
-@timing
-def do_test() -> None:
-    run_command(str(CMAKE_TESTS_PATH), timeout_seconds=5)
-
-
 # @timing
 # def do_lint() -> None:
 #     files_to_lint = [
@@ -345,8 +328,9 @@ def test():
     build_type = BuildType.Debug
 
     do_cmake(platform, build_type)
+    do_generate()
     do_build(BuildTarget.tests, platform, build_type)
-    do_test()
+    run_command(str(CMAKE_TESTS_PATH), timeout_seconds=5)
 
 
 @command
