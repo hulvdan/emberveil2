@@ -88,7 +88,11 @@ def degrees_to_radians_recursive_transform(gamelib_recursed) -> None:
                     degrees_to_radians_recursive_transform(v)
 
 
-def _do_localization(gamelib) -> set[int]:
+def _do_localization(gamelib) -> tuple[set[int], dict[str, int]]:
+    gamelib["localization"] = {
+        "INVALID": "<< LOCALE NOT SET >>",
+        **gamelib["localization"],
+    }
     locale_to_index: dict[str, int] = {
         key: i for i, key in enumerate(gamelib["localization"])
     }
@@ -154,14 +158,15 @@ def _do_localization(gamelib) -> set[int]:
             if not translated.strip():
                 log.warn(f"Localization: {language}: Translation not found '{codename}'!")
 
+            if translated.strip() == "":
+                translated = "<< LOCALE NOT TRANSLATED >>"
+
             strings.append(translated)
             codepoints.update(ord(c) for c in translated)
 
         gamelib["localizations"].append({"strings": strings})
 
-    recursive_replace_transform(gamelib, "locale", "locales", locale_to_index)
-
-    return codepoints
+    return codepoints, locale_to_index
 
 
 @timing
@@ -174,7 +179,7 @@ def convert_gamelib_json_to_binary(
 
     gamelib |= atlas_data
 
-    localization_codepoints = _do_localization(gamelib)
+    localization_codepoints, locale_to_index = _do_localization(gamelib)
 
     for gamelib_processing_function in gamelib_processing_functions:
         gamelib_processing_function(genline, gamelib, localization_codepoints)
@@ -189,6 +194,7 @@ def convert_gamelib_json_to_binary(
         gamelib, transform_texture_id, transform_texture_ids_list
     )
     degrees_to_radians_recursive_transform(gamelib)
+    recursive_replace_transform(gamelib, "locale", "locales", locale_to_index)
 
     # Создание `gamelib.bin`.
     intermediate_path = TEMP_DIR / "gamelib.intermediate.jsonc"
