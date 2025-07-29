@@ -551,7 +551,7 @@ def git_bump_tag() -> None:
     run_command("git reset")
     run_command("git add src/bf_version.cpp")
     run_command(f'git commit -m "Release v1.{next_version}"')
-    run_command(f"git push --force")
+    run_command("git push --force")
 
     run_command(f"git tag v1.{next_version}")
     run_command(f"git push origin v1.{next_version}")
