@@ -1,7 +1,6 @@
 import os
 import subprocess
 import zipfile
-from datetime import datetime
 from itertools import product
 from pathlib import Path
 from typing import Callable, ParamSpec
@@ -19,6 +18,8 @@ from bf_lib import (
     BuildType,
     T,
     data_values,
+    git_bump_tag,
+    git_stash,
     global_timing_manager_instance,
     hash32,
     run_command,
@@ -310,21 +311,10 @@ def run_in_debugger(target: BuildTarget, build_type: BuildType):
 @command
 def update_template():
     subprocess.run("git fetch template", check=True, shell=True)
-    git_status_process = subprocess.run(
-        "git status --porcelain", check=True, shell=True, capture_output=True, text=True
-    )
-    git_status_text = git_status_process.stdout.strip()
-    should_stash = bool(git_status_text)
 
-    if should_stash:
-        stash_message = datetime.now().strftime("%Y%m%d-%H%M%S template-update autostash")
-        subprocess.run(f'git stash push -u -m "{stash_message}"', check=True, shell=True)
-
-    subprocess.run("git rebase template/template", check=True, shell=True)
-    subprocess.run("poetry install", check=True, shell=True)
-
-    if should_stash:
-        subprocess.run("git stash apply", check=True, shell=True)
+    with git_stash():
+        subprocess.run("git rebase template/template", check=True, shell=True)
+        subprocess.run("poetry install", check=True, shell=True)
 
 
 @command
@@ -340,6 +330,11 @@ def test():
 
 @command
 def deploy_itch():
+    git_bump_tag()
+
+    with git_stash():
+        build(BuildTarget.game, BuildPlatform.Web, BuildType.Release)
+
     zip_path = TEMP_DIR / "itch.zip"
 
     with zipfile.ZipFile(zip_path, "w") as archive:

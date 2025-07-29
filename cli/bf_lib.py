@@ -5,6 +5,7 @@ import subprocess
 import sys
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from functools import wraps
 from pathlib import Path
@@ -481,3 +482,66 @@ def recursive_replace_transform(
         raise AssertionError(message)
 
     return errors
+
+
+# Git.
+# ==================================================
+@contextmanager
+def git_stash():
+    process = subprocess.run(
+        "git status --porcelain", check=True, shell=True, capture_output=True, text=True
+    )
+    git_status_text = process.stdout.strip()
+    should_stash = bool(git_status_text)
+
+    if should_stash:
+        log.info("git_stash: stashing changes...")
+        stash_message = datetime.now().strftime("%Y%m%d-%H%M%S template-update autostash")
+        subprocess.run(f'git stash push -u -m "{stash_message}"', check=True, shell=True)
+    else:
+        log.info("git_stash: no changes - not stashing")
+
+    yield
+
+    if should_stash:
+        log.info("git_stash: applying previously stashed changes...")
+        subprocess.run("git stash apply", check=True, shell=True)
+
+
+def _git_get_current_commit_tag() -> str | None:
+    process = subprocess.run(
+        "git tag --points-at HEAD", check=True, shell=True, capture_output=True, text=True
+    )
+    return process.stdout.strip()
+
+
+def _git_get_current_branch() -> str:
+    return subprocess.run(
+        "git branch --show-current",
+        check=True,
+        shell=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def git_bump_tag() -> None:
+    assert _git_get_current_branch() == "master"
+
+    if _git_get_current_commit_tag():
+        log.info("Skipping bumping tag")
+        return
+
+    version_tags = (
+        subprocess.run(
+            'git tag -l "v1\\.*"', check=True, shell=True, capture_output=True, text=True
+        )
+        .stdout.strip()
+        .split("\n")
+    )
+    next_version = 0
+    if version_tags:
+        next_version = max(int(t.split(".")[-1]) for t in version_tags) + 1
+
+    run_command(f"git tag v1.{next_version}")
+    run_command(f"git push origin v1.{next_version}")
