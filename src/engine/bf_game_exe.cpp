@@ -49,7 +49,7 @@ using Vector4Int = glm::ivec4;
 #define LOGE(...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 
 #include "bf_lib.cpp"
-
+#include "bf_version.cpp"
 #include "engine/bf_engine.cpp"
 #include "game/bf_game.cpp"
 
