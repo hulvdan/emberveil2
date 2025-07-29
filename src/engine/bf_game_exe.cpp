@@ -18,6 +18,13 @@
 #include <bgfx/bgfx.h>
 #include "glm/glm.hpp"
 
+using Vector2    = glm::vec2;
+using Vector3    = glm::vec3;
+using Vector4    = glm::vec4;
+using Vector2Int = glm::ivec2;
+using Vector3Int = glm::ivec3;
+using Vector4Int = glm::ivec4;
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_RECT_PACK_IMPLEMENTATION

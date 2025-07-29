@@ -20,7 +20,7 @@ TEST_CASE ("Unlerp") {
 
 #define SIGN(v) (((v) > 0) ? 1 : (((v) < 0) ? -1 : 0))
 
-int Round(float value) {
+int Round(f32 value) {
   return lround(value);
 }
 
@@ -588,15 +588,9 @@ f32 EaseBounceSmall(f32 p) {
 #define OFFSET_IN_DIRECTION_OF_ANGLE_DEG(offset, angleDeg) \
   OFFSET_IN_DIRECTION_OF_ANGLE_RAD((offset), (angleDeg) * DEG2RAD)
 
-#ifndef RAYLIB_H
-
-float Lerp(float start, float end, float amount) {
+f32 Lerp(f32 start, f32 end, f32 amount) {
   return start + amount * (end - start);
 }
-
-#endif
-
-#ifdef RAYLIB_H
 
 Vector2 Vector2ExponentialDecay(Vector2 a, Vector2 b, f32 decay, f32 dt) {
   return b + (a - b) * expf(-decay * dt);
@@ -620,8 +614,6 @@ f32 InOutLerp(f32 from, f32 to, f32 elapsed, f32 totalDuration, f32 easeDuration
   ASSERT(elapsed <= totalDuration);
   return to;
 }
-
-#endif
 
 constexpr u32 EMPTY_HASH32 = 0x811c9dc5;
 

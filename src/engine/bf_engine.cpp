@@ -5,13 +5,6 @@
 #  include "stb_image_write.h"
 #endif
 
-using Vector2    = glm::vec2;
-using Vector3    = glm::vec3;
-using Vector4    = glm::vec4;
-using Vector2Int = glm::ivec2;
-using Vector3Int = glm::ivec3;
-using Vector4Int = glm::ivec4;
-
 constexpr auto SQRT_2        = 1.41421356237f;
 constexpr auto SQRT_2_OVER_2 = 0.70710678f;
 
