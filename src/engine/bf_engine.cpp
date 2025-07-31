@@ -247,6 +247,7 @@ struct EngineData {
   struct Settings {
     Color     vignetteAndStripsColor = BLACK;
     View<u64> bgfxDisabledCapabilities{};
+    u32       bgfxFillColor = 0x000000ff;
 
     struct {
       bool                     setup      = {};

@@ -241,12 +241,7 @@ SDL_AppResult SDL_AppInit(void** /* appstate */, int argc, char** argv) {
     bgfx::setDebug(BGFX_DEBUG_TEXT);
     // bgfx_set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030FF, 1.0f, 0);
 
-#if BF_RELEASE
-    auto color = 0x000000FF;
-#else
-    auto color = 0x600060FF;
-#endif
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR, color, 1.0f, 0);
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR, ge.settings.bgfxFillColor, 1.0f, 0);
   }
 
 #if defined(SDL_PLATFORM_EMSCRIPTEN)
