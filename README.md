@@ -1,8 +1,19 @@
 # The Game
 
+## Development Requirements
+
+- Install Visual Studio 17 2022
+  - with "Desktop development with C++"
+  - with "Game development with C++"
+  - with "C++ CMake tools for Windows"
+- Install pyenv
+- Install python 3.11.3
+
+## Bootstrap a new game
+
 ```shell
-# Создать репозиторий в Github
-# Переименовать NEWGAME в github-название репозитория
+# Create a repo in Github
+# Replace NEWGAME into github-name of the repo
 mkdir NEWGAME
 cd NEWGAME
 git init
@@ -26,5 +37,5 @@ make wasm
 cd ..
 cd ..
 
-# В github desktop поставить alias
+# Set alias in Github Desktop
 ```
