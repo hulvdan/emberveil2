@@ -7,7 +7,16 @@
   - with "Game development with C++"
   - with "C++ CMake tools for Windows"
 - Install pyenv
-- Install python 3.11.3
+  - `pyenv install 3.11.3`
+  - `pyenv global 3.11.3`
+  - `pip install poetry pre-commit`
+
+## Setup game-template
+
+```shell
+pre-commit install
+pre-commit install --install-hooks
+```
 
 ## Bootstrap a new game
 
