@@ -4,15 +4,15 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "Python Debugger: Current File with Arguments",
+            "name": "build game Win Debug",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
+            "program": "cli/cli.py",
             "console": "integratedTerminal",
             "args": [
                 "build","game","Win","Debug"
-                // "precommit", "src/bf_screen_gameplay.cpp"
             ]
         }
     ]
