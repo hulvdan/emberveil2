@@ -65,6 +65,7 @@ using Vector4Int = glm::ivec4;
 
 #include "bf_version.cpp"
 #include "hands/bf_codegen.cpp"
+#include "engine/bf_engine_config.cpp"
 #include "engine/bf_engine.cpp"
 #include "game/bf_game.cpp"
 
@@ -359,7 +360,7 @@ SDL_AppResult SDL_AppIterate(void* /* appstate */) {  ///
       }
     }
 
-    result = GameUpdate();
+    result = EngineUpdate();
     if (result == SDL_APP_CONTINUE) {
       ZoneScopedN("bgfx. bgfx::frame()");
       bgfx::frame(false);

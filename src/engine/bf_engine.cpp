@@ -354,6 +354,8 @@ struct RenderCommand {
 
 struct EngineData {
   struct Meta {
+    i64 frame = 0;
+
     Texture2D           atlas                 = {};
     Vector2Int          atlasSize             = {};
     bgfx::ProgramHandle programDefaultTexture = {};
@@ -2472,6 +2474,57 @@ const char* TextFormat(const char* text, ...) {  ///
     index = 0;
 
   return currentBuffer;
+}
+
+void GameInit();
+void GameReady();
+void GameFixedUpdate();
+void GameDraw();
+
+SDL_AppResult EngineUpdate() {  ///
+  ZoneScoped;
+
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    GameInit();
+    GameReady();
+  }
+
+  static f32 frameTime = 0.0f;
+  frameTime += FrameTime();
+
+  if (IsKeyDown(SDL_SCANCODE_F1) && IsKeyPressed(SDL_SCANCODE_F2))
+    ge.meta.debugEnabled = !ge.meta.debugEnabled;
+
+  if (ge.meta.debugEnabled) {
+    if (IsKeyPressed(SDL_SCANCODE_F3))
+      IncrementSetZeroOn(&ge.meta.localization, 2);
+
+    if (IsKeyPressed(SDL_SCANCODE_F4))
+      IncrementSetZeroOn((int*)&ge.meta.deviceType, (int)DeviceType_COUNT);
+  }
+
+  int simulated = 0;
+
+  while (frameTime >= FIXED_DT) {
+    frameTime -= FIXED_DT;
+
+    GameFixedUpdate();
+
+    ResetPressedReleasedStates();
+    ge.meta.frame++;
+
+    // Skipping frames if there are too many of them.
+    if (simulated++ >= FIXED_FPS / 2) {
+      frameTime = 0;
+      break;
+    }
+  }
+
+  GameDraw();
+
+  return SDL_APP_CONTINUE;
 }
 
 ///

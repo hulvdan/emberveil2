@@ -26,7 +26,19 @@ static const char* const g_gameVersion = BF_VERSION
 #endif
   ;
 
-void GamePreInit() {}
+struct GameData {
+  struct Meta {
+  } meta;
+};
+
+void GamePreInit() {  ///
+}
+
+void GameInit() {  ///
+}
+
+void GameFixedUpdate() {  ///
+}
 
 void GameDraw() {
   // Drawing debug text.
@@ -52,12 +64,4 @@ void GameDraw() {
 
     debugTextArena("ge.meta._arena", ge.meta._arena);
   }
-}
-
-SDL_AppResult GameUpdate() {
-  if (IsKeyDown(SDL_SCANCODE_F1) && IsKeyPressed(SDL_SCANCODE_F2))
-    ge.meta.debugEnabled = !ge.meta.debugEnabled;
-
-  GameDraw();
-  return SDL_APP_CONTINUE;
 }
