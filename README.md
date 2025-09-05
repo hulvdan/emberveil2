@@ -25,6 +25,13 @@
   choco install ffmpeg
   choco install llvm
   ```
+- Install `emscripten`:
+  ```shell
+  git clone https://github.com/emscripten-core/emsdk.git
+  cd emsdk
+  git pull
+  ./emsdk install latest
+  ```
 
 ## Contributing to game-template
 
