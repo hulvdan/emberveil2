@@ -21,6 +21,31 @@ pre-commit install --install-hooks
 poetry install
 ```
 
+## Zheka: Contributing to a specific game
+
+Open `cli/win_start.bat`
+
+Optionally create a desktop shortcut to it (RMB -> Send to -> Desktop (create shortcut))
+
+Execute the following in terminal
+
+```shell
+pip install poetry pre-commit
+pre-commit install
+pre-commit install --install-hooks
+poetry install
+cd vendor
+cd bgfx
+make
+msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Debug
+msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Release
+make wasm
+cd ..
+cd ..
+```
+
+Press F5 in cursor to build the game (there is also a configuration for building + launching tests)
+
 ## Bootstrap a new game
 
 ```shell
