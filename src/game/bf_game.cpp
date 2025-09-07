@@ -1,3 +1,32 @@
+// John Carmack on Inlined Code.
+// http://number-none.com/blow/blog/programming/2014/09/26/carmack-on-inlined-code.html
+//
+// «The real enemy addressed by inlining is unexpected dependency and mutation of state.»
+//
+// If you are going to make a lot of state changes, having them all happen inline does
+// have advantages; you should be made constantly aware of the full horror of what you are
+// doing. When it gets to be too much to take, figure out how to factor blocks out into
+// pure functions.
+//
+// To sum up:
+//
+// * If a function is only called from a single place, consider inlining it.
+//
+// * If a function is called from multiple places, see if it is possible to arrange
+//   for the work to be done in a single place, perhaps with flags, and inline that.
+//
+// * If there are multiple versions of a function,
+//   consider making a single function with more, possibly defaulted, parameters.
+//
+// * If the work is close to purely functional, with few references to global state,
+//   try to make it completely functional.
+//
+// * Try to use const on both parameters and functions when the function
+//   really must be used in multiple places.
+//
+// * Minimize control flow complexity and "area under ifs", favoring consistent
+//   execution paths and times over "optimally" avoiding unnecessary work.
+
 #pragma once
 
 const char* GetWindowTitle() {  ///
@@ -67,3 +96,5 @@ void GameDraw() {
     debugTextArena("ge.meta._arena", ge.meta._arena);
   }
 }
+
+///
