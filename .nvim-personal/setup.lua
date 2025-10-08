@@ -1,6 +1,7 @@
-vim.keymap.set("n", "gD", "<C-w>o:vs<CR>gd", opts)
-
 local opts = { remap = false, silent = true }
+
+vim.keymap.set("n", "gD", "<C-w>o:vs<CR>gd", opts)
+vim.keymap.set("n", "<leader>fc", ":e codegen/hands/bf_codegen.cpp<CR>", opts)
 
 function cli_command(cmd)
     return [[.venv\Scripts\ruff.exe check cli && .venv\Scripts\mypy.exe cli && .venv\Scripts\python.exe cli\cli.py ]]
@@ -48,6 +49,10 @@ function rebuild_tasks()
         { "f_run_in_debugger_tests", cli_command("run_in_debugger tests Debug") },
         { "u_update_template", cli_command("update_template") },
         { "t_test", cli_command("test") },
+        {
+            "y_test_python",
+            [[.venv\Scripts\ruff.exe check cli && .venv\Scripts\mypy.exe cli && poetry run pytest -x -vv]],
+        },
         { "r_build_all_and_test", cli_command("build_all_and_test") },
         {
             "z_serve_web_debug",
@@ -73,7 +78,7 @@ function rebuild_tasks()
         { "i_make_swatch", cli_command("make_swatch") },
         -- { "p_test_python", [[.venv\Scripts\pytest.exe]] },
         -- -- { "killall", [[start .nvim-personal\cli.ahk killall]] },
-        -- { "l_lint_cpp", cli_command("lint") },
+        { "l_lint_cpp", cli_command("lint") },
         -- { "k_lint_python", [[.venv\Scripts\ruff.exe check cli]] },
         -- { "z_clean_cmake", [[del /f/s/q .cmake]] },
         -- { "x_clean_temp", [[del /f/s/q .temp]] },
@@ -99,11 +104,19 @@ end, opts)
 
 -- Space + 0 -> Folding of `///`.
 vim.keymap.set("n", "<leader>0", function()
-    if (vim.bo.filetype == "cpp") or (vim.bo.filetype == "jsonc") or (vim.bo.filetype == "yaml") then
+    if
+        (vim.bo.filetype == "cpp")
+        or (vim.bo.filetype == "jsonc")
+        or (vim.bo.filetype == "yaml")
+        or (vim.bo.filetype == "python")
+    then
         vim.fn.execute([[silent!normal!zE]])
         vim.fn.execute([[silent!normal!mz]])
-        vim.fn.execute([[%g/\/\/\//silent!normal! $hhhhhzf%]])
-        vim.fn.execute([[%g/###/silent!normal! j$zf%]])
+        if (vim.bo.filetype == "cpp") or (vim.bo.filetype == "jsonc") then
+            vim.fn.execute([[%g/\/\/\//silent!normal! $bbzf%]])
+        else
+            vim.fn.execute([[%g/###/silent!normal! j$zf%]])
+        end
         vim.api.nvim_input("hl0$`z")
     end
 end, opts)
@@ -113,6 +126,9 @@ end, opts)
 ------------------------------------------------------------------------------------
 
 vim.fn.execute([[set errorformat=]])
+
+-- Processing python errors.
+vim.fn.execute([[set errorformat+=%f:%l:%c:\ %m]])
 
 -- Обработка ошибок web.
 vim.fn.execute([[set errorformat+=%f(%l\\,%c):\ %t%[A-z]%#\ %m]])
@@ -129,6 +145,7 @@ vim.fn.execute([[set errorformat+=\\\ %#%f(%l\\\,%c-%*[0-9]):\ %#%t%[A-z]%#\ %m]
 -- Обработка ошибок FlatBuffers.
 vim.fn.execute([[set errorformat+=\ \ %f(%l\\,\ %c\\):\ %m]])
 
+-- Not sure what these are for.
 vim.fn.execute([[set errorformat+=%f:%l:\ %m]])
 
 -- Форматтер.

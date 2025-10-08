@@ -94,7 +94,7 @@ ignore = [
 ]
 
 [tool.pytest.ini_options]
-addopts = ["-ra", "-q"]
+addopts = ["-ra"]
 pythonpath = "cli"
 testpaths = ["cli"]
 python_files = ["*.py"]

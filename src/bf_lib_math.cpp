@@ -2,17 +2,30 @@
 
 #pragma once
 
-#ifndef PI
-#  define PI 3.14159265358979323846
+#ifndef PI32
+#  define PI32 3.14159265358979323846f
+#endif
+#ifndef PI64
+#  define PI64 3.14159265358979323846
 #endif
 
-f32 Unlerp(f32 a, f32 b, f32 c) {  ///
-  auto result = (c - a) / (b - a);
-  return result;
+bool FloatEquals(f32 v1, f32 v2) {  ///
+  return abs(v1 - v2) < 0.00001f;
+}
+
+f32 Unlerp(f32 value, f32 rangeMin, f32 rangeMax) {  ///
+  ASSERT_IS_NUMBER(value);
+  ASSERT_IS_NUMBER(rangeMin);
+  ASSERT_IS_NUMBER(rangeMax);
+
+  auto v1 = (value - rangeMin);
+  auto v2 = (rangeMax - rangeMin);
+  return v1 / v2;
 }
 
 TEST_CASE ("Unlerp") {  ///
-  ASSERT(Unlerp(10.0f, 20.0f, 18.0f) == 0.8f);
+  auto v = Unlerp(18.0f, 10.0f, 20.0f);
+  ASSERT(FloatEquals(v, 0.8f));
 }
 
 #define REVOLUTIONS2RAD (3.14159265358979f)
@@ -52,6 +65,7 @@ TEST_CASE ("MoveTowards") {  ///
 
 //  [0; 360)
 f32 NormalizeAngleDeg0360(f32 a) {  ///
+  ASSERT_IS_NUMBER(a);
   a = fmodf(a, 360);
   if (a < 0)
     a += 360;
@@ -60,6 +74,7 @@ f32 NormalizeAngleDeg0360(f32 a) {  ///
 
 // [-180; 180)
 f32 NormalizeAngleDeg180180(f32 a) {  ///
+  ASSERT_IS_NUMBER(a);
   a = fmodf(a + 180, 360);
   if (a < 0)
     a += 360;
@@ -68,14 +83,20 @@ f32 NormalizeAngleDeg180180(f32 a) {  ///
 
 // [-180; 180)
 f32 AngleDiffDeg(f32 a, f32 b) {  ///
+  ASSERT_IS_NUMBER(a);
+  ASSERT_IS_NUMBER(b);
   return NormalizeAngleDeg180180(b - a);
 }
 
 f32 BisectAngleDeg(f32 a, f32 b) {  ///
+  ASSERT_IS_NUMBER(a);
+  ASSERT_IS_NUMBER(b);
   return NormalizeAngleDeg0360(a + AngleDiffDeg(a, b) * 0.5f);
 }
 
 bool FloatAngleDegreesEquals(f32 a1, f32 a2) {  ///
+  ASSERT_IS_NUMBER(a1);
+  ASSERT_IS_NUMBER(a2);
   a1 = NormalizeAngleDeg0360(a1);
   a2 = NormalizeAngleDeg0360(a2);
   return a1 == a2;
@@ -99,6 +120,9 @@ TEST_CASE ("BisectAngleDeg") {  ///
 }
 
 f32 MoveTowardsAngleDeg(f32 a1, f32 a2, f32 maxAngle) {  ///
+  ASSERT_IS_NUMBER(a1);
+  ASSERT_IS_NUMBER(a2);
+  ASSERT_IS_NUMBER(maxAngle);
   ASSERT(maxAngle >= 0);
 
   auto diff = AngleDiffDeg(a1, a2);
@@ -161,6 +185,16 @@ int Ceilf(f32 value) {  ///
   return result;
 }
 
+int Floor(f64 value) {  ///
+  auto result = (int)std::floor(value);
+  return result;
+}
+
+int Floorf(f32 value) {  ///
+  auto result = (int)std::floorf(value);
+  return result;
+}
+
 u64 CeilDivisionU64(u64 value, u64 divisor) {  ///
   ASSERT(value >= 0);
   ASSERT(divisor > 0);
@@ -183,31 +217,29 @@ TEST_CASE ("CeilDivision") {  ///
 f32 GetLesserAngle(f32 aa, f32 bb) {  ///
   auto a = aa;
   auto b = bb;
-  while (a < -PI)
-    a += 2 * PI;
-  while (b < -PI)
-    b += 2 * PI;
-  while (a >= PI)
-    a -= 2 * PI;
-  while (b >= PI)
-    b -= 2 * PI;
+  while (a < -PI32)
+    a += 2 * PI32;
+  while (b < -PI32)
+    b += 2 * PI32;
+  while (a >= PI32)
+    a -= 2 * PI32;
+  while (b >= PI32)
+    b -= 2 * PI32;
 
   if (abs(a) > abs(b))
     return bb;
   return aa;
 }
 
-bool FloatEquals(f32 v1, f32 v2) {  ///
-  return abs(v1 - v2) < 0.00001f;
-}
-
 TEST_CASE ("GetLesserAngle") {  ///
-  ASSERT(FloatEquals(GetLesserAngle(PI * 1 / 2, PI), PI * 1 / 2));
-  ASSERT(FloatEquals(GetLesserAngle(-PI * 1 / 2, PI), -PI * 1 / 2));
-  ASSERT(FloatEquals(GetLesserAngle(PI / 2, PI * 15 / 8), PI * 15 / 8));
+  ASSERT(FloatEquals(GetLesserAngle(PI32 * 1 / 2, PI32), PI32 * 1 / 2));
+  ASSERT(FloatEquals(GetLesserAngle(-PI32 * 1 / 2, PI32), -PI32 * 1 / 2));
+  ASSERT(FloatEquals(GetLesserAngle(PI32 / 2, PI32 * 15 / 8), PI32 * 15 / 8));
 }
 
 f32 Clamp(f32 value, f32 min, f32 max) {  ///
+  ASSERT_IS_NUMBER(min);
+  ASSERT_IS_NUMBER(max);
   ASSERT(min <= max);
   if (value < min)
     return min;
@@ -376,18 +408,22 @@ TEST_CASE ("IsPowerOf2") {  ///
 using Easing_function_t = f32 (*)(f32);
 
 f32 EaseLinear(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return p;
 }
 
 f32 EaseInQuad(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return p * p;
 }
 
 f32 EaseOutQuad(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return -(p * (p - 2));
 }
 
 f32 EaseInOutQuad(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5)
     return 2 * p * p;
   else
@@ -395,15 +431,18 @@ f32 EaseInOutQuad(f32 p) {  ///
 }
 
 f32 EaseInCubic(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return p * p * p;
 }
 
 f32 EaseOutCubic(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   f32 f = (p - 1);
   return f * f * f + 1;
 }
 
 f32 EaseInOutCubic(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5f)
     return 4 * p * p * p;
   else {
@@ -413,15 +452,18 @@ f32 EaseInOutCubic(f32 p) {  ///
 }
 
 f32 EaseInQuart(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return p * p * p * p;
 }
 
 f32 EaseOutQuart(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   f32 f = (p - 1);
   return f * f * f * (1 - p) + 1;
 }
 
 f32 EaseInOutQuart(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5)
     return 8 * p * p * p * p;
   else {
@@ -431,15 +473,18 @@ f32 EaseInOutQuart(f32 p) {  ///
 }
 
 f32 EaseInQuint(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return p * p * p * p * p;
 }
 
 f32 EaseOutQuint(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   f32 f = (p - 1);
   return f * f * f * f * f + 1;
 }
 
 f32 EaseInOutQuint(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5f)
     return 16 * p * p * p * p * p;
   else {
@@ -449,26 +494,32 @@ f32 EaseInOutQuint(f32 p) {  ///
 }
 
 f32 EaseInSin(f32 p) {  ///
-  return sinf((p - 1) * 2 * PI) + 1;
+  ASSERT_IS_NUMBER(p);
+  return sinf((p - 1) * 2 * PI32) + 1;
 }
 
 f32 EaseOutSin(f32 p) {  ///
-  return sinf(p * 2 * PI);
+  ASSERT_IS_NUMBER(p);
+  return sinf(p * 2 * PI32);
 }
 
 f32 EaseInOutSin(f32 p) {  ///
-  return 0.5f * (1 - cosf(p * PI));
+  ASSERT_IS_NUMBER(p);
+  return 0.5f * (1 - cosf(p * PI32));
 }
 
 f32 EaseInCirc(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return 1 - sqrtf(1 - (p * p));
 }
 
 f32 EaseOutCirc(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return sqrtf((2 - p) * p);
 }
 
 f32 EaseInOutCirc(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5f)
     return 0.5f * (1 - sqrtf(1 - 4 * (p * p)));
   else
@@ -476,14 +527,17 @@ f32 EaseInOutCirc(f32 p) {  ///
 }
 
 f32 EaseInExpo(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return (p == 0.0f) ? p : powf(2, 10 * (p - 1));
 }
 
 f32 EaseOutExpo(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return (p == 1.0f) ? p : 1 - powf(2, -10 * p);
 }
 
 f32 EaseInOutExpo(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p == 0.0f || p == 1.0f)
     return p;
   if (p < 0.5f)
@@ -493,42 +547,49 @@ f32 EaseInOutExpo(f32 p) {  ///
 }
 
 f32 EaseInElastic(f32 p) {  ///
-  return sinf(13 * 2 * PI * p) * powf(2, 10 * (p - 1));
+  ASSERT_IS_NUMBER(p);
+  return sinf(13 * 2 * PI32 * p) * powf(2, 10 * (p - 1));
 }
 
 f32 EaseOutElastic(f32 p) {  ///
-  return sinf(-13 * 2 * PI * (p + 1)) * powf(2, -10 * p) + 1;
+  ASSERT_IS_NUMBER(p);
+  return sinf(-13 * 2 * PI32 * (p + 1)) * powf(2, -10 * p) + 1;
 }
 
 f32 EaseInOutElastic(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5f)
-    return 0.5f * sinf(13 * 2 * PI * (2 * p)) * powf(2, 10 * ((2 * p) - 1));
+    return 0.5f * sinf(13 * 2 * PI32 * (2 * p)) * powf(2, 10 * ((2 * p) - 1));
   else
     return 0.5f
-           * (sinf(-13 * 2 * PI * ((2 * p - 1) + 1)) * powf(2, -10 * (2 * p - 1)) + 2);
+           * (sinf(-13 * 2 * PI32 * ((2 * p - 1) + 1)) * powf(2, -10 * (2 * p - 1)) + 2);
 }
 
 f32 EaseInBack(f32 p) {  ///
-  return p * p * p - p * sinf(p * PI);
+  ASSERT_IS_NUMBER(p);
+  return p * p * p - p * sinf(p * PI32);
 }
 
 f32 EaseOutBack(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   f32 f = (1 - p);
-  return 1 - (f * f * f - f * sinf(f * PI));
+  return 1 - (f * f * f - f * sinf(f * PI32));
 }
 
 f32 EaseInOutBack(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5f) {
     f32 f = 2 * p;
-    return 0.5f * (f * f * f - f * sinf(f * PI));
+    return 0.5f * (f * f * f - f * sinf(f * PI32));
   }
   else {
     f32 f = (1 - (2 * p - 1));
-    return 0.5f * (1 - (f * f * f - f * sinf(f * PI))) + 0.5f;
+    return 0.5f * (1 - (f * f * f - f * sinf(f * PI32))) + 0.5f;
   }
 }
 
 f32 EaseOutBounce(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 4 / 11.0f)
     return (121 * p * p) / 16.0f;
   else if (p < 8 / 11.0f)
@@ -540,10 +601,12 @@ f32 EaseOutBounce(f32 p) {  ///
 }
 
 f32 EaseInBounce(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   return 1 - EaseOutBounce(1 - p);
 }
 
 f32 EaseInOutBounce(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   if (p < 0.5f)
     return 0.5f * EaseInBounce(p * 2);
   else
@@ -551,6 +614,7 @@ f32 EaseInOutBounce(f32 p) {  ///
 }
 
 f32 EaseABitUpThenDown(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   /*
   [[[cog
   import numpy as np
@@ -562,6 +626,7 @@ f32 EaseABitUpThenDown(f32 p) {  ///
 }
 
 f32 EaseBounceThenZero(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   /*
   [[[cog
   import numpy as np
@@ -573,6 +638,7 @@ f32 EaseBounceThenZero(f32 p) {  ///
 }
 
 f32 EaseBounceSmall(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
   /*
   [[[cog
   import numpy as np
@@ -589,18 +655,46 @@ f32 EaseBounceSmall(f32 p) {  ///
   OFFSET_IN_DIRECTION_OF_ANGLE_RAD((offset), (angleDeg) * DEG2RAD)
 
 f32 Lerp(f32 start, f32 end, f32 amount) {  ///
+  ASSERT_IS_NUMBER(start);
+  ASSERT_IS_NUMBER(end);
+  ASSERT_IS_NUMBER(amount);
+
   return start + amount * (end - start);
 }
 
+f32 Remap(f32 v, f32 range1min, f32 range1max, f32 range2min, f32 range2max) {  ///
+  ASSERT_IS_NUMBER(v);
+  ASSERT_IS_NUMBER(range1min);
+  ASSERT_IS_NUMBER(range1max);
+  ASSERT_IS_NUMBER(range2min);
+  ASSERT_IS_NUMBER(range2max);
+
+  const auto t = Unlerp(v, range1min, range1max);
+  return Lerp(range2min, range2max, t);
+}
+
+TEST_CASE ("Remap") {  ///
+  ASSERT(FloatEquals(Remap(18.0f, 10.0f, 20.0f, 5.0f, 10.0f), 9.0f));
+}
+
 Vector2 Vector2ExponentialDecay(Vector2 a, Vector2 b, f32 decay, f32 dt) {  ///
+  ASSERT_IS_NUMBER(decay);
+  ASSERT_IS_NUMBER(dt);
   return b + (a - b) * expf(-decay * dt);
 }
 
 Vector3 Vector3ExponentialDecay(Vector3 a, Vector3 b, f32 decay, f32 dt) {  ///
+  ASSERT_IS_NUMBER(decay);
+  ASSERT_IS_NUMBER(dt);
   return b + (a - b) * expf(-decay * dt);
 }
 
 f32 InOutLerp(f32 from, f32 to, f32 elapsed, f32 totalDuration, f32 easeDuration) {  ///
+  ASSERT_IS_NUMBER(from);
+  ASSERT_IS_NUMBER(to);
+  ASSERT_IS_NUMBER(elapsed);
+  ASSERT_IS_NUMBER(totalDuration);
+  ASSERT_IS_NUMBER(easeDuration);
   ASSERT(easeDuration * 2 <= totalDuration);
 
   if (elapsed < easeDuration) {
@@ -647,6 +741,48 @@ void IncrementSetZeroOn(int* value, int mod) {  ///
 
   if (*value >= mod)
     *value = 0;
+}
+
+// NOTE: `start` and `end` values must be accessible via `step`!
+int ArithmeticSum(int start, int end, int step = 1) {  ///
+  ASSERT_FALSE((end - start) % step);
+  if (end >= start) {
+    ASSERT(step > 0);
+    return (start + end) * (end - start + 1) / 2;
+  }
+  else if (end < start) {
+    ASSERT(step < 0);
+    return (start + end) * (start - end + 1) / 2;
+  }
+  INVALID_PATH;
+  return 0;
+}
+
+TEST_CASE ("ArithmeticSum") {  ///
+  ASSERT(ArithmeticSum(1, 1) == 1);
+  ASSERT(ArithmeticSum(2, 2) == 2);
+  ASSERT(ArithmeticSum(1, 4) == 10);
+  ASSERT(ArithmeticSum(4, 1, -1) == 10);
+  ASSERT(ArithmeticSum(1, 5) == 15);
+  ASSERT(ArithmeticSum(2, 5) == 14);
+}
+
+// NOTE: `start` and `end` values must be accessible via `step`!
+f32 ArithmeticSumAverage(int start, int end, int step = 1) {  ///
+  int sum = ArithmeticSum(start, end, step);
+  if (start > end) {
+    auto t = start;
+    start  = end;
+    end    = t;
+  }
+  return (f32)sum / (f32)(end - start + 1);
+}
+
+TEST_CASE ("AverageOfArithmeticSum") {  ///
+  ASSERT(FloatEquals(ArithmeticSumAverage(1, 4), 2.5f));
+  ASSERT(FloatEquals(ArithmeticSumAverage(4, 1, -1), 2.5f));
+  ASSERT(FloatEquals(ArithmeticSumAverage(1, 5), 3.0f));
+  ASSERT(FloatEquals(ArithmeticSumAverage(2, 5), 3.5f));
 }
 
 ///

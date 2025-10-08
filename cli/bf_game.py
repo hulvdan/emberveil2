@@ -7,7 +7,7 @@ USAGE:
     data_values.languages = ["russian", "english"]
 
     @gamelib_processor
-    def process_gamelib(_genline, gamelib, _localization_codepoints: set[int]) -> None:
+    def _process_gamelib(_genline, gamelib, _localization_codepoints: set[int]) -> None:
         for tile in gamelib["tiles"]:
             tile.pop("type")
 """

@@ -120,8 +120,12 @@ EM_JS(void, js_LogWebGLVersion, (), {  ///
 
 class BGFXCallbackHandler : public bgfx::CallbackI {  ///
   public:
-  void fatal(const char* filePath, uint16_t line, bgfx::Fatal::Enum code, const char* str)
-    override {
+  void fatal(
+    const char* filePath,
+    uint16_t    line,
+    bgfx::Fatal::Enum /* code */,
+    const char* str
+  ) override {
     LOGE("bgfx fatal [%s:%d]: %s\n", filePath, line, str);
     INVALID_PATH;
     exit(EXIT_FAILURE);
@@ -147,11 +151,11 @@ class BGFXCallbackHandler : public bgfx::CallbackI {  ///
 
   void profilerEnd() override {}
 
-  uint32_t cacheReadSize(uint64_t id) override {
+  uint32_t cacheReadSize(uint64_t /* id */) override {
     return 0;
   }
 
-  bool cacheRead(uint64_t id, void* data, uint32_t size) override {
+  bool cacheRead(uint64_t /* id */, void* /* data */, uint32_t /* size */) override {
     return false;
   }
 
@@ -180,7 +184,7 @@ class BGFXCallbackHandler : public bgfx::CallbackI {  ///
   void captureFrame(const void* data, uint32_t size) override {}
 };
 
-SDL_AppResult SDL_AppInit(void** /* appstate */, int argc, char** argv) {  ///
+SDL_AppResult SDL_AppInit(void** /* appstate */, int /* argc */, char** /* argv */) {  ///
   ZoneScopedN("SDL_AppInit");
 
   GamePreInit();
@@ -212,6 +216,8 @@ SDL_AppResult SDL_AppInit(void** /* appstate */, int argc, char** argv) {  ///
       return SDL_APP_FAILURE;
     }
     g_appstate.window = window;
+
+    SDL_SetWindowMouseGrab(window, true);
   }
 
   {
@@ -332,31 +338,31 @@ SDL_AppResult SDL_AppIterate(void* /* appstate */) {  ///
       }
 
       // Background.
-      RenderGroup_Begin(RenderZ_SCREEN_BACKGROUND);
-      RenderGroup_SetSortY(0);
+      DrawGroup_Begin(DrawZ_SCREEN_BACKGROUND);
+      DrawGroup_SetSortY(0);
       {
-        RenderGroup_CommandRect({
+        DrawGroup_CommandRect({
           .pos  = pos,
           .size = size,
           .anchor{},
           .color = ge.settings.backgroundColor,
         });
       }
-      RenderGroup_End();
+      DrawGroup_End();
 
       // Fade.
       if (ge.settings.screenFade > 0) {
-        RenderGroup_Begin(RenderZ_SCREEN_FADE);
-        RenderGroup_SetSortY(0);
+        DrawGroup_Begin(DrawZ_SCREEN_FADE);
+        DrawGroup_SetSortY(0);
         {
-          RenderGroup_CommandRect({
+          DrawGroup_CommandRect({
             .pos  = pos,
             .size = size,
             .anchor{},
             .color = Fade(ge.settings.screenFadeColor, ge.settings.screenFade),
           });
         }
-        RenderGroup_End();
+        DrawGroup_End();
       }
     }
 
@@ -397,33 +403,41 @@ SDL_AppResult SDL_AppEvent(void* /* appstate */, SDL_Event* event) {
       SDL_SetWindowFullscreen(window, !fullscreen);
     } break;
 #endif
+
+    default:
+      break;
     }
   } break;
 
   case SDL_EVENT_FINGER_DOWN: {  ///
-    auto& t = event->tfinger;
+    const auto& d = event->tfinger;
     _OnTouchDown({
-      ._id{._touchID = t.touchID, ._fingerID = t.fingerID},
-      ._screenPos = Vector2{t.x, 1 - t.y} * (Vector2)ge.meta.screenSize,
+      ._id{._touchID = d.touchID, ._fingerID = d.fingerID},
+      ._screenPos = Vector2{d.x, 1 - d.y} * (Vector2)ge.meta.screenSize,
     });
   } break;
 
   case SDL_EVENT_FINGER_UP: {  ///
-    auto& t = event->tfinger;
+    const auto& d = event->tfinger;
     _OnTouchUp({
-      ._id{._touchID = t.touchID, ._fingerID = t.fingerID},
-      ._screenPos = Vector2{t.x, 1 - t.y} * (Vector2)ge.meta.screenSize,
+      ._id{._touchID = d.touchID, ._fingerID = d.fingerID},
+      ._screenPos = Vector2{d.x, 1 - d.y} * (Vector2)ge.meta.screenSize,
     });
   } break;
 
   case SDL_EVENT_FINGER_MOTION: {  ///
-    auto& t = event->tfinger;
+    const auto& d = event->tfinger;
     _OnTouchMoved({
-      ._id{._touchID = t.touchID, ._fingerID = t.fingerID},
-      ._screenPos  = Vector2{t.x, 1 - t.y} * (Vector2)ge.meta.screenSize,
-      ._screenDPos = Vector2{t.dx, -t.dy} * (Vector2)ge.meta.screenSize,
+      ._id{._touchID = d.touchID, ._fingerID = d.fingerID},
+      ._screenPos  = Vector2{d.x, 1 - d.y} * (Vector2)ge.meta.screenSize,
+      ._screenDPos = Vector2{d.dx, -d.dy} * (Vector2)ge.meta.screenSize,
     });
   } break;
+
+  case SDL_EVENT_MOUSE_WHEEL: {
+    const auto& d       = event->wheel;
+    ge.meta._mouseWheel = MIN(1, MAX(-1, (d.direction ? -1 : 1) * d.integer_y));
+  };
 
   case SDL_EVENT_WINDOW_FOCUS_LOST: {
     // Required by yandex.
@@ -434,14 +448,17 @@ SDL_AppResult SDL_AppEvent(void* /* appstate */, SDL_Event* event) {
   case SDL_EVENT_WINDOW_FOCUS_GAINED: {
     // Required by yandex.
     // TODO: check if it works.
-    ma_engine_set_volume(&ge.meta._soundManager.engine, 1);
+    ma_engine_set_volume(&ge.meta._soundManager.engine, ge.meta._soundManager.volume);
   } break;
+
+  default:
+    break;
   }
 
   return SDL_APP_CONTINUE;
 }
 
-void SDL_AppQuit(void* /* appstate */, SDL_AppResult result) {  ///
+void SDL_AppQuit(void* /* appstate */, SDL_AppResult /* result */) {  ///
   DeinitEngine();
 
   bgfx::shutdown();

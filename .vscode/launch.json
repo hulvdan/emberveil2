@@ -4,7 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "name": "debug-game.exe",
             "type": "lldb",
@@ -22,6 +21,14 @@
             "args": [],
             "cwd": ".cmake/vs17/Debug",
             "preLaunchTask": "build-tests",
+        },
+        {
+            "name": "python codegen Win Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "cli/cli.py",
+            "console": "integratedTerminal",
+            "args": "codegen Win Debug",
         },
     ],
 }

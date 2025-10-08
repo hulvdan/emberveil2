@@ -204,9 +204,14 @@ target_link_libraries(game
         vendor_and_codegen
         basisu_transcoder
         GameAnalytics
-        TracyClient
         miniaudio
 )
+if ("${PLATFORM}" STREQUAL "Win")
+    target_link_libraries(game
+        PRIVATE
+            TracyClient
+    )
+endif()
 target_include_directories(game
     PRIVATE
         "${CMAKE_SOURCE_DIR}/src"
@@ -369,6 +374,45 @@ add_custom_command(
     DEPENDS GameAnalytics
 )
 
+# Enabling Linting On Windows.
+#-----------------------------------------------------------------------------------
+if(WIN32 AND CMAKE_GENERATOR STREQUAL Ninja)
+    # add_compile_definitions(
+    #     BF_DEBUG
+    #     BF_LINT
+    #     BF_ENABLE_ASSERTS
+    # )
+
+    # # NOTE(2025-01-06): Херню строкой ниже поставил,
+    # # т.к. в какой-то момент перестала отрабатывать Ninja.
+    # # ref: https://cmake.org/pipermail/cmake/2016-June/063848.html
+    # set(CMAKE_C_COMPILE_OBJECT
+    #     "cmake\
+    #     -DWINE=${WINE}\
+    #     -DCOMPILER=<CMAKE_C_COMPILER>\
+    #     -DSOURCE=<SOURCE>\
+    #     -DINCLUDES=\"<INCLUDES>\"\
+    #     -DFLAGS=\"<DEFINES> <FLAGS>\"\
+    #     -DOBJECT=<OBJECT>"
+    # )
+
+    include_directories(
+        "${CMAKE_SOURCE_DIR}/vendor/"
+        "${CMAKE_SOURCE_DIR}/vendor/basis_universal/transcoder"
+        "${CMAKE_SOURCE_DIR}/vendor/bgfx/include"
+        "${CMAKE_SOURCE_DIR}/vendor/bx/include"
+        "${CMAKE_SOURCE_DIR}/vendor/bimg/include"
+        "${CMAKE_SOURCE_DIR}/vendor/box2d/include"
+        "${CMAKE_SOURCE_DIR}/vendor/bx/include"
+        "${CMAKE_SOURCE_DIR}/vendor/flatbuffers"
+        "${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/include"
+        "${CMAKE_SOURCE_DIR}/vendor/glm"
+        "${CMAKE_SOURCE_DIR}/vendor/miniaudio/include"
+        "${CMAKE_SOURCE_DIR}/vendor/SDL3/include"
+        # "${CMAKE_SOURCE_DIR}/vendor/tracy"
+        "c:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um"
+    )
+endif()
 
 # Windows. Startup project in Visual Studio.
 #-----------------------------------------------------------------------------------

@@ -1,14 +1,19 @@
 import csv
+import json
 import os
 import shutil
 import tempfile
 from collections import defaultdict
+from dataclasses import dataclass
+from enum import Enum, unique
+from functools import partial
+from itertools import groupby
 from math import radians
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias
 
 import pydub
-import pyjson5 as json
+import pytest
 import yaml
 from bf_game import *  # noqa
 from bf_lib import (
@@ -30,10 +35,10 @@ from bf_lib import (
     data_values,
     gamelib_processing_functions,
     genenum,
-    hash32_file_utf8,
     log,
     recursive_mkdir,
     recursive_replace_transform,
+    replace_double_spaces,
     run_command,
     stable_hash,
     timing,
@@ -94,87 +99,434 @@ def degrees_to_radians_recursive_transform(gamelib_recursed) -> None:
                     degrees_to_radians_recursive_transform(v)
 
 
-def _do_localization(gamelib) -> tuple[set[int], dict[str, int]]:
-    gamelib["localization"] = {
-        "INVALID": "<< LOCALE NOT SET >>",
-        **gamelib["localization"],
-    }
-    locale_to_index: dict[str, int] = {
-        key: i for i, key in enumerate(gamelib["localization"])
-    }
-    gamelib["localization"] = list(gamelib["localization"].values())
-    gamelib["localizations"] = [{"strings": gamelib.pop("localization")}]
+def _get_placeholder_from_string(string: str) -> str | None:
+    if string.startswith("{") and string.endswith("}"):
+        return string[1:-1]
+    return None
 
-    csv_columns = ("id", "translated", "original", "comment")
 
+@unique
+class BrokenStringDatumType(Enum):
+    INVALID = 0
+    STRING = 1
+    PLACEHOLDER = 2
+    SPACE = 3
+
+
+@dataclass
+class BrokenStringDatum:
+    type: BrokenStringDatumType
+    string: str | None
+
+
+StringGroup: TypeAlias = list[BrokenStringDatum]
+StringLine: TypeAlias = list[StringGroup]
+
+
+class StringMalformedError(Exception): ...
+
+
+def process_group(string: str) -> StringGroup:
+    assert string
+    assert " " not in string
+    assert "\t" not in string
+    assert "\n" not in string
+
+    result: StringGroup = []
+
+    while "{" in string:
+        l = string.find("{")
+        r = string.find("}")
+        if l:
+            result.append(
+                BrokenStringDatum(type=BrokenStringDatumType.STRING, string=string[:l])
+            )
+        result.append(
+            BrokenStringDatum(
+                type=BrokenStringDatumType.PLACEHOLDER, string=string[l + 1 : r]
+            )
+        )
+        string = string[r + 1 :]
+
+    if string:
+        result.append(BrokenStringDatum(type=BrokenStringDatumType.STRING, string=string))
+
+    return result
+
+
+def process_string(string: str) -> list[StringLine]:
+    string = replace_double_spaces(string.strip().replace("\t", " ").replace("\r", ""))
+
+    result: list[StringLine] = []
+
+    sp = string.split("\n")
+    if not any(sp):
+        return result
+
+    for line in sp:
+        line_result: list[StringGroup] = []
+        result.append(line_result)
+
+        try:
+            groups = line.split(" ")
+            for i, group in enumerate(groups):
+                if not line:
+                    continue
+                g = process_group(group)
+                if i < len(groups) - 1:
+                    g.append(
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None)
+                    )
+                line_result.append(g)
+
+        except StringMalformedError:
+            print(f"Line is malformed! `{line}`")
+            raise
+
+    return result
+
+
+def test_process_group():
+    assert process_group("a") == [
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a")
+    ]
+    assert process_group("ab") == [
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ab")
+    ]
+    assert process_group("a,b") == [
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a,b")
+    ]
+    assert process_group("a{ABOBA}") == [
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a"),
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="ABOBA"),
+    ]
+    assert process_group("{ABOBA}a") == [
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="ABOBA"),
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a"),
+    ]
+    assert process_group("+{ABOBA},") == [
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="+"),
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="ABOBA"),
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string=","),
+    ]
+    assert process_group("{ABOBA},") == [
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="ABOBA"),
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string=","),
+    ]
+    assert process_group("{A}{B}") == [
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="A"),
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="B"),
+    ]
+    assert process_group("{A}b{C}") == [
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="A"),
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="b"),
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="C"),
+    ]
+    assert process_group("{AB}cd{EF}") == [
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="AB"),
+        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="cd"),
+        BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="EF"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("string", "result"),
+    [
+        ("", []),
+        ("\n\n", []),
+        ("\t\t", []),
+        (
+            "ab",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ab"),
+                    ],
+                ],
+            ],
+        ),
+        (
+            "a. b",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a."),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="b"),
+                    ],
+                ],
+            ],
+        ),
+        (
+            "ab ke",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ab"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ke"),
+                    ],
+                ],
+            ],
+        ),
+        (
+            "ab\tke",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ab"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ke"),
+                    ],
+                ],
+            ],
+        ),
+        (
+            " ab  ke ",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ab"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="ke"),
+                    ],
+                ],
+            ],
+        ),
+        (
+            " +{CHANCE}% to explode ",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="+"),
+                        BrokenStringDatum(
+                            type=BrokenStringDatumType.PLACEHOLDER, string="CHANCE"
+                        ),
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="%"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="to"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(
+                            type=BrokenStringDatumType.STRING, string="explode"
+                        ),
+                    ],
+                ],
+            ],
+        ),
+        (
+            " +{CHANCE}%, to explode ",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="+"),
+                        BrokenStringDatum(
+                            type=BrokenStringDatumType.PLACEHOLDER, string="CHANCE"
+                        ),
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="%,"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="to"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(
+                            type=BrokenStringDatumType.STRING, string="explode"
+                        ),
+                    ],
+                ],
+            ],
+        ),
+        (
+            "{CHANCE}...",
+            [
+                [
+                    [
+                        BrokenStringDatum(
+                            type=BrokenStringDatumType.PLACEHOLDER, string="CHANCE"
+                        ),
+                        BrokenStringDatum(
+                            type=BrokenStringDatumType.STRING, string="..."
+                        ),
+                    ],
+                ],
+            ],
+        ),
+        (
+            "b\na c",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="b"),
+                    ],
+                ],
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="c"),
+                    ],
+                ],
+            ],
+        ),
+        (
+            "b\n\na c",
+            [
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="b"),
+                    ],
+                ],
+                [],
+                [
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a"),
+                        BrokenStringDatum(type=BrokenStringDatumType.SPACE, string=None),
+                    ],
+                    [
+                        BrokenStringDatum(type=BrokenStringDatumType.STRING, string="c"),
+                    ],
+                ],
+            ],
+        ),
+    ],
+)
+def test_process_string(string: str, result: list[StringLine]) -> None:
+    x = process_string(string)
+    assert x == result
+
+
+def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
+    loc_ids: list[str] = []
+    loc_by_languages: dict[str, list[str]] = defaultdict(list)
+
+    with open(ASSETS_DIR / "localization.csv", encoding="utf-8") as in_file:
+        not_language_columns = ("id", "\ufeffid", "comment")
+        for row in csv.DictReader(in_file, delimiter=";"):
+            row_id = row.get("id") or row.get("\ufeffid")
+            assert isinstance(row_id, str)
+            loc_ids.append(row_id)
+            for c in row:
+                if c not in not_language_columns:
+                    assert c in data_values.languages
+                    translation = row[c]
+                    loc_by_languages[c].append(
+                        translation.strip() or "<<NOT_TRANSLATED>>"
+                    )
+
+    loc_ids.insert(0, "<<INVALID>>")
+    for strings in loc_by_languages.values():
+        strings.insert(0, "<<INVALID>>")
+
+    for strings in loc_by_languages.values():
+        assert len(loc_ids) == len(strings)
+
+    locale_to_index: dict[str, int] = {key: i for i, key in enumerate(loc_ids)}
     index_to_locale = {i: codename for codename, i in locale_to_index.items()}
-
-    not_russian_languages = [l for l in data_values.languages if l != "russian"]
 
     SKIP_CHARACTERS = ("\n", "\t", "\r")
     codepoints: set[int] = set()
 
-    for language in not_russian_languages:
-        csv_path = ASSETS_DIR / f"localization_{language}.csv"
-        csv_temp_path = TEMP_DIR / f"localization_{language}.csv"
+    for strings in loc_by_languages.values():
+        for string in strings:
+            codepoints.update(ord(c) for c in string if c not in SKIP_CHARACTERS)
 
-        translated_values: dict[str, str] = {}
+    gamelib["localizations"] = [{"strings": x} for x in loc_by_languages.values()]
 
-        if csv_path.exists():
-            with open(csv_path, newline="", encoding="utf-8-sig") as in_file:
-                for row in csv.DictReader(in_file):
-                    translated_values[row["id"]] = row["translated"]
+    # Making `broken_lines`.
+    if 1:
+        genenum(genline, "BrokenStringDatumType", [x.name for x in BrokenStringDatumType])
+        all_russian_placeholders: list[tuple[int, str]] = []
 
-        with open(csv_temp_path, "w", newline="", encoding="utf-8-sig") as out_file:
-            writer = csv.writer(out_file)
-            writer.writerow(csv_columns)
+        for loc_index, loc in enumerate(gamelib["localizations"]):
+            is_russian = not loc_index
+            broken_lines: list = []
+            loc["broken_lines"] = broken_lines
 
-            russian_localization: list[str] = gamelib["localizations"][0]["strings"]
+            for string_index, string in enumerate(loc["strings"]):
+                string_lines: list = []
+                broken_lines.append({"lines": string_lines})
+                string_placeholders_to_verify = set()
 
-            for i in range(len(locale_to_index)):
-                codename = index_to_locale[i]
-                localized = russian_localization[i].strip()
-                codepoints.update(ord(c) for c in localized if c not in SKIP_CHARACTERS)
-                writer.writerow(
-                    (codename, translated_values.get(codename, "").strip(), localized, "")
-                )
+                for line in process_string(string):
+                    grs: list = []
+                    string_lines.append({"groups": grs})
 
-        if not csv_path.exists() or hash32_file_utf8(csv_path) != hash32_file_utf8(
-            csv_temp_path
-        ):
-            csv_temp_path.replace(csv_path)
+                    for group in line:
+                        gr: list = []
+                        grs.append({"strings": gr})
 
-    for language in not_russian_languages:
-        csv_path = ASSETS_DIR / f"localization_{language}.csv"
+                        for datum in group:
+                            placeholder: str | None = None
 
-        translated_values_: dict[str, str] = {}
-        with open(csv_path, newline="", encoding="utf-8-sig") as in_file:
-            for row in csv.DictReader(in_file):
-                translated_values_[row["id"]] = row["translated"]
+                            if datum.type == BrokenStringDatumType.PLACEHOLDER:
+                                assert datum.string
+                                placeholder_data = (string_index, datum.string)
+                                placeholder = datum.string
 
-        strings = []
+                                if is_russian and (
+                                    placeholder_data not in all_russian_placeholders
+                                ):
+                                    all_russian_placeholders.append(placeholder_data)
 
-        for i in range(len(locale_to_index)):
-            codename = index_to_locale[i]
-            translated = translated_values_[codename].strip()
-            if not translated:
-                log.warn(f"Localization: {language}: Translation not found '{codename}'!")
-                translated = "<< LOCALE NOT TRANSLATED >>"
+                                string_placeholders_to_verify.add(datum.string)
 
-            strings.append(translated)
-            codepoints.update(ord(c) for c in translated if c not in SKIP_CHARACTERS)
+                            gr.append(
+                                {
+                                    "type": datum.type.value,
+                                    "placeholder": placeholder,
+                                    "string": datum.string,
+                                }
+                            )
 
-        gamelib["localizations"].append({"strings": strings})
+                if not is_russian:
+                    russian_placeholders = set(
+                        x[1] for x in all_russian_placeholders if x[0] == string_index
+                    )
+                    assert string_placeholders_to_verify == russian_placeholders, (
+                        "Translated string differs in placeholders",
+                        data_values.languages[loc_index],
+                        index_to_locale[string_index],
+                    )
+
+        try:
+            max_placeholders = max(
+                len(list(placeholders))
+                for _, placeholders in groupby(all_russian_placeholders, lambda x: x[0])
+            )
+        except ValueError:
+            max_placeholders = 0
+
+        genline(
+            "constexpr int BF_MAX_PLACEHOLDERS_IN_STRING = {};\n".format(max_placeholders)
+        )
 
     return codepoints, locale_to_index
 
 
 @timing
 def convert_gamelib_json_to_binary(
-    texture_name_2_id: dict[str, int], genline, atlas_data
+    texture_name_2_id: dict[str, int], genline, atlas_data, original_texture_sizes
 ) -> None:
     gamelib = yaml.safe_load((GAME_DIR / "gamelib.yaml").read_text(encoding="utf-8"))
 
+    gamelib["original_texture_sizes"] = original_texture_sizes
+
+    # Enriching gamelib with sounds.
     if 1:
         sound_paths = list(RESOURCES_DIR.rglob("*.ogg"))
         genenum(
@@ -264,9 +616,34 @@ def convert_gamelib_json_to_binary(
         genline("};\n")
 
     gamelib |= atlas_data
-    genenum(genline, "RenderZ", gamelib.pop("render_z"), add_count=True)
+    genenum(genline, "DrawZ", gamelib.pop("render_z"), add_count=True)
 
-    localization_codepoints, locale_to_index = _do_localization(gamelib)
+    # Locale gen.
+    if 1:
+        lines = (
+            Path(SRC_DIR / "game" / "bf_gamelib.fbs")
+            .read_text(encoding="utf-8")
+            .split("\n")
+        )
+
+        start = -1
+        end = -1
+        for i, line in enumerate(lines):
+            if "LOCALE_GEN_START" in line:
+                start = i + 1
+            if "LOCALE_GEN_END" in line:
+                end = i
+                break
+
+        assert start >= 0
+        assert end >= 1
+        assert start <= end
+
+        for i in range(start, end):
+            field_name = lines[i].split(":", 1)[0].strip().removesuffix("_locale")
+            gamelib["{}_locale".format(field_name)] = field_name.upper()
+
+    localization_codepoints, locale_to_index = _do_localization(genline, gamelib)
 
     for gamelib_processing_function in gamelib_processing_functions:
         gamelib_processing_function(genline, gamelib, localization_codepoints)
@@ -289,14 +666,17 @@ def convert_gamelib_json_to_binary(
             gamelib, transform_texture_id, transform_texture_ids_list
         )
         if not_found_textures:
-            assert False, "Couldn't find textures: {}".format(not_found_textures)
+            assert False, "Couldn't find textures:\n{}".format(
+                "\n".join(f"- {x}" for x in not_found_textures)
+            )
 
     degrees_to_radians_recursive_transform(gamelib)
+
     recursive_replace_transform(gamelib, "locale", "locales", locale_to_index)
 
     # Creation of `gamelib.bin`.
     intermediate_path = TEMP_DIR / "gamelib.intermediate.jsonc"
-    intermediate_path.write_text(json.dumps(gamelib), newline="\n")
+    intermediate_path.write_text(json.dumps(gamelib, indent=4))
     run_command(
         [
             FLATC_PATH,
@@ -315,7 +695,7 @@ def convert_gamelib_json_to_binary(
 def downscale_images(downscale_factors: list[int]) -> None:
     assert downscale_factors, downscale_factors
 
-    images_to_downscale = (ART_DIR / "textures").rglob("*.png")
+    images_to_downscale = list((ART_DIR / "textures").rglob("*.png"))
 
     for factor in downscale_factors:
         assert factor >= 1, factor
@@ -340,6 +720,10 @@ def downscale_images(downscale_factors: list[int]) -> None:
             )
             im.save(export_image_path, "PNG")
             os.utime(export_image_path, ns=(s1.st_atime_ns, s1.st_mtime_ns))
+
+
+def texture_cmp_key(x: dict, factor: int) -> tuple[bool, str]:
+    return (x["debug_name"] != f"d{factor}/undefined", x["debug_name"])
 
 
 @timing
@@ -406,7 +790,7 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
             }
             textures.append(texture_data)
 
-        textures.sort(key=lambda x: (x["debug_name"] != "undefined", x["debug_name"]))
+        textures.sort(key=partial(texture_cmp_key, factor=factor))
 
         if not texture_name_2_id:
             assert textures, textures
@@ -448,6 +832,7 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
 
         atlases_data.append(
             {
+                "atlas_downscale_factor": factor,
                 "atlas_textures": textures,
                 "atlas_size_x": json_data["meta"]["size"]["w"],
                 "atlas_size_y": json_data["meta"]["size"]["h"],
@@ -830,9 +1215,27 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         remove_intermediate_generation_files()
 
         # TODO: downscale_factors = [1, 2, 4]
-        downscale_factors = [2]
+        downscale_factors = [2, 1]
+
         check_no_excessive_images_in_temp_art_dir(downscale_factors)
         downscale_images(downscale_factors)
+        downscale_factors.pop()
+
+        textures = [
+            {
+                "debug_name": f"d1/{filepath.stem}",
+                "size": Image.open(TEMP_ART_DIR / "d1" / filepath).size,
+            }
+            for filepath in Path(TEMP_ART_DIR / "d1").rglob("*.png")
+        ]
+        textures.sort(key=partial(texture_cmp_key, factor=1))
+        original_texture_sizes = [x["size"] for x in textures]
+
         texture_name_2_id, atlases_data = make_atlases(downscale_factors)
         assert len(downscale_factors) == 1
-        convert_gamelib_json_to_binary(texture_name_2_id, genline, atlases_data[0])
+        convert_gamelib_json_to_binary(
+            texture_name_2_id, genline, atlases_data[0], original_texture_sizes
+        )
+
+
+###

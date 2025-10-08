@@ -11,9 +11,12 @@ from bf_gamelib import do_generate
 from bf_lib import (
     ALLOWED_BUILDS,
     BUTLER_PATH,
+    CLANG_TIDY_PATH,
     CMAKE_TESTS_PATH,
+    CPPCHECK_PATH,
     MSBUILD_PATH,
     PROJECT_DIR,
+    SRC_DIR,
     TEMP_DIR,
     BuildPlatform,
     BuildTarget,
@@ -107,109 +110,102 @@ def do_test() -> None:
     run_command(str(CMAKE_TESTS_PATH), timeout_seconds=5)
 
 
-# @timing
-# def do_lint() -> None:
-#     files_to_lint = [
-#         *SRC_DIR.rglob("*.cpp"),
-#         *SRC_DIR.rglob("*.h"),
-#     ]
-#     run_command(["poetry", "run", "cpplint", "--quiet", *files_to_lint])
-#
-#     (Path(".cmake") / "cppcheck").mkdir(exist_ok=True)
-#     defines = (
-#         "_MSC_VER",
-#         "_WIN32",
-#         "_WIN64",
-#         "_M_X64",
-#         "BF_DEBUG",
-#         "BF_ENABLE_ASSERTS",
-#         "BF_ENABLE_LOGGING",
-#         "TESTS",
-#     )
-#     run_command(
-#         [
-#             CPPCHECK_PATH,
-#             "-j 4",
-#             "--cppcheck-build-dir=.cmake/cppcheck",
-#             "--project=compile_commands.json",
-#             "-ivendor",
-#             "--enable=all",
-#             "--inline-suppr",
-#             "--platform=win64",
-#             "--suppress=*:*codegen*",
-#             "--suppress=*:*vendor*",
-#             "--suppress=checkLevelNormal",
-#             "--suppress=checkersReport",
-#             "--suppress=constParameterCallback",
-#             "--suppress=constParameterPointer",
-#             "--suppress=constParameterReference",
-#             "--suppress=constStatement",
-#             "--suppress=constVariable",
-#             "--suppress=constVariablePointer",
-#             "--suppress=constVariableReference",
-#             "--suppress=cstyleCast",
-#             "--suppress=duplicateBreak",
-#             "--suppress=invalidPointerCast",
-#             "--suppress=knownConditionTrueFalse",
-#             "--suppress=memsetClassFloat",
-#             "--suppress=missingIncludeSystem",
-#             "--suppress=moduloofone",
-#             "--suppress=normalCheckLevelMaxBranches",
-#             "--suppress=nullPointerArithmetic",
-#             "--suppress=passedByValue",
-#             "--suppress=selfAssignment",
-#             "--suppress=unmatchedSuppression",
-#             "--suppress=unreadVariable",
-#             "--suppress=useStlAlgorithm",
-#             "--suppress=uselessAssignmentArg",
-#             "--suppress=variableScope",
-#             "--std=c++20",
-#             "-q",
-#             *[f"-D{d}" for d in defines],
-#         ]
-#     )
-#
-#     run_command(
-#         rf"""
-#             "{CLANG_TIDY_PATH}"
-#             src\bf_dll_game.cpp
-#             src\bf_exe_game_win.cpp
-#             src\bf_exe_launcher.cpp
-#             src\bf_exe_tests.cpp
-#         """
-#         # Убираем абсолютный путь к проекту из выдачи линтинга.
-#         # Тут куча экранирования происходит, поэтому нужно дублировать обратные слеши.
-#         + r'| sed "s/{}//"'.format(
-#             str(PROJECT_DIR).replace(os.path.sep, os.path.sep * 3) + os.path.sep * 3
-#         )
-#     )
+@timing
+def do_lint() -> None:
+    files_to_lint = [
+        *SRC_DIR.rglob("*.cpp"),
+        *SRC_DIR.rglob("*.h"),
+    ]
+    run_command(["poetry", "run", "cpplint", "--quiet", *files_to_lint])
+
+    (Path(".cmake") / "cppcheck").mkdir(exist_ok=True)
+    defines = (
+        "BF_DEBUG=1",
+        "BF_PLATFORM_Win=1",
+        "TESTS=1",
+    )
+    run_command(
+        [
+            CPPCHECK_PATH,
+            "-j 4",
+            "--cppcheck-build-dir=.cmake/cppcheck",
+            "--project=compile_commands.json",
+            "-ivendor",
+            "--enable=all",
+            "--inline-suppr",
+            "--platform=win64",
+            "--suppress=*:*codegen*",
+            "--suppress=*:*vendor*",
+            "--suppress=checkLevelNormal",
+            "--suppress=checkersReport",
+            "--suppress=constParameterCallback",
+            "--suppress=constParameterPointer",
+            "--suppress=constParameterReference",
+            "--suppress=constStatement",
+            "--suppress=constVariable",
+            "--suppress=constVariablePointer",
+            "--suppress=constVariableReference",
+            "--suppress=cstyleCast",
+            "--suppress=duplicateBreak",
+            "--suppress=invalidPointerCast",
+            "--suppress=knownConditionTrueFalse",
+            "--suppress=memsetClassFloat",
+            "--suppress=missingIncludeSystem",
+            "--suppress=moduloofone",
+            "--suppress=normalCheckLevelMaxBranches",
+            "--suppress=nullPointerArithmetic",
+            "--suppress=passedByValue",
+            "--suppress=selfAssignment",
+            "--suppress=unmatchedSuppression",
+            "--suppress=unreadVariable",
+            "--suppress=useStlAlgorithm",
+            "--suppress=uselessAssignmentArg",
+            "--suppress=variableScope",
+            "--std=c++20",
+            "-q",
+            *[f"-D{d}" for d in defines],
+        ]
+    )
+
+    run_command(
+        rf"""
+            "{CLANG_TIDY_PATH}"
+            src/engine/bf_game_exe.cpp
+        """
+        # Убираем абсолютный путь к проекту из выдачи линтинга.
+        # Тут куча экранирования происходит, поэтому нужно дублировать обратные слеши.
+        + r'| sed "s/{}//"'.format(
+            str(PROJECT_DIR).replace(os.path.sep, os.path.sep * 3) + os.path.sep * 3
+        )
+    )
 
 
-# @timing
-# def do_cmake_ninja_files() -> None:
-#     run_command(
-#         r"""
-#             cmake
-#             -G Ninja
-#             -B .cmake\ninja
-#             -D CMAKE_CXX_COMPILER=cl
-#             -D CMAKE_C_COMPILER=cl
-#             -DCMAKE_CONFIGURATION_TYPES=Debug
-#         """
-#     )
-#
-#
-# @timing
-# def do_compile_commands_json() -> None:
-#     run_command(
-#         r"""
-#             ninja
-#             -C .cmake\ninja
-#             -f build.ninja
-#             -t compdb
-#             > compile_commands.json
-#         """
-#     )
+@timing
+def do_cmake_ninja_files() -> None:
+    run_command(
+        rf"""
+            cmake
+            -G Ninja
+            -B .cmake\ninja
+            -D CMAKE_CXX_COMPILER=cl
+            -D CMAKE_C_COMPILER=cl
+            -D PLATFORM={BuildPlatform.Win}
+            -DCMAKE_CONFIGURATION_TYPES={BuildType.Debug}
+        """
+    )
+
+
+@timing
+def do_compile_commands_json() -> None:
+    run_command(
+        r"""
+            ninja
+            -C .cmake\ninja
+            -f build.ninja
+            -t compdb
+            > compile_commands.json
+        """
+    )
 
 
 @timing
@@ -275,6 +271,12 @@ def command(f: Callable[P, T]) -> Callable[P, T]:
 #                 text=True,
 #                 shell=True,
 #             )
+
+
+@command
+def codegen(platform: BuildPlatform, build_type: BuildType):
+    do_cmake(platform, build_type)
+    do_generate(platform, build_type)
 
 
 @command
@@ -359,26 +361,34 @@ def deploy_yandex():
 
 @command
 def make_swatch():
-    result = bf_swatch.parse("c:/Users/user/Downloads/woodspark.ase")
-    print(result)
+    # result = bf_swatch.parse("c:/Users/user/Downloads/woodspark.ase")
+    # print(result)
     colors = [
         "#ffffff",
-        "#f5eeb0",
-        "#fabf61",
-        "#e08d51",
-        "#8a5865",
-        "#452b3f",
-        "#2c5e3b",
-        "#609c4f",
-        "#c6cc54",
-        "#78c2d6",
-        "#5479b0",
-        "#56546e",
-        "#839fa6",
-        "#e0d3c8",
-        "#f05b5b",
-        "#8f325f",
-        "#eb6c98",
+        "#2c4941",
+        "#66a650",
+        "#b9d850",
+        "#82dcd7",
+        "#208cb2",
+        "#253348",
+        "#1d1b24",
+        "#3a3a41",
+        "#7a7576",
+        "#b59a66",
+        "#cec7b1",
+        "#edefe2",
+        "#d78b98",
+        "#a13d77",
+        "#6d2047",
+        "#3c1c43",
+        "#2c2228",
+        "#5e3735",
+        "#885a44",
+        "#b8560f",
+        "#dc9824",
+        "#efcb84",
+        "#e68556",
+        "#c02931",
         "#000000",
     ]
 
@@ -436,12 +446,25 @@ def make_swatch():
     with open("aboba.aco", "wb") as out_file:
         bf_swatch_aco.save_aco_file([process_color2(c) for c in new_colors], out_file)
 
+    with open("aboba.pal", "w") as out_file:
+        out_file.write(
+            "JASC-PAL\n0100\n{}\n".format(
+                len(new_colors),
+            )
+        )
+        color_lines = []
+        for color in new_colors:
+            r, g, b = hex_to_rgb(color)
+            color_lines.append(f"{r} {g} {b}")
+        color_lines = color_lines[2:] + color_lines[:2]
+        out_file.write("\n".join(color_lines))
 
-# @command
-# def lint():
-#     do_cmake_ninja_files()
-#     do_compile_commands_json()
-#     do_lint()
+
+@command
+def lint():
+    do_cmake_ninja_files()
+    do_compile_commands_json()
+    do_lint()
 
 
 def main() -> None:

@@ -33,9 +33,6 @@ def gamelib_processor(func):
     return func
 
 
-from bf_game import *  # noqa
-
-
 class StrEnum(str, Enum):
     def __str__(self):
         return self.value
@@ -192,7 +189,8 @@ def timed_exit(code: int) -> NoReturn:
 globals()["exit"] = timed_exit
 
 
-REPLACING_SPACES_PATTERN = re.compile(r"\s+")
+REPLACING_SPACES_PATTERN = re.compile(r"\ +")
+REPLACING_NEWLINES_PATTERN = re.compile(r"\n+")
 
 
 LOG_FILE_POSITION = False
@@ -276,6 +274,30 @@ log.addHandler(console_handler)
 
 def replace_double_spaces(string: str) -> str:
     return re.sub(REPLACING_SPACES_PATTERN, " ", string)
+
+
+def replace_double_newlines(string: str) -> str:
+    return re.sub(REPLACING_NEWLINES_PATTERN, "\n", string)
+
+
+def test_replace_double_spaces():
+    assert replace_double_spaces("") == ""
+    assert replace_double_spaces(" ") == " "
+    assert replace_double_spaces("  ") == " "
+    assert replace_double_spaces("   ") == " "
+    assert replace_double_spaces("\n") == "\n"
+    assert replace_double_spaces("\n\n") == "\n\n"
+    assert replace_double_spaces("\n\n\n") == "\n\n\n"
+
+
+def test_replace_double_newlines():
+    assert replace_double_newlines("") == ""
+    assert replace_double_newlines(" ") == " "
+    assert replace_double_newlines("  ") == "  "
+    assert replace_double_newlines("   ") == "   "
+    assert replace_double_newlines("\n") == "\n"
+    assert replace_double_newlines("\n\n") == "\n"
+    assert replace_double_newlines("\n\n\n") == "\n"
 
 
 def remove_spaces(string: str) -> str:
@@ -545,7 +567,7 @@ def _git_get_current_branch() -> str:
 
 
 def git_bump_tag() -> None:
-    assert _git_get_current_branch() == "master"
+    assert _git_get_current_branch() in ("master", "main")
 
     if _git_get_current_commit_version_tag():
         log.info("Skipping bumping tag")
@@ -570,7 +592,7 @@ def git_bump_tag() -> None:
     run_command("git reset")
     run_command("git add src/bf_version.cpp")
     run_command(f'git commit -m "Release v1.{next_version}"')
-    run_command("git push --force")
+    run_command("git push")
 
     run_command(f"git tag v1.{next_version}")
     run_command(f"git push origin v1.{next_version}")
@@ -632,3 +654,8 @@ def stable_hash(value: str | int) -> int:
     if isinstance(value, str):
         return int(hashlib.md5(value.encode("utf-8")).hexdigest(), 16)
     assert False, "Not supported type of value"
+
+
+from bf_game import *  # noqa
+
+###

@@ -6,6 +6,3 @@ render_z:
   - SCREEN_FADE
   - GIZMOS
 vignette_texture_id: vignette
-localization:
-  YES_: Да
-  NO_: Нет

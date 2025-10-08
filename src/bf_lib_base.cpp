@@ -43,6 +43,14 @@
 
 #define INLINE_LAMBDA [&]() BF_FORCE_INLINE_LAMBDA
 
+#if defined(_MSC_VER)
+#  define BF_RESTRICT __restrict
+#elif defined(__GNUC__) || defined(__clang__)
+#  define BF_RESTRICT __restrict__
+#else
+#  define BF_RESTRICT
+#endif
+
 #define BF_RELEASE (BF_DEBUG == 0)
 
 #define PTR_FROM_UINT(value) ((void*)((u8*)(nullptr) + (value)))
@@ -125,6 +133,10 @@ constexpr f64 f64_inf = std::numeric_limits<f64>::infinity();
 #    define ASSERT_FALSE(expr) EMPTY_STATEMENT
 #  endif  // BF_ENABLE_ASSERTS
 #endif    // TESTS
+
+#define ASSERT_IS_NUMBER(v) \
+  ASSERT((v) != f32_inf);   \
+  ASSERT((v) != -f32_inf);
 
 #ifndef TEST_CASE
 #  define h_with_counter_(counter) h_##counter

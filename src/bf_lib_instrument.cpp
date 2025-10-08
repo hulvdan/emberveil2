@@ -1,28 +1,37 @@
-// #define BF_ENABLE_FRAMESKIPPING (0 || BF_RELEASE)
-// #define BF_ENABLE_FRAMESKIPPING (0)
+// Other stuff.
+// ============================================================
 
-// #define BF_ENABLE_LOGGING (1 && BF_DEBUG)
-// #define BF_USE_TRACING_LOGGER 0
-
-#define BF_PROFILING (BF_DEBUG && defined(SDL_PLATFORM_WIN32))
+#ifdef SDL_PLATFORM_WIN32
+#  define BF_PROFILING (BF_DEBUG)
+#else
+#  define BF_PROFILING (0)
+#endif
 
 #define BF_ENABLE_ASSERTS (1 && BF_DEBUG)
 #define BF_ENABLE_SLOW_ASSERTS (1 && BF_ENABLE_ASSERTS)
 
-#define BF_SHOW_VERSION (BF_RELEASE && !defined(BF_PLATFORM_WebYandex))
-#define BF_DEBUG_VIGNETTE_AND_STRIPS 0
+#ifdef BF_PLATFORM_WebYandex
+#  define BF_SHOW_VERSION (0)
+#else
+#  define BF_SHOW_VERSION (BF_RELEASE)
+#endif
 
-// #define BF_ENABLE_SANITIZATION (0 && BF_DEBUG)
-//
-// #define BF_FORCE_GIZMOS_ENABLE (0 && BF_DEBUG)
-//
-// // #define BF_MIN_REPLAYING_SIMULATION_FRAMES 1
-// #define BF_MIN_REPLAYING_SIMULATION_FRAMES 100
-//
-// #define BF_FAST_REPLAY_UP_TO_RELOADED_COUNT (-1)
-// // #define BF_FAST_REPLAY_UP_TO 300
-// #define BF_FAST_REPLAY_UP_TO int_max
-//
-// #define BF_VALIDATE_REPLAY 1
-// #define BF_INPUTS_HANDLING_TYPE_DEBUG InputsHandlingType_REPLAYING
-// #define BF_INPUTS_HANDLING_TYPE_RELEASE InputsHandlingType_RECORDING
+#define BF_DEBUG_VIGNETTE_AND_STRIPS (0)
+
+// Unmapping allocator.
+// ============================================================
+
+// Set to 1 to enable testing buffer overruns (Windows only).
+#if 1 && BF_DEBUG
+#  define BF_ALLOC unmapped_alloc
+#  define BF_FREE unmapped_free
+#else
+#  define BF_ALLOC malloc
+#  define BF_FREE free
+#endif
+
+// To test buffer overruns on right side (eg `char buffer[10]; x = buffer[10]`), set to 1.
+// To test on left side (eg buffer[-1]), set to 0.
+#define UNMAPPING_ALLOCATOR_ERROR_ON_RIGHT 1
+
+#define UNMAPPING_ALLOCATOR_PAGES_MARGIN 4

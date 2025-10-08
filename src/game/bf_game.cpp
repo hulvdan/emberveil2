@@ -63,15 +63,20 @@ struct GameData {
 };
 
 void GamePreInit() {  ///
+  ZoneScoped;
 }
 
 void GameInit() {  ///
+  ZoneScoped;
 }
 
 void GameFixedUpdate() {  ///
+  ZoneScoped;
 }
 
 void GameDraw() {
+  ZoneScoped;
+
   // Drawing debug text.
   if (ge.meta.debugEnabled) {  ///
     int y = 1;

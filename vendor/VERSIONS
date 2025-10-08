@@ -8,4 +8,6 @@ flatbuffers-24.3.25
 gameanalytics-sdk-cpp-4.1.1
 glm-1.0.1-light
 miniaudio-v0.11.22
+sort.h - Feb 13, 2024 - https://github.com/swenson/sort/commit/24f5b8b13810ad130109c7b56daf8e99ab0fe1b8
 tracy-0.12.2
+randrew_layout -  Oct 15, 2020 - https://github.com/randrew/layout/commit/b0c02829df41b066c5aaedcb946498209bcb38e5

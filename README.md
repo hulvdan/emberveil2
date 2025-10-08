@@ -32,6 +32,7 @@
   git pull
   ./emsdk install latest
   ```
+- `npm install -g free-tex-packer-cli`:
 
 ## Contributing to game-template
 

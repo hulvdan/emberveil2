@@ -6,8 +6,6 @@
 // ============================================================
 
 #if BF_DEBUG && defined(SDL_PLATFORM_WINDOWS)
-#  define UNMAPPED_PAGES_MARGIN 4
-#  define UNMAPPING_ALLOCATOR_ERROR_ON_RIGHT 1
 
 #  include <windows.h>
 #  include <stdio.h>
@@ -17,45 +15,61 @@ struct UnmappedAllocation {
   void* base   = {};
 };
 
-Vector<UnmappedAllocation> _g_unmappedAllocations = {};
-size_t                     _g_pageSize            = {};
+static struct {
+  std::vector<UnmappedAllocation> allocs   = {};
+  size_t                          pageSize = {};
+} g_unmappingAllocatorData;
 
 void* unmapped_alloc(size_t size) {  ///
+  auto& data = g_unmappingAllocatorData;
+
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
     SYSTEM_INFO si{};
     GetSystemInfo(&si);
-    _g_pageSize = si.dwPageSize;
+    data = {.pageSize = si.dwPageSize};
   }
 
-  auto pages  = CeilDivisionU64(size, _g_pageSize) + 2 * UNMAPPED_PAGES_MARGIN;
-  auto base   = VirtualAlloc(0, pages * _g_pageSize, MEM_RESERVE, PAGE_NOACCESS);
-  auto addr   = (void*)((u8*)base + UNMAPPED_PAGES_MARGIN * _g_pageSize);
+  auto pages
+    = CeilDivisionU64(size, data.pageSize) + 2 * UNMAPPING_ALLOCATOR_PAGES_MARGIN;
+  auto base   = VirtualAlloc(nullptr, pages * data.pageSize, MEM_RESERVE, PAGE_NOACCESS);
+  auto addr   = (void*)((u8*)base + UNMAPPING_ALLOCATOR_PAGES_MARGIN * data.pageSize);
   auto result = VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
 
-  auto baseOffset = _g_pageSize * UNMAPPED_PAGES_MARGIN;
 #  if UNMAPPING_ALLOCATOR_ERROR_ON_RIGHT
-  baseOffset += pages * _g_pageSize - size;
+  auto baseOffset = (pages - UNMAPPING_ALLOCATOR_PAGES_MARGIN) * data.pageSize - size;
+#  else
+  auto baseOffset = data.pageSize * UNMAPPING_ALLOCATOR_PAGES_MARGIN;
 #  endif
 
-  *_g_unmappedAllocations.Add() = {
-    .result = (void*)((u8*)base + baseOffset),
-    .base   = base,
-  };
-  return result;
+  auto r = (void*)((u8*)base + baseOffset);
+  data.allocs.push_back({.result = r, .base = base});
+  return r;
 }
 
 void unmapped_free(void* ptr) {  ///
-  FOR_RANGE (int, i, _g_unmappedAllocations.count) {
-    auto& v = _g_unmappedAllocations[i];
+  auto& data = g_unmappingAllocatorData;
+
+  FOR_RANGE (int, i, data.allocs.size()) {
+    auto& v = data.allocs[i];
     if (v.result == ptr) {
       VirtualFree((void*)v.base, 0, MEM_RELEASE);
-      _g_unmappedAllocations.UnstableRemoveAt(i);
+
+      if (i != data.allocs.size() - 1)
+        v = data.allocs[data.allocs.size() - 1];
+      data.allocs.pop_back();
+
       return;
     }
   }
   INVALID_PATH;
+}
+
+TEST_CASE ("Unmapping allocator") {
+  auto base = (u8*)unmapped_alloc(sizeof(u8));
+  base[0]   = 255;
+  unmapped_free(base);
 }
 
 #else
@@ -65,7 +79,7 @@ BF_FORCE_INLINE void* unmapped_alloc(size_t size) {  ///
 }
 
 BF_FORCE_INLINE void unmapped_free(void* ptr) {  ///
-  return free(ptr);
+  free(ptr);
 }
 
 #endif
@@ -81,11 +95,11 @@ struct Arena {
 };
 
 Arena MakeArena(size_t size) {  ///
-  return {.size = size, .base = (u8*)malloc(size)};
+  return {.size = size, .base = (u8*)BF_ALLOC(size)};
 }
 
 void DeinitArena(Arena* arena) {  ///
-  free(arena->base);
+  BF_FREE(arena->base);
   *arena = {};
 }
 

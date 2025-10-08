@@ -13,21 +13,70 @@ table Texture {
     baseline: int;
 }
 
+table NineSlice {
+    texture_id: int;
+    left: int;
+    right: int;
+    top: int;
+    bottom: int;
+}
+
+table StringDatum {
+    // Ref: BrokenStringDatumType.
+    type: int;
+
+    placeholder: string;
+
+    // Used only when `type` is STRING.
+    string: string;
+}
+
+table StringGroup {
+    strings: [StringDatum] (required);
+}
+
+table StringLine {
+    groups: [StringGroup];
+}
+
+table StringLines {
+    lines: [StringLine];
+}
+
 table Localization {
     strings: [string] (required);
+    broken_lines: [StringLines] (required);
+}
+
+table Placeholder {
+}
+
+struct Posf {
+    x: float;
+    y: float;
+}
+
+struct Pos {
+    x: int;
+    y: int;
 }
 
 // GAME STUFF
 // GAME STUFF END
 
 table GameLibrary {
+    atlas_downscale_factor: int;
     atlas_size_x: uint;
     atlas_size_y: uint;
     atlas_textures: [Texture] (required);
+    original_texture_sizes: [Pos] (required);
 
     vignette_texture_id: int;
 
     localizations: [Localization] (required);
+
+    // LOCALE_GEN_START.
+    // LOCALE_GEN_END.
 
     // GAME STUFF
     // GAME STUFF END
