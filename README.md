@@ -33,6 +33,9 @@
   ./emsdk install latest
   ```
 - `npm install -g free-tex-packer-cli`:
+- SFX
+  - Reaper. https://www.reaper.fm/download.php
+  - Reaper SWS Extensions. https://www.sws-extension.org/
 
 ## Contributing to game-template
 

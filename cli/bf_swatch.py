@@ -1,8 +1,14 @@
+# Imports.  {  ###
 import os
 import struct
+from enum import Enum, unique
+from typing import BinaryIO, NamedTuple
+
+# }
 
 
 def parse(filename):
+    # {  ###
     """parses a .ase file and returns a list of colors and color groups
 
     `swatch.parse` reads in an ase file and converts it to a list of colors and
@@ -76,15 +82,17 @@ def parse(filename):
     """
 
     with open(filename, "rb") as data:
-        header, v_major, v_minor, chunk_count = struct.unpack("!4sHHI", data.read(12))
+        header, v_major, v_minor, _ = struct.unpack("!4sHHI", data.read(12))
 
         assert header == b"ASEF"
         assert (v_major, v_minor) == (1, 0)
 
         return list(_parse_chunk(data))
+    # }
 
 
 def write(obj, filename):
+    # {  ###
     """write a swatch object to the filename specified.
 
     if `filename` exists, it will be overwritten.
@@ -105,9 +113,11 @@ def write(obj, filename):
         head = struct.pack("!4sHHI", header, v_major, v_minor, chunk_count)
         body = b"".join([_chunk_for_object(c) for c in obj])
         f.write(head + body)
+        # }
 
 
 def _parse_chunk(fd):
+    # {  ###
     chunk_type = fd.read(2)
     while chunk_type:
         if chunk_type == b"\x00\x01":
@@ -130,18 +140,22 @@ def _parse_chunk(fd):
             assert chunk_type in [b"\xc0\x01", b"\x00\x01", b"\xc0\x02", b"\x00\x02"]
 
         chunk_type = fd.read(2)
+    # }
 
 
 def _colors(fd):
+    # {  ###
     chunk_type = fd.read(2)
     while chunk_type in [b"\x00\x01", b"\x00\x02"]:
         d = _dict_for_chunk(fd)
         yield d
         chunk_type = fd.read(2)
     fd.seek(-2, os.SEEK_CUR)
+    # }
 
 
 def _dict_for_chunk(fd):
+    # {  ###
     chunk_length = struct.unpack(">I", fd.read(4))[0]
     data = fd.read(chunk_length)
 
@@ -165,15 +179,17 @@ def _dict_for_chunk(fd):
 
         output.update(
             {
-                "data": {"mode": color_mode.decode("utf-8"), "values": color_values},
+                "data": {"mode": color_mode.decode("utf-8"), "values": color_values},  # type: ignore[dict-item]
                 "type": str(swatch_type),
             }
         )
 
     return output
+    # }
 
 
 def _chunk_count(swatch):
+    # {  ###
     """return the number of byte-chunks in a swatch object
 
     this recursively walks the swatch list, returning 1 for a single color &
@@ -190,9 +206,11 @@ def _chunk_count(swatch):
         return sum(map(_chunk_count, swatch))
 
     return -1
+    # }
 
 
 def _chunk_for_object(obj):
+    # {  ###
     type_ = obj.get("type")
     if type_ == "Color Group":
         return _chunk_for_folder(obj)
@@ -201,9 +219,11 @@ def _chunk_for_object(obj):
 
     assert False
     return None
+    # }
 
 
 def _chunk_for_color(obj):
+    # {  ###
     """builds up a byte-chunk for a color
 
     the format for this is
@@ -248,9 +268,11 @@ def _chunk_for_color(obj):
 
     chunk = struct.pack(">I", len(chunk)) + chunk  # prepend the chunk size
     return b"\x00\x01" + chunk  # swatch color header
+    # }
 
 
 def _chunk_for_folder(obj):
+    # {  ###
     """produce a byte-chunk for a folder of colors
 
     the structure is very similar to a color's data:
@@ -287,3 +309,121 @@ def _chunk_for_folder(obj):
     chunk += b"\xc0\x02"  # folder terminator chunk
     chunk += b"\x00\x00\x00\x00"  # folder terminator
     return chunk
+    # }
+
+
+# ACO.
+# ============================================================
+@unique
+class ColorSpace(Enum):
+    # {  ###
+    """Adobe Color Swatch - Color Space Ids."""
+
+    RGB = (0, "RGB", True)
+    HSB = (1, "HSB", True)
+    CMYK = (2, "CMYK", True)
+    PANTONE = (3, "Pantone matching system", False)
+    FOCOLTONE = (4, "Focoltone colour system", False)
+    TRUMATCH = (5, "Trumatch color", False)
+    TOYO = (6, "Toyo 88 colorfinder 1050", False)
+    LAB = (7, "Lab", False)
+    GRAYSCALE = (8, "Grayscale", True)
+    HKS = (10, "HKS colors", False)
+
+    def __new__(cls, *args):
+        obj = object.__new__(cls)
+        obj._value_ = args[0]
+        return obj
+
+    def __init__(
+        self,
+        _: int,
+        label: str | None = None,
+        supported: bool = False,
+    ):
+        self.label = label
+        self.supported = supported
+
+    def __str__(self) -> str:
+        return self.label if self.label is not None else "unknown"
+
+    # }
+
+
+class HexColor(NamedTuple):
+    # {  ###
+    name: str
+    color_space: ColorSpace
+    color_hex: str
+    # }
+
+
+class RawColor(NamedTuple):
+    # {  ###
+    name: str
+    color_space: ColorSpace
+    component_1: int = 0
+    component_2: int = 0
+    component_3: int = 0
+    component_4: int = 0
+    # }
+
+
+def save_aco_file(colors_data: list[RawColor], file: BinaryIO) -> None:
+    # {  ###
+    """Saves provided color data into a `.aco` file.
+
+    Args:
+        colors_data: list of `RawColor`s, were each of them contains the name,
+            color space and four color components.
+        file: handle to the `.aco` file to be saved.
+    """
+    try:
+        # Version 1
+        version = 1
+        file.write(version.to_bytes(2, "big"))
+
+        color_count = len(colors_data)
+        file.write(color_count.to_bytes(2, "big"))
+
+        for color_data in colors_data:
+            color_space_id = color_data.color_space.value
+            file.write(color_space_id.to_bytes(2, "big"))
+
+            file.write(color_data.component_1.to_bytes(2, "big"))
+            file.write(color_data.component_2.to_bytes(2, "big"))
+            file.write(color_data.component_3.to_bytes(2, "big"))
+            file.write(color_data.component_4.to_bytes(2, "big"))
+
+        # Version 2
+        version = 2
+        file.write(version.to_bytes(2, "big"))
+
+        color_count = len(colors_data)
+        file.write(color_count.to_bytes(2, "big"))
+
+        for color_data in colors_data:
+            color_space_id = color_data.color_space.value
+            file.write(color_space_id.to_bytes(2, "big"))
+
+            file.write(color_data.component_1.to_bytes(2, "big"))
+            file.write(color_data.component_2.to_bytes(2, "big"))
+            file.write(color_data.component_3.to_bytes(2, "big"))
+            file.write(color_data.component_4.to_bytes(2, "big"))
+
+            # + 1 is for termination character
+            color_name_length = len(color_data.name) + 1
+            file.write(color_name_length.to_bytes(4, "big"))
+
+            color_name_bytes = bytes(color_data.name, "utf-16-be")
+            file.write(color_name_bytes)
+
+            termination_char = 0
+            file.write(termination_char.to_bytes(2, "big"))
+
+    finally:
+        file.close()
+    # }
+
+
+###

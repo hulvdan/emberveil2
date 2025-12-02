@@ -3,8 +3,11 @@ local opts = { remap = false, silent = true }
 vim.keymap.set("n", "gD", "<C-w>o:vs<CR>gd", opts)
 vim.keymap.set("n", "<leader>fc", ":e codegen/hands/bf_codegen.cpp<CR>", opts)
 
+vim.keymap.set("n", "<leader>C", "o  continue;<ESC>", opts)
+vim.keymap.set("n", "<leader>B", "o  break;<ESC>", opts)
+
 function cli_command(cmd)
-    return [[.venv\Scripts\ruff.exe check cli && .venv\Scripts\mypy.exe cli && .venv\Scripts\python.exe cli\cli.py ]]
+    return [[uvx ruff check --output-format concise cli && uv run mypy --check-untyped-defs cli && uv run cli\bf_cli.py ]]
         .. cmd
 end
 
@@ -51,19 +54,19 @@ function rebuild_tasks()
         { "t_test", cli_command("test") },
         {
             "y_test_python",
-            [[.venv\Scripts\ruff.exe check cli && .venv\Scripts\mypy.exe cli && poetry run pytest -x -vv]],
+            [[uvx ruff check --output-format concise cli && uv run mypy --check-untyped-defs cli && uv run pytest -x -vv]],
         },
         { "r_build_all_and_test", cli_command("build_all_and_test") },
         {
             "z_serve_web_debug",
             function()
-                vim.fn.execute([[term python -m http.server -d .cmake\Web_Debug 8000]])
+                vim.fn.execute([[term python -m http.server -d .cmake\Web_Debug -b 0.0.0.0 8000]])
             end,
         },
         {
             "x_serve_web_release",
             function()
-                vim.fn.execute([[term python -m http.server -d .cmake\Web_Release 8001]])
+                vim.fn.execute([[term python -m http.server -d .cmake\Web_Release -b 0.0.0.0 8001]])
             end,
         },
         {
@@ -76,10 +79,9 @@ function rebuild_tasks()
         { "o_deploy_itch", cli_command("deploy_itch") },
         { "p_deploy_yandex", cli_command("deploy_yandex") },
         { "i_make_swatch", cli_command("make_swatch") },
-        -- { "p_test_python", [[.venv\Scripts\pytest.exe]] },
+        { "g_codegen", cli_command("codegen Win Debug") },
         -- -- { "killall", [[start .nvim-personal\cli.ahk killall]] },
         { "l_lint_cpp", cli_command("lint") },
-        -- { "k_lint_python", [[.venv\Scripts\ruff.exe check cli]] },
         -- { "z_clean_cmake", [[del /f/s/q .cmake]] },
         -- { "x_clean_temp", [[del /f/s/q .temp]] },
         -- ----------
@@ -102,49 +104,23 @@ vim.keymap.set("n", "<leader>m", function()
     vim.fn.execute("e C:/Users/user/AppData/Roaming/HulvdanTheGame/user_settings.variables")
 end, opts)
 
--- Space + 0 -> Folding of `///`.
-vim.keymap.set("n", "<leader>0", function()
-    if
-        (vim.bo.filetype == "cpp")
-        or (vim.bo.filetype == "jsonc")
-        or (vim.bo.filetype == "yaml")
-        or (vim.bo.filetype == "python")
-    then
-        vim.fn.execute([[silent!normal!zE]])
-        vim.fn.execute([[silent!normal!mz]])
-        if (vim.bo.filetype == "cpp") or (vim.bo.filetype == "jsonc") then
-            vim.fn.execute([[%g/\/\/\//silent!normal! $bbzf%]])
-        else
-            vim.fn.execute([[%g/###/silent!normal! j$zf%]])
-        end
-        vim.api.nvim_input("hl0$`z")
-    end
-end, opts)
-
 ------------------------------------------------------------------------------------
 -- Остальное.
 ------------------------------------------------------------------------------------
 
+-- Errorformat.
 vim.fn.execute([[set errorformat=]])
-
--- Processing python errors.
+-- Python.
 vim.fn.execute([[set errorformat+=%f:%l:%c:\ %m]])
-
--- Обработка ошибок web.
+-- Web.
 vim.fn.execute([[set errorformat+=%f(%l\\,%c):\ %t%[A-z]%#\ %m]])
 vim.fn.execute([[set errorformat+=%f:%l:%c:\ %t%[A-z]%#:\ %m]])
-
--- Обработка ошибок MSBuild.
+-- MSBuild.
 -- https://forums.handmadehero.org/index.php/forum?view=topic&catid=4&id=704#3982
--- Microsoft MSBuild
--- Microsoft compiler: cl.exe
 vim.fn.execute([[set errorformat+=\\\ %#%f(%l)\ :\ %#%t%[A-z]%#\ %m]])
--- Microsoft HLSL compiler: fxc.exe
 vim.fn.execute([[set errorformat+=\\\ %#%f(%l\\\,%c-%*[0-9]):\ %#%t%[A-z]%#\ %m]])
-
--- Обработка ошибок FlatBuffers.
+-- FlatBuffers.
 vim.fn.execute([[set errorformat+=\ \ %f(%l\\,\ %c\\):\ %m]])
-
 -- Not sure what these are for.
 vim.fn.execute([[set errorformat+=%f:%l:\ %m]])
 

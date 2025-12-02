@@ -19,6 +19,10 @@ table NineSlice {
     right: int;
     top: int;
     bottom: int;
+    outer_left: int;
+    outer_right: int;
+    outer_top: int;
+    outer_bottom: int;
 }
 
 table StringDatum {
@@ -61,6 +65,18 @@ struct Pos {
     y: int;
 }
 
+table Sound {
+    enum_value_id: uint (key);
+    variations: [string];
+    pitch_max: float = 1.1;
+    pitch_min: float = 0.9;
+}
+
+table Flattened {
+  start: int;
+  end: int;
+}
+
 // GAME STUFF
 // GAME STUFF END
 
@@ -71,14 +87,21 @@ table GameLibrary {
     atlas_textures: [Texture] (required);
     original_texture_sizes: [Pos] (required);
 
-    vignette_texture_id: int;
-
+    localization_debug_strings: [string] (required);
     localizations: [Localization] (required);
 
-    // LOCALE_GEN_START.
-    // LOCALE_GEN_END.
+    sounds: [Sound];
 
     // GAME STUFF
+    // AUTOMATIC_TEXTURE_BIND_START
+    vignette_texture_id: int;
+    // AUTOMATIC_TEXTURE_BIND_END
+
+    // NOTE: "Table Gen" works in Python `bf_game.py`.
+    // It goes through the field names in the following TABLE_GEN_START/END region.
+    // Then makes code generation magic (enums in `bf_codegen.cpp`, recursive replaces)
+    // TABLE_GEN_START
+    // TABLE_GEN_END
     // GAME STUFF END
 }
 

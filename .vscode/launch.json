@@ -26,7 +26,7 @@
             "name": "python codegen Win Debug",
             "type": "debugpy",
             "request": "launch",
-            "program": "cli/cli.py",
+            "program": "cli/bf_cli.py",
             "console": "integratedTerminal",
             "args": "codegen Win Debug",
         },

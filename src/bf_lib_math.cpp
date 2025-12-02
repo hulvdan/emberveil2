@@ -3,10 +3,10 @@
 #pragma once
 
 #ifndef PI32
-#  define PI32 3.14159265358979323846f
+#  define PI32 (3.14159265358979323846f)
 #endif
 #ifndef PI64
-#  define PI64 3.14159265358979323846
+#  define PI64 (3.14159265358979323846)
 #endif
 
 bool FloatEquals(f32 v1, f32 v2) {  ///
@@ -37,7 +37,24 @@ int Round(f32 value) {  ///
   return lround(value);
 }
 
-f32 MoveTowards(f32 v, f32 target, f32 maxDistance) {  ///
+f32 MoveTowardsF(f32 v, f32 target, f32 maxDistance) {  ///
+  ASSERT(maxDistance >= 0);
+
+  if (v > target) {
+    v -= maxDistance;
+    if (v < target)
+      v = target;
+  }
+  else if (v < target) {
+    v += maxDistance;
+    if (v > target)
+      v = target;
+  }
+
+  return v;
+}
+
+int MoveTowardsI(int v, int target, int maxDistance) {  ///
   ASSERT(maxDistance >= 0);
 
   if (v > target) {
@@ -55,12 +72,19 @@ f32 MoveTowards(f32 v, f32 target, f32 maxDistance) {  ///
 }
 
 TEST_CASE ("MoveTowards") {  ///
-  ASSERT(MoveTowards(0, 10, 5) == 5);
-  ASSERT(MoveTowards(-10, 10, 5) == -5);
-  ASSERT(MoveTowards(10, -10, 5) == 5);
-  ASSERT(MoveTowards(0, 10, 30) == 10);
-  ASSERT(MoveTowards(-10, 10, 30) == 10);
-  ASSERT(MoveTowards(10, -10, 30) == -10);
+  ASSERT(MoveTowardsI(0, 10, 5) == 5);
+  ASSERT(MoveTowardsI(-10, 10, 5) == -5);
+  ASSERT(MoveTowardsI(10, -10, 5) == 5);
+  ASSERT(MoveTowardsI(0, 10, 30) == 10);
+  ASSERT(MoveTowardsI(-10, 10, 30) == 10);
+  ASSERT(MoveTowardsI(10, -10, 30) == -10);
+
+  ASSERT(MoveTowardsF(0, 10, 5) == 5);
+  ASSERT(MoveTowardsF(-10, 10, 5) == -5);
+  ASSERT(MoveTowardsF(10, -10, 5) == 5);
+  ASSERT(MoveTowardsF(0, 10, 30) == 10);
+  ASSERT(MoveTowardsF(-10, 10, 30) == 10);
+  ASSERT(MoveTowardsF(10, -10, 30) == -10);
 }
 
 //  [0; 360)
@@ -119,19 +143,19 @@ TEST_CASE ("BisectAngleDeg") {  ///
   }
 }
 
-f32 MoveTowardsAngleDeg(f32 a1, f32 a2, f32 maxAngle) {  ///
+f32 MoveTowardsFAngleDeg(f32 a1, f32 a2, f32 maxAngle) {  ///
   ASSERT_IS_NUMBER(a1);
   ASSERT_IS_NUMBER(a2);
   ASSERT_IS_NUMBER(maxAngle);
   ASSERT(maxAngle >= 0);
 
   auto diff = AngleDiffDeg(a1, a2);
-  auto d    = MoveTowards(0, diff, maxAngle);
+  auto d    = MoveTowardsF(0, diff, maxAngle);
   auto res  = a1 + d;
   return res;
 }
 
-TEST_CASE ("MoveTowardsAngleDeg") {  ///
+TEST_CASE ("MoveTowardsFAngleDeg") {  ///
   const struct {
     int a, b, c, d;
   } r[] = {
@@ -148,7 +172,7 @@ TEST_CASE ("MoveTowardsAngleDeg") {  ///
     {90, 180, 5, 95},
   };
   for (auto [a, b, c, d] : r) {
-    auto res = MoveTowardsAngleDeg((f32)a, (f32)b, (f32)c);
+    auto res = MoveTowardsFAngleDeg((f32)a, (f32)b, (f32)c);
     CHECK(FloatAngleDegreesEquals(res, (f32)d));
   }
 }
@@ -250,6 +274,10 @@ f32 Clamp(f32 value, f32 min, f32 max) {  ///
 
 f32 Clamp01(f32 value) {  ///
   return Clamp(value, 0, 1);
+}
+
+f32 Clamp11(f32 value) {  ///
+  return Clamp(value, -1, 1);
 }
 
 int ClampInt(int value, int min, int max) {  ///
@@ -404,6 +432,26 @@ TEST_CASE ("IsPowerOf2") {  ///
 // NOTE: bounds are EXCLUSIVE.
 #define POS_IS_IN_BOUNDS(pos, bounds) \
   (!((pos).x < 0 || (pos).x >= (bounds).x || (pos).y < 0 || (pos).y >= (bounds).y))
+
+BF_FORCE_INLINE Vector2 Vector2Lerp(Vector2 v1, Vector2 v2, f32 amount) {  ///
+  return v1 + (v2 - v1) * amount;
+}
+
+BF_FORCE_INLINE Vector2
+Bezier(Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4, f32 t) {  ///
+  ASSERT(t >= 0);
+  ASSERT(t <= 1);
+
+  auto a1 = Vector2Lerp(v1, v2, t);
+  auto a2 = Vector2Lerp(v2, v3, t);
+  auto a3 = Vector2Lerp(v3, v4, t);
+
+  auto b1 = Vector2Lerp(a1, a2, t);
+  auto b2 = Vector2Lerp(a2, a3, t);
+
+  auto c = Vector2Lerp(b1, b2, t);
+  return c;
+}
 
 using Easing_function_t = f32 (*)(f32);
 
@@ -647,6 +695,11 @@ f32 EaseBounceSmall(f32 p) {  ///
   ]]] */
   return -2.100000f * p * p + 3.100000f * p + 0.000000f;
   /* [[[end]]] */
+}
+
+BF_FORCE_INLINE f32 EaseBounceSmallSmooth(f32 p) {  ///
+  ASSERT_IS_NUMBER(p);
+  return Bezier({0, 0}, {0.8f, 1.8f}, {0.8f, 0.9f}, {1, 1}, p).y;
 }
 
 #define OFFSET_IN_DIRECTION_OF_ANGLE_RAD(offset, angleRad) \

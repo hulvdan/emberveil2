@@ -1,12 +1,45 @@
-[tool.poetry]
-name = "game-template"
+[project]
+name = "cli"
 version = "0.1.0"
-description = ""
-authors = ["Aleksei Chistov <aleksey.chistov@gmail.com>"]
+description = "Add your description here"
 readme = "README.md"
+authors = [
+    { name = "Aleksei Chistov", email = "aleksey.chistov@gmail.com" }
+]
+requires-python = ">=3.11.3"
+dependencies = [
+    "cogapp>=3.6.0",
+    "cpplint>=2.0.2",
+    "fnvhash>=0.2.1",
+    "livereload>=2.7.1",
+    "lxml>=6.0.2",
+    "mypy>=1.18.2",
+    "numpy>=2.3.5",
+    "opencv-python>=4.11.0.86",
+    "pillow>=12.0.0",
+    "pydantic>=2.12.5",
+    "pydub>=0.25.1",
+    "pyjson5>=2.0.0",
+    "pytest>=9.0.1",
+    "pyyaml>=6.0.3",
+    "rich>=14.2.0",
+    "ruff>=0.14.6",
+    "typer>=0.20.0",
+    "types-pyyaml>=6.0.12.20250915",
+]
 packages = [
     { include = "cli" },
 ]
+
+[project.scripts]
+cli = "cli:main"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[build-system]
+requires = ["uv_build>=0.9.13,<0.10.0"]
+build-backend = "uv_build"
 
 [tool.poetry.dependencies]
 fnvhash = "^0.1.0"
@@ -28,16 +61,6 @@ mypy = "^1.16.1"
 types-pyyaml = "^6.0.12.20250516"
 livereload = "^2.7.1"
 pydub = "^0.25.1"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 90
-
-[tool.isort]
-profile = "black"
 
 [tool.ruff]
 [tool.ruff.lint]
@@ -88,6 +111,7 @@ ignore = [
     "T201",
     "TD002",
     "TD003",
+    "TD005",
     "TRY300",
     "UP032",
     "UP035",

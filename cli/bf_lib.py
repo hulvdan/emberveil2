@@ -1,7 +1,6 @@
+# Imports.  {  ###
 import colorsys
 import hashlib
-import json
-import logging
 import re
 import subprocess
 import sys
@@ -9,21 +8,29 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from functools import wraps
 from pathlib import Path
-from time import time
-from typing import Any, Callable, Iterator, NoReturn, ParamSpec, Sequence, TypeVar
+from typing import Any, Iterator, Sequence, TypeVar
 
 import fnvhash
+import yaml
+from bf_typer import log
+
+# }
+
+T = TypeVar("T")
 
 
 @dataclass(slots=True)
-class _DataValues:
+class _GameSettings:
+    # {  ###
     itch_target: str = "hulvdan/game-template"
     languages: list[str] = field(default_factory=lambda: ["russian", "english"])
+    generate_flatbuffers_api_for: list[str] = field(default_factory=list)
+    # }
 
 
-data_values = _DataValues()
+game_settings = _GameSettings()
+
 
 gamelib_processing_functions = []
 
@@ -31,6 +38,19 @@ gamelib_processing_functions = []
 def gamelib_processor(func):
     gamelib_processing_functions.append(func)
     return func
+
+
+_gamelib = None
+
+
+def load_gamelib_cached() -> dict:
+    # {  ###
+    global _gamelib
+    if _gamelib is not None:
+        return _gamelib
+    _gamelib = yaml.safe_load((GAME_DIR / "gamelib.yaml").read_text(encoding="utf-8"))
+    return _gamelib  # type: ignore[return-value]
+    # }
 
 
 class StrEnum(str, Enum):
@@ -55,7 +75,7 @@ class BuildTarget(StrEnum):
     tests = "tests"
 
 
-ALLOWED_BUILDS = (
+ALLOWED_BUILDS = (  ###
     (BuildTarget.game, BuildPlatform.Win, BuildType.Debug),
     (BuildTarget.game, BuildPlatform.Win, BuildType.RelWithDebInfo),
     (BuildTarget.game, BuildPlatform.Win, BuildType.Release),
@@ -66,146 +86,20 @@ ALLOWED_BUILDS = (
 )
 
 
-P = ParamSpec("P")
-T = TypeVar("T")
-
-_exiting = False
-
-timings_stack: list[Any] = []
-_root_timings_stack = timings_stack
-_timing_marks: list[Any] = []
-_timing_recursion_depth = 0
-
-
-def timing(f: Callable[P, T]) -> Callable[P, T]:
-    @wraps(f)
-    def wrap(*args: P.args, **kw: P.kwargs) -> T:
-        global timings_stack
-        global _timing_marks
-        global _timing_recursion_depth
-
-        started_at = time()
-
-        old_stack = timings_stack
-        timings_stack = []
-
-        old_timing_marks = _timing_marks
-        _timing_marks = []
-
-        _timing_recursion_depth += 1
-
-        try:
-            result = f(*args, **kw)
-        finally:
-            _timing_recursion_depth -= 1
-
-            elapsed = time() - started_at
-            log.info("Running '{}' took: {:.2f} ms".format(f.__name__, elapsed * 1000))
-
-            old_stack.append((f.__name__, elapsed, timings_stack, _timing_marks))
-
-            timings_stack = old_stack
-            _timing_marks = old_timing_marks
-
-            if _exiting:
-                print_timings()
-
-        return result
-
-    return wrap
-
-
-def timing_mark(text):
-    _timing_marks.append(text)
-
-
-def print_timings():
-    total_elapsed = sum(i[1] for i in _root_timings_stack)
-    if total_elapsed == 0:
-        total_elapsed = 0.000001
-
-    timings_string = "Timings:\n"
-
-    def process_value(i, depth):
-        nonlocal timings_string
-
-        function_name = i[0]
-        elapsed = i[1]
-        nested_function_calls = i[2]
-        timing_marks_list = i[3]
-        timing_marks_joined = ", ".join(timing_marks_list)
-
-        timings_string += "{}- {}".format("  " * depth, function_name).ljust(
-            52
-        ) + " {: 9.2f} ms, {:4.1f}%{}\n".format(
-            elapsed * 1000,
-            elapsed * 100 / total_elapsed,
-            " ({})".format(timing_marks_joined) if timing_marks_list else "",
-        )
-
-        for v in nested_function_calls:
-            process_value(v, depth + 1)
-
-    for i in _root_timings_stack:
-        process_value(i, 0)
-
-    log.info(timings_string)
-
-    log.info("RUNNING TOOK: {:.2f} SEC".format(time() - _started_at))
-
-
-_started_at = None
-
-
-@contextmanager
-def timing_manager():
-    global _exiting
-    global _started_at
-
-    _started_at = time()
-
-    yield
-
-    _exiting = True
-
-    if _timing_recursion_depth == 0:
-        print_timings()
-
-
-global_timing_manager_instance = timing_manager()
-
-
-old_exit = exit
-
-
-def timed_exit(code: int) -> NoReturn:
-    if global_timing_manager_instance is not None:
-        global_timing_manager_instance.__exit__(None, None, None)
-        console_handler.flush()
-
-    old_exit(code)
-
-
-globals()["exit"] = timed_exit
-
-
 REPLACING_SPACES_PATTERN = re.compile(r"\ +")
 REPLACING_NEWLINES_PATTERN = re.compile(r"\n+")
 
 
-LOG_FILE_POSITION = False
-
-
-# -----------------------------------------------------------------------------------
 # Constants.
-# -----------------------------------------------------------------------------------
-
+# ============================================================
+# {  ###
 PROJECT_DIR = Path(__file__).parent.parent
 TEMP_DIR = PROJECT_DIR / ".temp"
 TEMP_ART_DIR = TEMP_DIR / "art"
 CLI_DIR = Path("cli")
 ASSETS_DIR = PROJECT_DIR / "assets"
 ART_DIR = ASSETS_DIR / "art"
+ART_TEXTURES_DIR = ART_DIR / "textures"
 SRC_DIR = Path("src")
 RESOURCES_DIR = PROJECT_DIR / "resources"
 VENDOR_DIR = PROJECT_DIR / "vendor"
@@ -224,54 +118,12 @@ BUTLER_PATH = "C:/Users/user/Programs/butler/butler.exe"
 MSBUILD_PATH = r"c:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 CLANG_CL_PATH = r"c:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin\clang-cl.exe"
 
-
-# -----------------------------------------------------------------------------------
-# Logging.
-# -----------------------------------------------------------------------------------
+AUDIO_EXTENSIONS = {".wav", ".mp3", ".flac", ".aac", ".m4a", ".wma", ".ogg"}
+# }
 
 
-class CustomLoggingFormatter(logging.Formatter):
-    _grey = "\x1b[30;20m"
-    _green = "\x1b[32;20m"
-    _yellow = "\x1b[33;20m"
-    _red = "\x1b[31;20m"
-    _bold_red = "\x1b[31;1m"
-
-    @staticmethod
-    def _get_format(color: str | None) -> str:
-        reset = "\x1b[0m"
-        if color is None:
-            color = reset
-
-        suffix = ""
-        if LOG_FILE_POSITION:
-            suffix = " (%(filename)s:%(lineno)d)"
-
-        return f"{color}[%(levelname)s] %(message)s{suffix}{reset}"
-
-    _FORMATS = {
-        logging.NOTSET: _get_format(None),
-        logging.DEBUG: _get_format(None),
-        logging.INFO: _get_format(_green),
-        logging.WARNING: _get_format(_yellow),
-        logging.ERROR: _get_format(_red),
-        logging.CRITICAL: _get_format(_bold_red),
-    }
-
-    def format(self, record):
-        log_fmt = self._FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
-
-
-log = logging.getLogger(__file__)
-log.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(CustomLoggingFormatter())
-log.addHandler(console_handler)
-
-
+# Utility functions.
+# ============================================================
 def replace_double_spaces(string: str) -> str:
     return re.sub(REPLACING_SPACES_PATTERN, " ", string)
 
@@ -281,6 +133,7 @@ def replace_double_newlines(string: str) -> str:
 
 
 def test_replace_double_spaces():
+    # {  ###
     assert replace_double_spaces("") == ""
     assert replace_double_spaces(" ") == " "
     assert replace_double_spaces("  ") == " "
@@ -288,9 +141,11 @@ def test_replace_double_spaces():
     assert replace_double_spaces("\n") == "\n"
     assert replace_double_spaces("\n\n") == "\n\n"
     assert replace_double_spaces("\n\n\n") == "\n\n\n"
+    # }
 
 
 def test_replace_double_newlines():
+    # {  ###
     assert replace_double_newlines("") == ""
     assert replace_double_newlines(" ") == " "
     assert replace_double_newlines("  ") == "  "
@@ -298,6 +153,7 @@ def test_replace_double_newlines():
     assert replace_double_newlines("\n") == "\n"
     assert replace_double_newlines("\n\n") == "\n"
     assert replace_double_newlines("\n\n\n") == "\n"
+    # }
 
 
 def remove_spaces(string: str) -> str:
@@ -310,6 +166,7 @@ def run_command(
     cwd=None,
     timeout_seconds: int | None = None,
 ) -> None:
+    # {  ###
     if isinstance(cmd, str):
         cmd = replace_double_spaces(cmd.replace("\n", " ").strip())
 
@@ -334,38 +191,18 @@ def run_command(
     if p.returncode:
         log.critical(f'Failed to execute: "{c}"')
         exit(p.returncode)
+    # }
 
 
 def recursive_mkdir(path: Path) -> None:
+    # {  ###
     parents = list(path.parents)
     parents.insert(0, path)
     count = len(parents)
 
     for i in range(count):
         parents[-i - 1].mkdir(exist_ok=True)
-
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def better_json_dump(data, path):
-    with open(path, "w", encoding="utf-8") as out_file:
-        json.dump(data, out_file, indent="\t", ensure_ascii=False)
-
-
-def hash32(value: str) -> int:
-    return fnvhash.fnv1a_32(value.encode(encoding="ascii"))
-
-
-def hash32_utf8(value: str) -> int:
-    return fnvhash.fnv1a_32(value.encode(encoding="utf-8"))
-
-
-def hash32_file_utf8(filepath) -> int:
-    with open(filepath, encoding="utf-8") as in_file:
-        d = in_file.read()
-    return hash32_utf8(d)
+    # }
 
 
 def batched(list_: list[T], n: int) -> Iterator[list[T]]:
@@ -373,13 +210,50 @@ def batched(list_: list[T], n: int) -> Iterator[list[T]]:
         yield list_[i : i + n]
 
 
+def check_duplicates(values: list) -> None:
+    # {  ###
+    for i in range(len(values)):
+        for k in range(i + 1, len(values)):
+            assert values[i] != values[k], f"Found duplicate value: {values[i]}"
+    # }
+
+
+def only_one_is_not_none(values: list) -> bool:
+    # {  ###
+    found = False
+    for v in values:
+        if v:
+            if found:
+                return False
+            found = True
+    return found
+    # }
+
+
+def test_only_one_is_not_none() -> None:
+    # {  ###
+    assert only_one_is_not_none([2, None, None])
+    assert only_one_is_not_none([2])
+    assert not only_one_is_not_none([])
+    assert not only_one_is_not_none([1, 2])
+    # }
+
+
+def all_are_not_none(values: list) -> bool:
+    return all(v is not None for v in values)
+
+
+# Codegen helpers.
+# ============================================================
 def generate_binary_file_header(genline, source_path: Path, variable_name: str) -> None:
+    # {  ###
     data = source_path.read_bytes()
     genline(f"const u8 {variable_name}[] = {{")
     for i in range(0, len(data), 12):
         chunk = ", ".join(f"0x{b:02x}" for b in data[i : i + 12])
         genline(f"    {chunk},")
     genline("};\n")
+    # }
 
 
 def genenum(
@@ -395,6 +269,7 @@ def genenum(
     add_to_string: bool = False,
     comments: list[str] | None = None,
 ) -> None:
+    # {  ###
     assert not (hex_values and enumerate_values)
     assert not (override_values and enumerate_values)
 
@@ -404,7 +279,7 @@ def genenum(
     string = f"enum {name}"
     if enum_type:
         string += f" : {enum_type}"
-    string += " {"
+    string += " {  ///"
     genline(string)
 
     def genline_with_comment(line: str, i: int) -> None:
@@ -417,7 +292,7 @@ def genenum(
             genline_with_comment("  {}_{} = {},".format(name, value, hex(2**i)), i)
     elif override_values:
         i = 0
-        for value, value2 in zip(values, override_values):
+        for value, value2 in zip(values, override_values, strict=True):
             genline_with_comment("  {}_{} = {},".format(name, value, value2), i)
             i += 1
     else:
@@ -447,6 +322,13 @@ def genenum(
         genline("  };")
         genline("  return strings[type];")
         genline("};\n")
+    # }
+
+
+_call_stack: list[str | int] = []
+
+
+_recursive_replace_transform_patterns: Any = None
 
 
 def recursive_replace_transform(
@@ -455,15 +337,31 @@ def recursive_replace_transform(
     key_postfix_list: str,
     codename_to_index: dict[str, int],
     *,
-    root=True,
+    root: bool = True,
 ) -> list[str] | None:
+    # {  ###
+    global _recursive_replace_transform_patterns
     errors = None
 
     if not isinstance(gamelib_recursed, dict):
         return None
 
+    if root:
+        _recursive_replace_transform_patterns = (
+            re.compile(f"(.*_)?{key_postfix_single}(_\\d+)?$"),
+            re.compile(f"(.*_)?{key_postfix_list}(_\\d+)?$"),
+        )
+
     for key, value in gamelib_recursed.items():
+        _call_stack.append(key)
+
+        added_type = False
+
         if isinstance(value, dict):
+            if "type" in value:
+                _call_stack.append("(type={})".format(value["type"]))
+                added_type = True
+
             more_errors = recursive_replace_transform(
                 value, key_postfix_single, key_postfix_list, codename_to_index, root=False
             )
@@ -474,9 +372,10 @@ def recursive_replace_transform(
                     errors.extend(more_errors)
 
         elif isinstance(key, str) and (
-            key.endswith((key_postfix_single, key_postfix_list))
+            re.match(_recursive_replace_transform_patterns[0], key)
+            or re.match(_recursive_replace_transform_patterns[1], key)
         ):
-            if key.endswith(key_postfix_list):
+            if re.match(_recursive_replace_transform_patterns[1], key):
                 assert isinstance(value, list)
                 for i in range(len(value)):
                     assert isinstance(value[i], str), f"value: {value[i]}"
@@ -488,7 +387,9 @@ def recursive_replace_transform(
                             errors = []
                         errors.append(v)
             else:
-                assert isinstance(value, str), f"value: {value}"
+                assert isinstance(value, str), "key: {}, value: {}, stack: {}".format(
+                    key, value, _call_stack
+                )
                 try:
                     gamelib_recursed[key] = codename_to_index[value]
                 except KeyError:
@@ -497,34 +398,115 @@ def recursive_replace_transform(
                     errors.append(value)
 
         elif isinstance(value, list):
-            for v in value:
-                if isinstance(v, dict):
-                    more_errors = recursive_replace_transform(
-                        v,
-                        key_postfix_single,
-                        key_postfix_list,
-                        codename_to_index,
-                        root=False,
-                    )
-                    if more_errors:
-                        if not errors:
-                            errors = more_errors
-                        else:
-                            errors.extend(more_errors)
+            for i, v in enumerate(value):
+                if not isinstance(v, dict):
+                    continue
+
+                _call_stack.append(i)
+
+                added_type2 = False
+                if "type" in v:
+                    _call_stack.append("(type={})".format(v["type"]))
+                    added_type2 = True
+
+                more_errors = recursive_replace_transform(
+                    v,
+                    key_postfix_single,
+                    key_postfix_list,
+                    codename_to_index,
+                    root=False,
+                )
+                if more_errors:
+                    if not errors:
+                        errors = more_errors
+                    else:
+                        errors.extend(more_errors)
+
+                if added_type2:
+                    _call_stack.pop()
+
+                _call_stack.pop()
+
+        if added_type:
+            _call_stack.pop()
+        _call_stack.pop()
+
+    if root:
+        _recursive_replace_transform_patterns = None
 
     if root and errors:
         message = "recursive_replace_transform({}, {}):\nNot found:\n{}".format(
-            key_postfix_single, key_postfix_list, "\n".join(errors)
+            key_postfix_single, key_postfix_list, "\n".join(sorted(set(errors)))
         )
         raise AssertionError(message)
 
     return errors
+    # }
 
 
-# Git.
-# ==================================================
+def recursive_flattenizer(
+    gamelib_recursed,
+    key_postfix_single: str,
+    key_postfix_list: str,
+    root_list_field: str,
+    *,
+    list_to_fill: list | None = None,
+) -> None:
+    # {  ###
+    if not isinstance(gamelib_recursed, dict):
+        return
+
+    should_emplace_list_in_gamelib = False
+    if list_to_fill is None:
+        assert root_list_field not in gamelib_recursed
+        should_emplace_list_in_gamelib = True
+        list_to_fill = [{}]
+
+    for key, value in gamelib_recursed.items():
+        if isinstance(key, str) and (
+            key.endswith((key_postfix_single, key_postfix_list))
+        ):
+            if key.endswith(key_postfix_list):
+                assert isinstance(value, list)
+                start = len(list_to_fill)
+                list_to_fill.extend(value)
+                gamelib_recursed[key] = {"start": start, "end": len(list_to_fill)}
+            else:
+                list_to_fill.append(gamelib_recursed[key])
+                gamelib_recursed[key] = len(list_to_fill) - 1
+
+        elif isinstance(value, dict):
+            recursive_flattenizer(
+                value,
+                key_postfix_single,
+                key_postfix_list,
+                root_list_field,
+                list_to_fill=list_to_fill,
+            )
+
+        elif isinstance(value, list):
+            for v in value:
+                if not isinstance(v, dict):
+                    continue
+
+                recursive_flattenizer(
+                    v,
+                    key_postfix_single,
+                    key_postfix_list,
+                    root_list_field,
+                    list_to_fill=list_to_fill,
+                )
+
+    if should_emplace_list_in_gamelib:
+        gamelib_recursed[root_list_field] = list_to_fill
+    # }
+
+
+# Git helpers.
+# ============================================================
 @contextmanager
 def git_stash():
+    # {  ###
     process = subprocess.run(
         "git status --porcelain", check=True, shell=True, capture_output=True, text=True
     )
@@ -543,9 +525,11 @@ def git_stash():
     if should_stash:
         log.info("git_stash: applying previously stashed changes...")
         subprocess.run("git stash apply", check=True, shell=True)
+    # }
 
 
 def _git_get_current_commit_version_tag() -> str | None:
+    # {  ###
     process = subprocess.run(
         'git tag -l "v1\\.*" --points-at HEAD',
         check=True,
@@ -554,9 +538,11 @@ def _git_get_current_commit_version_tag() -> str | None:
         text=True,
     )
     return process.stdout.strip()
+    # }
 
 
 def _git_get_current_branch() -> str:
+    # {  ###
     return subprocess.run(
         "git branch --show-current",
         check=True,
@@ -564,9 +550,11 @@ def _git_get_current_branch() -> str:
         capture_output=True,
         text=True,
     ).stdout.strip()
+    # }
 
 
 def git_bump_tag() -> None:
+    # {  ###
     assert _git_get_current_branch() in ("master", "main")
 
     if _git_get_current_commit_version_tag():
@@ -583,7 +571,7 @@ def git_bump_tag() -> None:
 
     (
         SRC_DIR / "bf_version.cpp"
-    ).write_text(f"""// automatically generated by cli.py, do not modify
+    ).write_text(f"""// automatically generated by bf_cli.py, do not modify
 #pragma once
 
 #define BF_VERSION "v1.{next_version}"
@@ -596,17 +584,23 @@ def git_bump_tag() -> None:
 
     run_command(f"git tag v1.{next_version}")
     run_command(f"git push origin v1.{next_version}")
+    # }
 
 
-def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+# Color helpers.
+# ============================================================
+def hex_to_rgb_ints(hex_color: str) -> tuple[int, int, int]:
+    # {  ###
     hex_color = hex_color.lstrip("#")
     r = int(hex_color[0:2], 16)
     g = int(hex_color[2:4], 16)
     b = int(hex_color[4:6], 16)
     return (r, g, b)
+    # }
 
 
 def hex_to_rgb_floats(hex_color: str) -> tuple[float, float, float]:
+    # {  ###
     hex_color = hex_color.lstrip("#")
     r = int(hex_color[0:2], 16)
     g = int(hex_color[2:4], 16)
@@ -616,14 +610,17 @@ def hex_to_rgb_floats(hex_color: str) -> tuple[float, float, float]:
     b_float = b / 255.0
     r_float = min(1, r_float)
     return (r_float, g_float, b_float)
+    # }
 
 
 def rgb_floats_to_hex(rgb_floats: tuple[float, float, float]) -> str:
+    # {  ###
     r, g, b = rgb_floats
     r_int = round(r * 255)
     g_int = round(g * 255)
     b_int = round(b * 255)
     return "#{:02X}{:02X}{:02X}".format(r_int, g_int, b_int)
+    # }
 
 
 def transform_color(
@@ -632,6 +629,7 @@ def transform_color(
     saturation_scale: float = 1,
     value_scale: float = 1.0,
 ) -> tuple[float, float, float]:
+    # {  ###
     """
     Saturate an RGB color (tuple of 3 floats in 0-1) by a given amount.
 
@@ -646,14 +644,33 @@ def transform_color(
     s = min(s * saturation_scale, 1.0)
     v = min(v * value_scale, 1.0)
     return colorsys.hsv_to_rgb(h, s, v)
+    # }
 
 
+# Hashing helpers.
+# ==================================================
 def stable_hash(value: str | int) -> int:
+    # {  ###
     if isinstance(value, int):
         value = str(value)
     if isinstance(value, str):
         return int(hashlib.md5(value.encode("utf-8")).hexdigest(), 16)
     assert False, "Not supported type of value"
+    # }
+
+
+def hash32(value: str) -> int:
+    return fnvhash.fnv1a_32(value.encode(encoding="ascii"))
+
+
+def hash32_utf8(value: str) -> int:
+    return fnvhash.fnv1a_32(value.encode(encoding="utf-8"))
+
+
+def hash32_file_utf8(filepath) -> int:
+    with open(filepath, encoding="utf-8") as in_file:
+        d = in_file.read()
+    return hash32_utf8(d)
 
 
 from bf_game import *  # noqa

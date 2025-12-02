@@ -67,6 +67,9 @@ case "vs_set_startup_game":
     SendInput {ctrl down}{alt down}l{alt up}{ctrl up}{home}game_win32
     SendInput {AppsKey}a
 
+case "activate_game":
+    WinActivate, ahk_exe game.exe
+
 Default:
     MsgBox, Invalid Argument, %command%
     Exit, 1

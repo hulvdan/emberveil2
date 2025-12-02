@@ -1,3 +1,4 @@
+# Imports.  {  ###
 import csv
 import json
 import os
@@ -7,17 +8,15 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum, unique
 from functools import partial
-from itertools import groupby
 from math import radians
 from pathlib import Path
 from typing import Any, TypeAlias
 
-import pydub
 import pytest
-import yaml
 from bf_game import *  # noqa
 from bf_lib import (
     ART_DIR,
+    ART_TEXTURES_DIR,
     ASSETS_DIR,
     FLATBUFFERS_GENERATED_DIR,
     FLATC_PATH,
@@ -32,24 +31,27 @@ from bf_lib import (
     VENDOR_DIR,
     BuildPlatform,
     BuildType,
-    data_values,
+    game_settings,
     gamelib_processing_functions,
     genenum,
+    load_gamelib_cached,
     log,
     recursive_mkdir,
     recursive_replace_transform,
     replace_double_spaces,
     run_command,
     stable_hash,
-    timing,
-    timing_mark,
 )
+from bf_typer import timing, timing_mark
 from PIL import Image
+
+# }
 
 
 def texture_ids_recursive_transform(
     gamelib_recursed, transform_texture_id, transform_texture_ids_list
 ) -> None:
+    # {  ###
     if not isinstance(gamelib_recursed, dict):
         return
 
@@ -73,9 +75,11 @@ def texture_ids_recursive_transform(
                     texture_ids_recursive_transform(
                         v, transform_texture_id, transform_texture_ids_list
                     )
+    # }
 
 
 def degrees_to_radians_recursive_transform(gamelib_recursed) -> None:
+    # {  ###
     if not isinstance(gamelib_recursed, dict):
         return
 
@@ -97,12 +101,7 @@ def degrees_to_radians_recursive_transform(gamelib_recursed) -> None:
             for v in value:
                 if isinstance(v, dict):
                     degrees_to_radians_recursive_transform(v)
-
-
-def _get_placeholder_from_string(string: str) -> str | None:
-    if string.startswith("{") and string.endswith("}"):
-        return string[1:-1]
-    return None
+    # }
 
 
 @unique
@@ -127,6 +126,7 @@ class StringMalformedError(Exception): ...
 
 
 def process_group(string: str) -> StringGroup:
+    # {  ###
     assert string
     assert " " not in string
     assert "\t" not in string
@@ -143,7 +143,8 @@ def process_group(string: str) -> StringGroup:
             )
         result.append(
             BrokenStringDatum(
-                type=BrokenStringDatumType.PLACEHOLDER, string=string[l + 1 : r]
+                type=BrokenStringDatumType.PLACEHOLDER,
+                string=string[l + 1 : r].split("__", 1)[0],
             )
         )
         string = string[r + 1 :]
@@ -152,9 +153,11 @@ def process_group(string: str) -> StringGroup:
         result.append(BrokenStringDatum(type=BrokenStringDatumType.STRING, string=string))
 
     return result
+    # }
 
 
 def process_string(string: str) -> list[StringLine]:
+    # {  ###
     string = replace_double_spaces(string.strip().replace("\t", " ").replace("\r", ""))
 
     result: list[StringLine] = []
@@ -184,9 +187,11 @@ def process_string(string: str) -> list[StringLine]:
             raise
 
     return result
+    # }
 
 
 def test_process_group():
+    # {  ###
     assert process_group("a") == [
         BrokenStringDatum(type=BrokenStringDatumType.STRING, string="a")
     ]
@@ -227,9 +232,10 @@ def test_process_group():
         BrokenStringDatum(type=BrokenStringDatumType.STRING, string="cd"),
         BrokenStringDatum(type=BrokenStringDatumType.PLACEHOLDER, string="EF"),
     ]
+    # }
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # {  ###
     ("string", "result"),
     [
         ("", []),
@@ -326,7 +332,7 @@ def test_process_group():
             ],
         ),
         (
-            " +{CHANCE}%, to explode ",
+            " +{CHANCE__ALIAS}%, to explode ",
             [
                 [
                     [
@@ -404,13 +410,14 @@ def test_process_group():
             ],
         ),
     ],
-)
+)  # }
 def test_process_string(string: str, result: list[StringLine]) -> None:
     x = process_string(string)
     assert x == result
 
 
 def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
+    # {  ###
     loc_ids: list[str] = []
     loc_by_languages: dict[str, list[str]] = defaultdict(list)
 
@@ -422,18 +429,38 @@ def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
             loc_ids.append(row_id)
             for c in row:
                 if c not in not_language_columns:
-                    assert c in data_values.languages
+                    assert c in game_settings.languages
                     translation = row[c]
                     loc_by_languages[c].append(
                         translation.strip() or "<<NOT_TRANSLATED>>"
                     )
 
-    loc_ids.insert(0, "<<INVALID>>")
+    locale_caps_offset = -1
+
+    l = len(loc_ids)
+    for i in range(l):
+        loc = loc_ids[i]
+        if loc.startswith("UI_"):
+            if locale_caps_offset == -1:
+                locale_caps_offset = len(loc_ids) - i
+            loc_ids.append("{}__CAPS".format(loc))
+
+    genline("constexpr int LOCALE_CAPS_OFFSET = {};\n".format(locale_caps_offset))
+    genenum(genline, "Loc", ["INVALID", *loc_ids], add_count=True)
+
     for strings in loc_by_languages.values():
+        l = len(strings)
+        for i in range(l):
+            if loc_ids[i].startswith("UI_"):
+                strings.append(strings[i].upper())
         strings.insert(0, "<<INVALID>>")
+
+    loc_ids.insert(0, "<<INVALID>>")
 
     for strings in loc_by_languages.values():
         assert len(loc_ids) == len(strings)
+
+    gamelib["localization_debug_strings"] = loc_ids
 
     locale_to_index: dict[str, int] = {key: i for i, key in enumerate(loc_ids)}
     index_to_locale = {i: codename for codename, i in locale_to_index.items()}
@@ -499,155 +526,78 @@ def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
                     )
                     assert string_placeholders_to_verify == russian_placeholders, (
                         "Translated string differs in placeholders",
-                        data_values.languages[loc_index],
+                        game_settings.languages[loc_index],
                         index_to_locale[string_index],
                     )
 
-        try:
-            max_placeholders = max(
-                len(list(placeholders))
-                for _, placeholders in groupby(all_russian_placeholders, lambda x: x[0])
-            )
-        except ValueError:
-            max_placeholders = 0
-
-        genline(
-            "constexpr int BF_MAX_PLACEHOLDERS_IN_STRING = {};\n".format(max_placeholders)
-        )
-
     return codepoints, locale_to_index
+    # }
 
 
 @timing
 def convert_gamelib_json_to_binary(
     texture_name_2_id: dict[str, int], genline, atlas_data, original_texture_sizes
 ) -> None:
-    gamelib = yaml.safe_load((GAME_DIR / "gamelib.yaml").read_text(encoding="utf-8"))
+    # {  ###
+    gamelib = load_gamelib_cached()
 
     gamelib["original_texture_sizes"] = original_texture_sizes
 
     # Enriching gamelib with sounds.
     if 1:
-        sound_paths = list(RESOURCES_DIR.rglob("*.ogg"))
+        do_audio()
+
+        sound_paths = list(RESOURCES_DIR.glob("*.ogg"))
+
+        m = 2**32
+        sound_types_ = [
+            (t, (stable_hash(t) % m))
+            for t in {
+                sound_path.stem.split("__", 1)[0].upper() for sound_path in sound_paths
+            }
+        ]
+        sound_types_.sort(key=lambda x: x[1])
+        sound_types = [x[0] for x in sound_types_]
+        sound_enum_values = [x[1] for x in sound_types_]
+
         genenum(
             genline,
             "Sound",
-            sorted(
-                {sound_path.stem.split("__", 1)[0].upper() for sound_path in sound_paths}
-            ),
-            add_count=True,
+            sound_types,
+            override_values=sound_enum_values,
+            enum_type="u32",
         )
-        gamelib_sound_types: list[str] = [
-            i.pop("type") for i in gamelib.get("sounds", [])
-        ]
-        sound_types_from_files = {i.stem.split("__", 1)[0].upper() for i in sound_paths}
-        excessive_gamelib_sound_types: list[str] = []
-        for sound_type in gamelib_sound_types:
-            if sound_type not in sound_types_from_files:
-                excessive_gamelib_sound_types.append(sound_type)
+        genline("constexpr int SOUNDS_COUNT = {};\n".format(len(sound_enum_values)))
+        genline("constexpr int INDEX_TO_SOUND_[]{  ///")
+        for t in sound_types:
+            genline(f"  Sound_{t},")
+        genline("};")
+        genline("VIEW_FROM_ARRAY_DANGER(INDEX_TO_SOUND);\n")
 
-        if excessive_gamelib_sound_types:
-            assert False, "Found excessive sound types in gamelib: {}".format(
-                excessive_gamelib_sound_types
-            )
-
-        not_found_sounds: list[str] = []
         sound_variations_per_type: dict[str, list[Path]] = defaultdict(list)
         for sound_path in sound_paths:
             sound_variations_per_type[sound_path.stem.split("__", 1)[0].upper()].append(
-                sound_path
+                "resources/" + sound_path.name
             )
 
-        for sound_type, variations in sound_variations_per_type.items():
-            params_index = gamelib_sound_types.index(sound_type)
-            if params_index < 0:
-                not_found_sounds.append(sound_type)
-                continue
-
-            genline("const char* const _soundVariations_{}[] {{".format(sound_type))
-            for sound_path in variations:
-                genline('  "{}",'.format(sound_path.relative_to(PROJECT_DIR).as_posix()))
-            genline("};")
-
-        if not_found_sounds:
-            assert False, f"Couldn't find {not_found_sounds} in gamelib"
-
-        genline("""\nconst struct {
-  const char* const * pathVariations = {};
-  int variations = {};
-  int pool = {};
-  f32 volume = {};
-  f32 pitchMin = {};
-  f32 pitchMax = {};
-} g_sounds[] = {""")
-
-        if not gamelib_sound_types:
-            genline("  {},")
-
-        for sound_type in sound_variations_per_type:
-            params = gamelib["sounds"][gamelib_sound_types.index(sound_type)]
-
-            pitch_min = params.get("pitch_min", 1)
-            pitch_max = params.get("pitch_max", 1)
-            if sound_type.startswith("GAME_") and (pitch_min == 1 and pitch_max == 1):
-                pitch_min = 0.85
-                pitch_max = 1.15
-
-            assert pitch_min > 0
-            assert pitch_max > 0
-            assert pitch_min <= pitch_max
-
-            pool = params.get("pool", 1)
-            assert pool >= 1
-
-            volume = params.get("volume", 1)
-
-            variations_var = "_soundVariations_{}".format(sound_type)
-            genline("  {")
-            genline("    .pathVariations = {},".format(variations_var))
-            genline("    .variations = ARRAY_COUNT({}),".format(variations_var))
-            genline("    .pool = {},".format(pool))
-            genline("    .volume = {},".format(volume))
-            genline("    .pitchMin = {},".format(pitch_min))
-            genline("    .pitchMax = {},".format(pitch_max))
-            genline("  },")
-
-        gamelib.pop("sounds", None)
-        genline("};\n")
+        sounds: list[Any] = []
+        gamelib["sounds"] = sounds
+        for sound_type, enum_value_id in sound_types_:
+            x = {
+                "enum_value_id": enum_value_id,
+                "variations": sound_variations_per_type[sound_type],
+            }
+            sounds.append(x)
 
     gamelib |= atlas_data
-    genenum(genline, "DrawZ", gamelib.pop("render_z"), add_count=True)
-
-    # Locale gen.
-    if 1:
-        lines = (
-            Path(SRC_DIR / "game" / "bf_gamelib.fbs")
-            .read_text(encoding="utf-8")
-            .split("\n")
-        )
-
-        start = -1
-        end = -1
-        for i, line in enumerate(lines):
-            if "LOCALE_GEN_START" in line:
-                start = i + 1
-            if "LOCALE_GEN_END" in line:
-                end = i
-                break
-
-        assert start >= 0
-        assert end >= 1
-        assert start <= end
-
-        for i in range(start, end):
-            field_name = lines[i].split(":", 1)[0].strip().removesuffix("_locale")
-            gamelib["{}_locale".format(field_name)] = field_name.upper()
+    genenum(genline, "DrawZ", gamelib.pop("draw_z"), add_count=True)
 
     localization_codepoints, locale_to_index = _do_localization(genline, gamelib)
 
     for gamelib_processing_function in gamelib_processing_functions:
         gamelib_processing_function(genline, gamelib, localization_codepoints)
 
+    # Asserting on not found textures.
     if 1:
         not_found_textures: list[str] = []
         transform_texture_id = lambda data, key: transform_to_texture_index(
@@ -690,15 +640,19 @@ def convert_gamelib_json_to_binary(
 
     intermediate_binary_path = Path(str(intermediate_path).rsplit(".", 1)[0] + ".bin")
     shutil.move(intermediate_binary_path, RESOURCES_DIR / "gamelib.bin")
+    # }}
 
 
 def downscale_images(downscale_factors: list[int]) -> None:
+    # {  ###
     assert downscale_factors, downscale_factors
 
-    images_to_downscale = list((ART_DIR / "textures").rglob("*.png"))
+    images_to_downscale = list(ART_TEXTURES_DIR.glob("*.png"))
 
     for factor in downscale_factors:
         assert factor >= 1, factor
+
+        log.info("Downscaling by {}".format(factor))
 
         export_dir = TEMP_ART_DIR / f"d{factor}"
         recursive_mkdir(export_dir)
@@ -713,13 +667,13 @@ def downscale_images(downscale_factors: list[int]) -> None:
             ):
                 continue
 
-            log.info("Downscaling by {} '{}'".format(factor, export_image_path))
             im = Image.open(image_path)
             im.thumbnail(
                 (im.size[0] // factor, im.size[1] // factor), Image.Resampling.LANCZOS
             )
             im.save(export_image_path, "PNG")
             os.utime(export_image_path, ns=(s1.st_atime_ns, s1.st_mtime_ns))
+    # }
 
 
 def texture_cmp_key(x: dict, factor: int) -> tuple[bool, str]:
@@ -728,6 +682,7 @@ def texture_cmp_key(x: dict, factor: int) -> tuple[bool, str]:
 
 @timing
 def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dict]]:
+    # {  ###
     assert downscale_factors, downscale_factors
 
     texture_name_2_id: dict[str, int] = {}
@@ -840,10 +795,12 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
         )
 
     return texture_name_2_id, atlases_data
+    # }
 
 
 @timing
 def check_no_excessive_images_in_temp_art_dir(downscale_factors: list[int]) -> None:
+    # {  ###
     for factor in downscale_factors:
         TEMP_ART_DOWNSCALED_DIR = TEMP_ART_DIR / f"d{factor}"
 
@@ -852,8 +809,8 @@ def check_no_excessive_images_in_temp_art_dir(downscale_factors: list[int]) -> N
             for filepath in TEMP_ART_DOWNSCALED_DIR.rglob("*.png")
         ]
         art_filepaths = [
-            filepath.relative_to(ART_DIR / "textures")
-            for filepath in (ART_DIR / "textures").rglob("*.png")
+            filepath.relative_to(ART_TEXTURES_DIR)
+            for filepath in ART_TEXTURES_DIR.glob("*.png")
         ]
 
         for temp_filepath in temp_filepaths:
@@ -861,6 +818,7 @@ def check_no_excessive_images_in_temp_art_dir(downscale_factors: list[int]) -> N
                 p = TEMP_ART_DOWNSCALED_DIR / temp_filepath
                 log.info("Removing excessive image '{}'...".format(p))
                 p.unlink()
+    # }
 
 
 @timing
@@ -875,6 +833,7 @@ def transform_to_texture_indexes_list(
     texture_name_2_index: dict[str, int],
     not_found_textures: list[str],
 ) -> None:
+    # {  ###
     textures = data[key]
     assert isinstance(textures, list)
 
@@ -886,6 +845,7 @@ def transform_to_texture_indexes_list(
                 textures[i] = texture_name_2_index[texture_name]
             else:
                 not_found_textures.append(texture_name)
+    # }
 
 
 def transform_to_texture_index(
@@ -894,6 +854,7 @@ def transform_to_texture_index(
     texture_name_2_index: dict[str, int],
     not_found_textures: list[str],
 ) -> None:
+    # {  ###
     texture_name = data[key]
     assert isinstance(texture_name, str)
 
@@ -905,9 +866,11 @@ def transform_to_texture_index(
         data[key] = texture_name_2_index[texture_name]
     else:
         not_found_textures.append(texture_name)
+    # }
 
 
 def listfiles_with_hashes_in_dir(path: str | Path) -> dict[str, int]:
+    # {  ###
     filepath_string_to_hash = {}
 
     for filepath in Path(path).rglob("*"):
@@ -917,10 +880,12 @@ def listfiles_with_hashes_in_dir(path: str | Path) -> dict[str, int]:
             )
 
     return filepath_string_to_hash
+    # }
 
 
 @timing
 def generate_flatbuffer_files():
+    # {  ###
     recursive_mkdir(FLATBUFFERS_GENERATED_DIR)
 
     hashes_for_msbuild = listfiles_with_hashes_in_dir(FLATBUFFERS_GENERATED_DIR)
@@ -942,22 +907,31 @@ def generate_flatbuffer_files():
 
             run_command(command)
 
-        to_reflect = "bf_boner.fbs"
         gen(
-            (i for i in flatbuffer_files if i.name == to_reflect),
+            (
+                i
+                for i in flatbuffer_files
+                if i.name in game_settings.generate_flatbuffers_api_for
+            ),
             "--gen-object-api",
             "--reflect-names",
         )
-        gen(i for i in flatbuffer_files if i.name != to_reflect)
+        gen(
+            i
+            for i in flatbuffer_files
+            if i.name not in game_settings.generate_flatbuffers_api_for
+        )
 
         for file, file_hash in listfiles_with_hashes_in_dir(td).items():
             # Костыль, чтобы MSBuild не ребилдился каждый раз.
             if file_hash != hashes_for_msbuild.get(file):
                 shutil.copyfile(Path(td) / file, FLATBUFFERS_GENERATED_DIR / file)
+    # }
 
 
 @timing
 def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType) -> None:
+    # {  ###
     match platform:
         case BuildPlatform.Win:
             target_dir_ = f".cmake/vs17/{build_type}/resources"
@@ -979,88 +953,74 @@ def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType
         if file.is_file() and file.name not in src_files:
             file.unlink()
             log.info(f"Removed orphan resources/ file '{file}'")
+    # }
 
 
 @timing
-def convert_audio() -> None:
+def do_audio() -> None:
+    # {  ###
     AUDIO_SRC_DIR = ASSETS_DIR / "sfx"
     AUDIO_DST_DIR = RESOURCES_DIR
-    AUDIO_INPUT_EXTENSIONS = {".wav", ".mp3", ".flac", ".aac", ".m4a", ".wma", ".ogg"}
 
-    src_files = {
-        p
-        for p in AUDIO_SRC_DIR.rglob("*")
-        if p.suffix.lower() in AUDIO_INPUT_EXTENSIONS and p.is_file()
-    }
+    src_files = {p for p in AUDIO_SRC_DIR.glob("*.ogg") if p.is_file()}
 
-    # Checking no duplicated names.
     if 1:
-        src_files_without_extensions_and_options: set[str] = set()
-        duplicated_filenames: list[str] = []
+        # Making symlinks.
         for src_file in src_files:
-            if src_file.stem in src_files_without_extensions_and_options:
-                duplicated_filenames.append(src_file.stem.split("__", 1)[0])
-            else:
-                src_files_without_extensions_and_options.add(src_file.stem)
-        if duplicated_filenames:
-            assert False, f"Found duplicated audio filenames: {duplicated_filenames}"
+            dst_file = AUDIO_DST_DIR / (src_file.stem + ".ogg")
+            if dst_file.exists():
+                if dst_file.is_symlink():
+                    continue
+                else:
+                    dst_file.unlink()
+            dst_file.symlink_to(src_file)
 
-    # Converting.
-    for src_file in src_files:
-        dst_file = AUDIO_DST_DIR / (src_file.stem + ".ogg")
+        log.info(f"Make symlinks for {len(src_files)} audio files")
 
-        if dst_file.exists():
-            src_mtime = src_file.stat().st_mtime_ns
-            dst_mtime = dst_file.stat().st_mtime_ns
-            if dst_mtime == src_mtime:
-                continue
+    else:
+        # Copying.
+        copied = 0
+        for src_file in src_files:
+            dst_file = AUDIO_DST_DIR / (src_file.stem + ".ogg")
 
-        log.info(f"Converting {src_file} -> {dst_file}")
+            if dst_file.exists():
+                src_mtime = src_file.stat().st_mtime_ns
+                dst_mtime = dst_file.stat().st_mtime_ns
+                if dst_mtime == src_mtime:
+                    continue
 
-        audio = pydub.AudioSegment.from_file(src_file)
-        audio = pydub.effects.normalize(audio)
+            copied += 1
+            log.info(f"Copying {src_file} -> {dst_file}")
 
-        # Trimming of audio start and end.
-        silent_ranges = pydub.silence.detect_silence(
-            audio, min_silence_len=40, silence_thresh=audio.dBFS - 14
+            shutil.copyfile(src_file, dst_file)
+            shutil.copystat(src_file, dst_file)
+
+        log.info(
+            f"Found {len(src_files)} total files. (copied {copied}, others have the same modified time)"
         )
-        start_trim = 0
-        len_audio = len(audio)
-        end_trim = len_audio
-        if silent_ranges:
-            if silent_ranges[0][0] == 0:
-                start_trim = silent_ranges[0][1]
-            if silent_ranges[-1][1] == len(audio):
-                end_trim = silent_ranges[-1][0]
 
-        audio = audio[start_trim:end_trim]
-        if start_trim:
-            audio = audio.fade_in(40)
-        if end_trim != len_audio:
-            audio = audio.fade_out(40)
-        audio.export(dst_file, format="ogg")
-
-        mtime = src_file.stat().st_mtime_ns
-        os.utime(dst_file, ns=(mtime, mtime))
-
-    # Removing orphan audio files from resources/.
-    for dst_file in AUDIO_DST_DIR.rglob("*.ogg"):
+    # Removing orphan audio files from `resources` dir.
+    orphans = []
+    for dst_file in AUDIO_DST_DIR.glob("*.ogg"):
         src_file = AUDIO_SRC_DIR / dst_file.relative_to(AUDIO_DST_DIR)
-        found = False
-        for ext in AUDIO_INPUT_EXTENSIONS:
-            candidate = AUDIO_SRC_DIR / (dst_file.stem + ext)
-            if candidate.exists():
-                found = True
-                break
-        if not found:
-            log.info(f"Removing orphaned audio file: {dst_file}")
+        if not src_file.exists():
+            orphans.append(dst_file.name)
             dst_file.unlink()
+
+    if orphans:
+        log.info(
+            "Removed {} orphan audio files:\n{}".format(
+                len(orphans), "\n".join(x for x in orphans)
+            )
+        )
+
+    # }
 
 
 @timing
 def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
+    # {  ###
     remove_orphan_resources_files(platform, build_type)
-    convert_audio()
 
     if build_type == BuildType.Release and platform in (
         BuildPlatform.Web,
@@ -1085,8 +1045,8 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
 
                     (async () => {
                         window.ysdk = await YaGames.init();
-
                         await moduleReady;
+                        window.player = await window.ysdk.getPlayer();
                         Module.ccall('mark_ysdk_loaded_from_js', null, [], []);
 
                         window.ysdk.on('game_api_pause', () => {
@@ -1104,7 +1064,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
                             uk: 0,
                             uz: 0,
                             en: 1,
-                        }
+                        };
                         const l = window.ysdk.environment.i18n.lang;
                         if (l in languages_map)
                             lang = languages_map[l];
@@ -1200,7 +1160,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         HANDS_GENERATED_DIR / "bf_codegen.cpp", "w", encoding="utf-8"
     ) as codegen_file:
         codegen_file.write(
-            """// automatically generated by cli.py, do not modify
+            """// automatically generated by bf_cli.py, do not modify
 #pragma once
 
 """
@@ -1226,7 +1186,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
                 "debug_name": f"d1/{filepath.stem}",
                 "size": Image.open(TEMP_ART_DIR / "d1" / filepath).size,
             }
-            for filepath in Path(TEMP_ART_DIR / "d1").rglob("*.png")
+            for filepath in Path(TEMP_ART_DIR / "d1").glob("*.png")
         ]
         textures.sort(key=partial(texture_cmp_key, factor=1))
         original_texture_sizes = [x["size"] for x in textures]
@@ -1236,6 +1196,8 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         convert_gamelib_json_to_binary(
             texture_name_2_id, genline, atlases_data[0], original_texture_sizes
         )
+        genline("///")
+    # }
 
 
 ###

@@ -24,7 +24,7 @@ endif()
 # BF_PLATFORM_Win
 add_compile_definitions("BF_PLATFORM_${PLATFORM}=1")
 
-# vendor and codegen
+# vendor and codegen.
 #-----------------------------------------------------------------------------------
 add_library(vendor_and_codegen INTERFACE)
 target_include_directories(vendor_and_codegen
@@ -45,7 +45,7 @@ target_include_directories(GameAnalytics
         "${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/include"
 )
 
-# bgfx
+# bgfx.
 #-----------------------------------------------------------------------------------
 add_library(bgfx STATIC IMPORTED)
 target_include_directories(bgfx
@@ -123,7 +123,7 @@ else()
     message(FATAL_ERROR "bgfx: Not supported platform: ${PLATFORM}")
 endif()
 
-# sdl
+# sdl.
 #-----------------------------------------------------------------------------------
 add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/SDL3")
 
@@ -135,7 +135,7 @@ set_target_properties(box2d
         COMPILE_WARNING_AS_ERROR OFF
 )
 
-# basisu_transcoder
+# basisu_transcoder.
 #-----------------------------------------------------------------------------------
 add_library(zstd STATIC
     "${CMAKE_SOURCE_DIR}/vendor/basis_universal/zstd/zstd.h"
@@ -159,11 +159,11 @@ if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
     )
 endif()
 
-# tracy
+# tracy.
 #-----------------------------------------------------------------------------------
 add_subdirectory(vendor/tracy)
 
-# stb_vorbis
+# stb_vorbis.
 #-----------------------------------------------------------------------------------
 add_library(stb_vorbis STATIC
     "${CMAKE_SOURCE_DIR}/vendor/stb_vorbis.c"
@@ -173,7 +173,7 @@ target_compile_definitions(stb_vorbis
         STB_VORBIS_HEADER_ONLY
 )
 
-# miniaudio
+# miniaudio.
 #-----------------------------------------------------------------------------------
 add_library(miniaudio STATIC
     "${CMAKE_SOURCE_DIR}/vendor/miniaudio/include/miniaudio.h"
@@ -193,7 +193,7 @@ target_link_libraries(miniaudio
         stb_vorbis
 )
 
-# game
+# game.
 #-----------------------------------------------------------------------------------
 add_executable(game "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
 target_link_libraries(game
@@ -306,7 +306,7 @@ if (0)
     endif()
 endif()
 
-# tests
+# Tests.
 #-----------------------------------------------------------------------------------
 add_executable(tests "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
 target_link_libraries(tests
@@ -359,7 +359,7 @@ if ("${PLATFORM}" STREQUAL "Win")
     )
 endif()
 
-# Copying resources/.
+# Copying resources.
 #-----------------------------------------------------------------------------------
 add_custom_command(
     TARGET game PRE_BUILD

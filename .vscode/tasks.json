@@ -5,7 +5,7 @@
             "label": "build-game-debug",
             "type": "shell",
             "command": ".venv/Scripts/python",
-            "args": ["cli/cli.py", "build", "game", "Win", "Debug"],
+            "args": ["cli/bf_cli.py", "build", "game", "Win", "Debug"],
             "group": "build",
             "problemMatcher": []
         },
@@ -13,7 +13,7 @@
             "label": "build-tests",
             "type": "shell",
             "command": ".venv/Scripts/python",
-            "args": ["cli/cli.py", "build", "tests", "Win", "Debug"],
+            "args": ["cli/bf_cli.py", "build", "tests", "Win", "Debug"],
             "group": "build",
             "problemMatcher": []
         },

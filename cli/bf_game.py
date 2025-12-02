@@ -1,13 +1,14 @@
 """
 USAGE:
 
-    from bf_lib import data_values, gamelib_processor
+    from bf_lib import game_settings, gamelib_processor
 
-    data_values.itch_target = "hulvdan/cult-boy"
-    data_values.languages = ["russian", "english"]
+    game_settings.itch_target = "hulvdan/cult-boy"
+    game_settings.languages = ["russian", "english"]
+    game_settings.generate_flatbuffers_api_for = ["bf_save.fbs"]
 
     @gamelib_processor
-    def _process_gamelib(_genline, gamelib, _localization_codepoints: set[int]) -> None:
+    def process_gamelib(_genline, gamelib, _localization_codepoints: set[int]) -> None:
         for tile in gamelib["tiles"]:
-            tile.pop("type")
+            t = tile["type"]
 """

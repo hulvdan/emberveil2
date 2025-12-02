@@ -1,8 +1,7 @@
-render_z:
+draw_z: # {  ###
   - INVALID
   - SCREEN_BACKGROUND
   - DEFAULT
   - VIGNETTE
   - SCREEN_FADE
   - GIZMOS
-vignette_texture_id: vignette

@@ -2,6 +2,16 @@
 
 #pragma once
 
+void UnstableRemoveAt_(u8* base, size_t stride, const int i, int* count) {  ///
+  ASSERT(i >= 0);
+  ASSERT(i < *count);
+
+  if (i != *count - 1)
+    memcpy(base + stride * i, base + stride * (*count - 1), stride);
+
+  (*count)--;
+}
+
 #define ARRAY_PUSH(array, arrayCount, arrayMaxCount, value) \
   STATEMENT({                                               \
     *((array) + (arrayCount)) = value;                      \
@@ -39,16 +49,22 @@ int ArrayFind(const T* base, int count, const T& value) {  ///
 
 template <typename T>
 int ArrayBinaryFind(const T* base, int count, const T& value) {  ///
+#if BF_ENABLE_ASSERTS
+  FOR_RANGE (int, i, count - 1) {
+    // Checking that array is sorted.
+    ASSERT(base[i] <= base[i + 1]);
+  }
+#endif
+
   int low  = 0;
   int high = count - 1;
   while (low <= high) {
     int mid = low + (high - low) / 2;
 
-    if (base[mid] == value)
-      return mid;
-
     if (base[mid] < value)
       low = mid + 1;
+    else if (base[mid] == value)
+      return mid;
     else
       high = mid - 1;
   }
@@ -194,6 +210,10 @@ struct View {
     return IndexOf(value) != -1;
   }
 
+  void UnstableRemoveAt(const int i) {  ///
+    UnstableRemoveAt_((u8*)base, sizeof(*base), i, &count);
+  }
+
   T* begin() {  ///
     return base;
   }
@@ -259,6 +279,20 @@ struct Array {
     };
   }
 };
+
+TEST_CASE ("UnstableRemoveAt_") {  ///
+  int values[]{0, 1, 2, 3};
+  int valuesCount = ARRAY_COUNT(values);
+  UnstableRemoveAt_((u8*)values, sizeof(*values), 2, &valuesCount);
+  ASSERT(valuesCount == 3);
+  ASSERT(values[0] == 0);
+  ASSERT(values[1] == 1);
+  ASSERT(values[2] == 3);
+  UnstableRemoveAt_((u8*)values, sizeof(*values), 0, &valuesCount);
+  ASSERT(valuesCount == 2);
+  ASSERT(values[0] == 3);
+  ASSERT(values[1] == 1);
+}
 
 template <typename T>
 struct Vector {
@@ -337,15 +371,10 @@ struct Vector {
   }
 
   void UnstableRemoveAt(const int i) {  ///
-    ASSERT(i >= 0);
-    ASSERT(i < count);
-
-    if (i != count - 1)
-      base[i] = base[count - 1];
-
-    count--;
+    UnstableRemoveAt_((u8*)base, sizeof(*base), i, &count);
   }
 
+  // Remove value + ensure there's no of the same value remaining.
   void UnstableRemoveUniqueAssert(T value) {  ///
 #if BF_ENABLE_ASSERTS
     int found = 0;
@@ -413,36 +442,36 @@ struct Vector {
 };
 
 template <typename T>
-struct VectorIterator : public IteratorFacade<VectorIterator<T>> {
+struct VectorIterator : public IteratorFacade<VectorIterator<T>> {  ///
   VectorIterator() = delete;
   explicit VectorIterator(Vector<T>* container)
       : VectorIterator(container, 0) {}
   VectorIterator(Vector<T>* container, int current)
       : _container(container)
       , _current(current)  //
-  {                        ///
+  {
     ASSERT(container != nullptr);
   }
 
-  [[nodiscard]] VectorIterator begin() const {  ///
+  [[nodiscard]] VectorIterator begin() const {
     return {_container, _current};
   }
 
-  [[nodiscard]] VectorIterator end() const {  ///
+  [[nodiscard]] VectorIterator end() const {
     return {_container, _container->count};
   }
 
-  [[nodiscard]] T* Dereference() const {  ///
+  [[nodiscard]] T* Dereference() const {
     ASSERT(_current >= 0);
     ASSERT(_current < _container->count);
     return _container->base + _current;
   }
 
-  void Increment() {  ///
+  void Increment() {
     _current++;
   }
 
-  [[nodiscard]] bool EqualTo(const VectorIterator& o) const {  ///
+  [[nodiscard]] bool EqualTo(const VectorIterator& o) const {
     return _current == o._current;
   }
 
@@ -455,5 +484,42 @@ template <typename T>
 auto Iter(Vector<T>* container) {  ///
   return VectorIterator(container);
 }
+
+struct RangeIterator : public IteratorFacade<RangeIterator> {  ///
+  RangeIterator() = delete;
+  explicit RangeIterator(int end)
+      : RangeIterator(0, end) {}
+  RangeIterator(int current, int end)
+      : _current(current)
+      , _end(end) {
+    ASSERT(current <= end);
+  }
+
+  [[nodiscard]] RangeIterator begin() const {
+    return {_current, _end};
+  }
+
+  [[nodiscard]] RangeIterator end() const {
+    return {_end, _end};
+  }
+
+  [[nodiscard]] int Dereference() const {
+    ASSERT(_current >= 0);
+    ASSERT(_current < _end);
+    return _current;
+  }
+
+  void Increment() {
+    _current++;
+  }
+
+  [[nodiscard]] bool EqualTo(const RangeIterator& o) const {
+    return _current == o._current;
+  }
+
+  private:
+  int _current = {};
+  int _end     = {};
+};
 
 ///

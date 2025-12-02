@@ -1,1 +1,1 @@
-poetry run python cli\cli.py build game Win Release
+poetry run python cli\bf_cli.py build game Win Release

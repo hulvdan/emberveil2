@@ -1,8 +1,11 @@
+// Game Toggles.
+// ============================================================
+
 // Other stuff.
 // ============================================================
 
 #ifdef SDL_PLATFORM_WIN32
-#  define BF_PROFILING (BF_DEBUG)
+#  define BF_PROFILING (BF_DEBUG && 0)
 #else
 #  define BF_PROFILING (0)
 #endif

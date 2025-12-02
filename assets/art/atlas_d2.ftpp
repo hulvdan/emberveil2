@@ -25,7 +25,7 @@
     "fixedSize": false,
     "powerOfTwo": true,
     "padding": 1,
-    "extrude": 0,
+    "extrude": 1,
     "allowRotation": false,
     "allowTrim": false,
     "trimMode": "trim",

@@ -33,7 +33,7 @@ def render_file(cog, filename, name, args):
 
         for i in range(len(arg_names), len(lines)):
             line = lines[i]
-            for arg, arg_name in zip(args, arg_names):
+            for arg, arg_name in zip(args, arg_names, strict=True):
                 line = line.replace(arg_name, arg)
 
             out_file.write(line)
