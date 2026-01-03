@@ -4,34 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-    <title>raylib web game</title>
-
-    <meta name="title" content="raylib web game">
-    <meta name="description" content="New raylib web videogame, developed using raylib videogames library">
-    <meta name="keywords" content="raylib, programming, examples, html5, C, C++, library, learn, games, videogames">
+    <title>Game [DEBUG]</title>
     <meta name="viewport" content="width=device-width">
-
-    <!-- Open Graph metatags for sharing -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="raylib web game">
-    <meta property="og:image:type" content="image/png">
-    <meta property="og:image" content="https://www.raylib.com/common/raylib_logo.png">
-    <meta property="og:image:alt" content="New raylib web videogame, developed using raylib videogames library" />
-    <meta property="og:site_name" content="raylib - example">
-    <meta property="og:url" content="https://www.raylib.com/games.html">
-    <meta property="og:description" content="New raylib web videogame, developed using raylib videogames library">
-
-    <!-- Twitter metatags for sharing -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@raysan5">
-    <meta name="twitter:title" content="raylib web game">
-    <meta name="twitter:image" content="https://www.raylib.com/common/raylib_logo.png">
-    <meta name="twitter:image:alt" content="New raylib web videogame, developed using raylib videogames library">
-    <meta name="twitter:url" content="https://www.raylib.com/games.html">
-    <meta name="twitter:description" content="New raylib web videogame, developed using raylib videogames library">
-
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="https://www.raylib.com/favicon.ico">
 
     <style>
         body {
@@ -39,19 +13,19 @@
           overflow: hidden;
           background-color: black;
         }
-        canvas.emscripten { border: 0px none; background-color: black;}
+        canvas.emscripten {
+            border: 0px none;
+            background-color: black;
+            width: 100vw;
+            height: 100vh;
+        }
     </style>
+
     </head>
     <body>
         <canvas class=emscripten id=canvas oncontextmenu=event.preventDefault() tabindex=-1></canvas>
         <p id="output" />
-        <script>
-            function onResize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                Module.ccall('resize_from_js', null, ['number', 'number'], [window.innerWidth, window.innerHeight]);
-            }
-
+        <script type="text/javascript">
             var Module = {
                 preRun: [],
                 postRun: [
@@ -60,11 +34,7 @@
                         var device = 0;
                         if (isMobile)
                             device = 1;
-                        Module.ccall('set_device_type_from_js', null, ['number'], [ device ]);
-                    },
-                    () => {
-                        window.addEventListener('resize', onResize);
-                        onResize();
+                        Module.fromJS_setDeviceType(device);
                     },
                 ],
 
@@ -80,10 +50,8 @@
                         }
                     };
                 })(),
-                canvas: (function() {
-                    var canvas = document.getElementById('canvas');
-                    return canvas;
-                })(),
+
+                canvas: (function() { return document.getElementById('canvas'); })(),
             };
         </script>
         {{{ SCRIPT }}}

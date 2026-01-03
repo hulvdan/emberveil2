@@ -53,6 +53,7 @@ table Localization {
 }
 
 table Placeholder {
+    type: string (required);
 }
 
 struct Posf {
@@ -65,11 +66,18 @@ struct Pos {
     y: int;
 }
 
+table SoundVariation {
+    filepath: string (required);
+    delay_milliseconds: uint64;
+}
+
 table Sound {
+    index: int;
     enum_value_id: uint (key);
-    variations: [string];
+    variations: [SoundVariation];
     pitch_max: float = 1.1;
-    pitch_min: float = 0.9;
+    pitch_min: float = 0.95;
+    is_music: bool;
 }
 
 table Flattened {

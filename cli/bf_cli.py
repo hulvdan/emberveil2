@@ -1,10 +1,19 @@
 # Imports.  {  ###
+import asyncio
+import datetime
 import os
 import zipfile
+from collections import Counter
 from pathlib import Path
 
+import bf_lib
+import websockets
 from bf_game import *  # noqa
-from bf_gamelib import do_generate
+from bf_gamelib import (
+    do_generate,
+    get_sounds_that_reaper_would_export,
+    regenerate_shaders,
+)
 from bf_lib import (
     ALLOWED_BUILDS,
     BUTLER_PATH,
@@ -18,8 +27,10 @@ from bf_lib import (
     BuildPlatform,
     BuildTarget,
     BuildType,
+    bannerify,
     game_settings,
     git_bump_tag,
+    git_check_no_unstashed,
     git_stash,
     hash32,
     run_command,
@@ -49,6 +60,7 @@ def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
     command = [
         "cmake",
         "-DBUILD_SHARED_LIBS=OFF",
+        # "-T ClangCL",
         f"-DPLATFORM={platform}",
         f"-DCMAKE_CONFIGURATION_TYPES={build_type}",
     ]
@@ -63,12 +75,12 @@ def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
             command.append('-G "Visual Studio 17 2022"')
             command.append(r"-B .cmake/vs17")
 
-        case BuildPlatform.Web | BuildPlatform.WebYandex:
-            command.insert(0, "emcmake")
-            command.append(f"-B .cmake/{platform}_{build_type}")
-
         case _:
-            assert False, f"Not supported platform: {platform}"
+            if platform.lower().startswith("web"):
+                command.insert(0, "emcmake")
+                command.append(f"-B .cmake/{platform}_{build_type}")
+            else:
+                assert False, f"Not supported platform: {platform}"
 
     run_command(" ".join(command))
     # }
@@ -95,16 +107,17 @@ def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType
                 """
             )
 
-        case BuildPlatform.Web | BuildPlatform.WebYandex:
-            run_command(rf"cmake --build .cmake/{platform}_{build_type} -t {target}")
-
-            if platform == BuildPlatform.WebYandex:
-                make_web_build_archive(
-                    TEMP_DIR / "yandex.zip", Path(f".cmake/{platform}_{build_type}")
-                )
-
         case _:
-            assert False, f"Not supported platform: {platform}"
+            if platform.lower().startswith("web"):
+                run_command(rf"cmake --build .cmake/{platform}_{build_type} -t {target}")
+
+                if platform == BuildPlatform.WebYandex:
+                    make_web_build_archive(
+                        TEMP_DIR / "yandex.zip", Path(f".cmake/{platform}_{build_type}")
+                    )
+
+            else:
+                assert False, f"Not supported platform: {platform}"
     # }
 
 
@@ -174,7 +187,7 @@ def do_lint() -> None:
     run_command(
         rf"""
             "{CLANG_TIDY_PATH}"
-            src/engine/bf_game_exe.cpp
+            src/engine/bf_engine.cpp
         """
         # Убираем абсолютный путь к проекту из выдачи линтинга.
         # Тут куча экранирования происходит, поэтому нужно дублировать обратные слеши.
@@ -219,13 +232,15 @@ def do_compile_commands_json() -> None:
 
 @timing
 def do_stop_debugger_ahk() -> None:
-    run_command(r".nvim-personal\cli.ahk stop_debugger")
+    run_command(r"autohotkey .nvim-personal\cli.ahk stop_debugger")
 
 
 @timing
 def do_run_in_debugger_ahk(target: BuildTarget, build_type: BuildType) -> None:
+    # {  ###
     exe_path = f".cmake/vs17/{build_type}/{target}.exe"
-    run_command(rf".nvim-personal\cli.ahk run_in_debugger {exe_path}")
+    run_command(rf"autohotkey .nvim-personal\cli.ahk run_in_debugger {exe_path}")
+    # }
 
 
 # @command
@@ -282,14 +297,16 @@ def do_run_in_debugger_ahk(target: BuildTarget, build_type: BuildType) -> None:
 
 @timing
 def do_activate_game_ahk() -> None:
-    run_command(r".nvim-personal\cli.ahk activate_game")
+    run_command(r"autohotkey .nvim-personal\cli.ahk activate_game")
 
 
 @command
 def codegen(platform: BuildPlatform, build_type: BuildType):
+    # {  ###
     do_cmake(platform, build_type)
     do_generate(platform, build_type)
     do_activate_game_ahk()
+    # }
 
 
 @command
@@ -304,11 +321,14 @@ def build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType):
 @command
 def build_all_and_test():
     # {  ###
+
     test()
     for target, platform, build_type in ALLOWED_BUILDS:
         if target != BuildTarget.game:
             continue
+        do_generate(platform, build_type)
         build(BuildTarget.game, platform, build_type)
+        bf_lib._gamelib = None  # noqa: SLF001
     # }
 
 
@@ -354,13 +374,15 @@ def test():
 @command
 def deploy_itch():
     # {  ###
+    git_check_no_unstashed()
+
     git_bump_tag()
 
     with git_stash():
-        build(BuildTarget.game, BuildPlatform.Web, BuildType.Release)
+        build(BuildTarget.game, BuildPlatform.WebItch, BuildType.Release)
 
     zip_path = TEMP_DIR / "itch.zip"
-    make_web_build_archive(zip_path, Path(".cmake/Web_Release"))
+    make_web_build_archive(zip_path, Path(".cmake/WebItch_Release"))
 
     target = "{}:html".format(game_settings.itch_target)
     run_command([BUTLER_PATH, "push", zip_path, target])
@@ -370,10 +392,34 @@ def deploy_itch():
 @command
 def deploy_yandex():
     # {  ###
+    git_check_no_unstashed()
+
     git_bump_tag()
 
     with git_stash():
         build(BuildTarget.game, BuildPlatform.WebYandex, BuildType.Release)
+    # }
+
+
+@command
+def receive_ws_logs(port: int):
+    # {  ###
+    get_time = lambda: datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+
+    async def handler(ws):
+        print(f"{get_time()} I: CONNECTED")
+        try:
+            async for msg in ws:
+                print(f"{get_time()} {msg}")
+        except websockets.exceptions.ConnectionClosedError:
+            print(f"{get_time()} I: DISCONNECTED")
+
+    async def main():
+        async with websockets.serve(handler, "0.0.0.0", port):
+            print(f"Listening on ws://0.0.0.0:{port}")
+            await asyncio.Future()
+
+    asyncio.run(main())
     # }
 
 
@@ -416,7 +462,28 @@ def _credit_sfx(_folder: Path, _credit: str = "") -> None:
 #     while stack:
 #         p = stack.pop(0)
 #         stack = stack[1:]
-# }
+
+
+@command
+def shaders() -> None:
+    regenerate_shaders(True)
+
+
+@command
+def banner(filepath: Path) -> None:
+    # {  ###
+    filepath.write_text(
+        bannerify([x.rstrip() for x in filepath.read_text("utf-8").splitlines()]),
+        "utf-8",
+    )
+    # }
+
+
+@command
+def list_sounds() -> None:
+    a = Counter()  # type: ignore[var-annotated]
+    a.update(x.split("__", 1)[0] for x in get_sounds_that_reaper_would_export())
+    print(a)
 
 
 def main() -> None:

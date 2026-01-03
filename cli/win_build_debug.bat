@@ -1,1 +1,1 @@
-poetry run python cli\bf_cli.py build game Win Debug
+uv run python cli\bf_cli.py build game Win Debug

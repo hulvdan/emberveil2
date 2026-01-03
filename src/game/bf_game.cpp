@@ -58,9 +58,7 @@ static const char* const g_gameVersion = BF_VERSION
 // }
 
 struct GameData {
-  struct Meta {
-  } meta;
-};
+} g = {};
 
 void GamePreInit() {  ///
   ZoneScoped;
@@ -70,35 +68,94 @@ void GameInit() {  ///
   ZoneScoped;
 }
 
+void GameInitAfterLoadingSavedata() {
+  ZoneScoped;
+
+  LOGI("GameInitAfterLoadingSavedata...");
+  DEFER {
+    LOGI("GameInitAfterLoadingSavedata... Finished!");
+  };
+}
+
+// NOTE: Logic must be executed only when `ge.meta._drawing` (`draw`) is false!
+// e.g. updating mouse position, processing `clicked()`,
+// logically reacting to `Clay_Hovered()`, changing game's state, etc.
+void DoUI() {
+#define BF_UI_PRE
+#include "bf_clay_ui.cpp"
+
+#define BF_UI_POST
+#include "bf_clay_ui.cpp"
+}
+
 void GameFixedUpdate() {  ///
   ZoneScoped;
+
+  DoUI();
 }
 
 void GameDraw() {
   ZoneScoped;
 
-  // Drawing debug text.
+  DoUI();
+
+  FlushDrawCommands();
+
+  // Debug info.
   if (ge.meta.debugEnabled) {  ///
-    int y = 1;
-    LAMBDA (void, DebugText, (const char* pattern, auto&&... args)) {
-      bgfx::dbgTextPrintf(1, y++, 0x4f, pattern, args...);
-    };
+    if (0)
+      IM::ShowDemoWindow();
 
-    DebugText("Close debug menu: hold F1 -> press F2");
+    auto localizationEn = glib->localizations()->Get(1)->strings();
 
-    LAMBDA (void, debugTextArena, (const char* name, const Arena& arena)) {
-      DebugText(
-        "%s: %d %d (%.1f%%) (max: %d, %.1f%%)",
-        name,
-        arena.used,
-        arena.size,
-        100.0f * (f32)arena.used / (f32)arena.size,
-        arena.maxUsed,
-        100.0f * (f32)arena.maxUsed / (f32)arena.size
-      );
-    };
+    if (IM::Begin("Debug") && IM::BeginTabBar("tabs")) {
+      if (IM::BeginTabItem("info")) {
+        IM::Text("Close debug menu: hold F1 -> press F2");
 
-    debugTextArena("ge.meta._arena", ge.meta._arena);
+        IM::Text("");
+
+        if (IM::Button("Reset Debug"))
+          gdebug = {};
+
+        IM::Checkbox("Gizmos", &gdebug.gizmos);
+        IM::Checkbox("Emulating Mobile", &gdebug.emulatingMobile);
+        IM::Checkbox("Hide UI For Video", &gdebug.hideUIForVideo);
+
+        ge.meta.device
+          = (gdebug.emulatingMobile ? DeviceType_MOBILE : DeviceType_DESKTOP);
+
+        IM::Text("MarkGameplay: %d", ge.meta.markGameplay);
+
+        IM::Text("F3 change localization");
+        IM::Text("F4 change device");
+
+        LAMBDA (void, debugTextArena, (const char* name, const Arena& arena)) {
+          IM::Text(
+            "%s: %d %d (%.1f%%) (max: %d, %.1f%%)",
+            name,
+            (int)arena.used,
+            (int)arena.size,
+            100.0f * (f32)arena.used / (f32)arena.size,
+            (int)arena.maxUsed,
+            100.0f * (f32)arena.maxUsed / (f32)arena.size
+          );
+        };
+
+        debugTextArena("ge.meta._arena", ge.meta._arena);
+        debugTextArena("ge.meta.trashArena", ge.meta.trashArena);
+        debugTextArena("ge.meta._transientDataArena", ge.meta._transientDataArena);
+
+#define X(type_, name_) \
+  IM::Text("g.run." #name_ ": %d/%d", g.run.name_.count, g.run.name_.maxCount);
+        VECTORS_TABLE;
+#undef X
+        IM::EndTabItem();
+      }
+
+      IM::EndTabBar();
+    }
+
+    IM::End();
   }
 }
 

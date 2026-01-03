@@ -3,78 +3,15 @@
 
 namespace BFSave;
 
-table Item {
-    type: int;
-    count: int;
-}
-
-table Weapon {
-    type: int;
-    tier: int;
-    killed_enemies: int;
-}
-
-table Upgrade {
-    stat: int;
-    tier: int;
-}
-
-table Rerolls {
-    rerolled_free_times: int;
-    rerolled_times: int;
-}
-
-table ShopItem {
-    weapon: int;
-    item: int;
-    tier: int;
-}
-
-table Achievement {
-    value: int64;
-}
-
-table Build {
-    max_difficulty_beaten: int;
-}
+// GAME STUFF
+// GAME STUFF END
 
 table Save {
+    version: int = 1;
     random_state: uint;
 
-    achievements: [Achievement];
-    builds: [Build];
-
-    difficulty: int;
-    build: int;
-    weapon: int;
-    biome: int;
-
-    health: int;
-
-    won: bool;
-    screen: int;
-
-    wave_index: int;
-    wave_won: bool;
-
-    level: int;
-    level_on_start_of_the_wave: int;
-    xp: float;
-
-    player_killed_enemies: int;
-    not_picked_up_coins: int;
-    crates: int;
-    to_spawn: int;
-
-    weapons: [Weapon];
-    items: [Item];
-    stats: [int];
-
-    screen_picked_up_item__to_pick: int;
-    screen_upgrades__to_pick: [Upgrade];
-    screen_upgrades__rerolls: Rerolls;
-    screen_shop__to_pick: [ShopItem];
-    screen_shop__rerolls: Rerolls;
+    // GAME STUFF
+    // GAME STUFF END
 }
 
 file_identifier "SAVE";

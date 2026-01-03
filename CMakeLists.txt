@@ -18,11 +18,74 @@ else()
     add_compile_definitions("BF_DEBUG=0")
 endif()
 
+# Enabling address sanitizer.
+if (0)
+    #
+    # After ENABLING run following commands:
+    #
+    #   cd vendor/bgfx
+    #   del /f/s/q .build
+    #   make
+    #   msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Debug /p:EnableAddressSanitizer=true
+    #
+    # After DISABLING run following commands:
+    #
+    #   cd vendor/bgfx
+    #   del /f/s/q .build
+    #   make
+    #   msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Debug
+    #   msbuild .build/projects/vs2022/bgfx.sln /t:Build /p:Configuration=Release
+    #
+    if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
+        if ("${PLATFORM}" STREQUAL "Win")
+            add_compile_options(/fsanitize=address)
+        endif()
+    endif()
+endif()
+
 # Adding:
 # BF_PLATFORM_Web
+# BF_PLATFORM_WebItch
 # BF_PLATFORM_WebYandex
 # BF_PLATFORM_Win
 add_compile_definitions("BF_PLATFORM_${PLATFORM}=1")
+
+if ("${PLATFORM}" MATCHES "^Web")
+    if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
+    else()
+        set(CMAKE_C_FLAGS_RELEASE "-O3 -flto -s WASM=1 -msimd128 -s ASSERTIONS=0 -s SAFE_HEAP=0 -fno-exceptions -fno-rtti")
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto -s WASM=1 -msimd128 -s ASSERTIONS=0 -s SAFE_HEAP=0 -fno-exceptions -fno-rtti")
+    endif()
+endif()
+
+add_library(optimization INTERFACE)
+if ("${PLATFORM}" MATCHES "^Web")
+    if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
+        target_compile_options(optimization INTERFACE
+            "-O1"
+            "-oASSERTIONS=1"
+            "-fsanitize=undefined"
+        )
+        target_link_options(optimization INTERFACE
+            "-sASSERTIONS=1"
+            "-g"
+            "-O1"
+            "-fsanitize=undefined"
+            --profiling-funcs
+        )
+    else()
+        target_compile_options(optimization INTERFACE
+            -O3
+            "-oASSERTIONS=0"
+        )
+        target_link_options(optimization INTERFACE
+            -O3
+            "--closure 1"
+            "-sASSERTIONS=0"
+            "-s WASM_ASYNC_COMPILATION=1"
+        )
+    endif()
+endif()
 
 # vendor and codegen.
 #-----------------------------------------------------------------------------------
@@ -33,17 +96,17 @@ target_include_directories(vendor_and_codegen
         "${CMAKE_SOURCE_DIR}/vendor"
 )
 
-# GameAnalytics.
-#-----------------------------------------------------------------------------------
-if (("${PLATFORM}" STREQUAL "Web") OR ("${PLATFORM}" STREQUAL "WebYandex"))
-    add_library(GameAnalytics INTERFACE)
-else()
-    add_subdirectory(vendor/gameanalytics-sdk-cpp)
-endif()
-target_include_directories(GameAnalytics
-    INTERFACE
-        "${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/include"
-)
+# # GameAnalytics.
+# #-----------------------------------------------------------------------------------
+# if ("${PLATFORM}" MATCHES "^Web")
+#     add_library(GameAnalytics INTERFACE)
+# else()
+#     add_subdirectory(vendor/gameanalytics-sdk-cpp)
+# endif()
+# target_include_directories(GameAnalytics
+#     INTERFACE
+#         "${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/include"
+# )
 
 # bgfx.
 #-----------------------------------------------------------------------------------
@@ -91,7 +154,7 @@ if ("${PLATFORM}" STREQUAL "Win")
                 IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/vendor/bgfx/.build/win64_vs2022/bin/bimgRelease.lib"
         )
     endif()
-elseif (("${PLATFORM}" STREQUAL "Web") OR ("${PLATFORM}" STREQUAL "WebYandex"))
+elseif ("${PLATFORM}" MATCHES "^Web")
     if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
         set_target_properties(bgfx
             PROPERTIES
@@ -126,6 +189,7 @@ endif()
 # sdl.
 #-----------------------------------------------------------------------------------
 add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/SDL3")
+# target_link_libraries(SDL3-static PRIVATE optimization)
 
 # box2d.
 #-----------------------------------------------------------------------------------
@@ -134,14 +198,19 @@ set_target_properties(box2d
     PROPERTIES
         COMPILE_WARNING_AS_ERROR OFF
 )
+# target_link_libraries(box2d PRIVATE optimization)
+
+# zstd.
+#-----------------------------------------------------------------------------------
+add_library(zstd STATIC
+    "${CMAKE_SOURCE_DIR}/vendor/zstd/zstd.h"
+    "${CMAKE_SOURCE_DIR}/vendor/zstd/zstd.c"
+)
+target_include_directories(zstd PUBLIC "${CMAKE_SOURCE_DIR}/vendor/zstd")
+target_link_libraries(zstd PRIVATE optimization)
 
 # basisu_transcoder.
 #-----------------------------------------------------------------------------------
-add_library(zstd STATIC
-    "${CMAKE_SOURCE_DIR}/vendor/basis_universal/zstd/zstd.h"
-    "${CMAKE_SOURCE_DIR}/vendor/basis_universal/zstd/zstd.c"
-)
-target_include_directories(zstd PUBLIC "${CMAKE_SOURCE_DIR}/vendor/basis_universal/zstd")
 add_library(basisu_transcoder STATIC
     "${CMAKE_SOURCE_DIR}/vendor/basis_universal/transcoder/basisu_transcoder.h"
     "${CMAKE_SOURCE_DIR}/vendor/basis_universal/transcoder/basisu_transcoder.cpp"
@@ -150,7 +219,7 @@ target_include_directories(basisu_transcoder
     PUBLIC
         "${CMAKE_SOURCE_DIR}/vendor/basis_universal/transcoder"
 )
-target_link_libraries(basisu_transcoder PRIVATE zstd)
+target_link_libraries(basisu_transcoder PRIVATE zstd optimization)
 
 if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
     target_compile_definitions(basisu_transcoder
@@ -162,6 +231,7 @@ endif()
 # tracy.
 #-----------------------------------------------------------------------------------
 add_subdirectory(vendor/tracy)
+target_compile_definitions(TracyClient PRIVATE optimization)
 
 # stb_vorbis.
 #-----------------------------------------------------------------------------------
@@ -171,6 +241,10 @@ add_library(stb_vorbis STATIC
 target_compile_definitions(stb_vorbis
     INTERFACE
         STB_VORBIS_HEADER_ONLY
+)
+target_link_libraries(stb_vorbis PRIVATE optimization)
+set_target_properties(stb_vorbis PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
 )
 
 # miniaudio.
@@ -183,28 +257,84 @@ target_include_directories(miniaudio
     PUBLIC
         "${CMAKE_SOURCE_DIR}/vendor/miniaudio/include"
 )
-target_compile_definitions(miniaudio
-    PRIVATE
-        MA_IMPLEMENTATION
-)
 target_link_libraries(miniaudio
     PRIVATE
         vendor_and_codegen
         stb_vorbis
+        optimization
+)
+set_target_properties(miniaudio PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
+)
+target_compile_definitions(miniaudio PUBLIC
+    MA_NO_FLAC
+    MA_NO_MP3
+    MA_NO_GENERATION
+    MA_NO_ENCODING
+)
+# target_compile_definitions(miniaudio PUBLIC MA_NO_DEVICE_IO)
+# if ("${PLATFORM}" MATCHES "^Web")
+#     target_compile_definitions(miniaudio PUBLIC MA_NO_DEVICE_IO)
+# endif()
+
+# readerwriterqueue.
+#-----------------------------------------------------------------------------------
+add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/readerwriterqueue")
+# target_link_libraries(readerwriterqueue PRIVATE optimization)
+
+# # freetype.
+# #-----------------------------------------------------------------------------------
+# add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/freetype")
+
+# imgui.
+#-----------------------------------------------------------------------------------
+add_library(imgui STATIC
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/imgui.h"
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/imgui.cpp"
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/imgui_draw.cpp"
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/imgui_widgets.cpp"
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/imgui_demo.cpp"
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/imgui_tables.cpp"
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_sdl3.cpp"
+    "${CMAKE_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_sdlgpu3.cpp"
+    # "${CMAKE_SOURCE_DIR}/vendor/imgui/misc/freetype/imgui_freetype.cpp"
+)
+target_include_directories(imgui
+    PUBLIC
+        "${CMAKE_SOURCE_DIR}/vendor/imgui"
+        "${CMAKE_SOURCE_DIR}/vendor/imgui/backends"
+        # "${CMAKE_SOURCE_DIR}/vendor/imgui/misc/freetype"
+)
+target_link_libraries(imgui
+    PUBLIC
+        SDL3-static
+    PRIVATE
+        optimization
+    #     freetype
+)
+target_compile_definitions(imgui
+    PUBLIC
+        IMGUI_USE_WCHAR32
+        # IMGUI_ENABLE_FREETYPE
 )
 
 # game.
 #-----------------------------------------------------------------------------------
-add_executable(game "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
+add_executable(game "${CMAKE_SOURCE_DIR}/src/engine/bf_engine.cpp")
 target_link_libraries(game
     PRIVATE
+        # GameAnalytics
         SDL3-static
+        basisu_transcoder
         bgfx
         box2d
-        vendor_and_codegen
-        basisu_transcoder
-        GameAnalytics
+        bx
+        imgui
         miniaudio
+        readerwriterqueue
+        vendor_and_codegen
+        zstd
+        optimization
 )
 if ("${PLATFORM}" STREQUAL "Win")
     target_link_libraries(game
@@ -222,7 +352,7 @@ target_compile_definitions(game
 )
 
 if ("${PLATFORM}" STREQUAL "Win")
-elseif (("${PLATFORM}" STREQUAL "Web") OR ("${PLATFORM}" STREQUAL "WebYandex"))
+elseif ("${PLATFORM}" MATCHES "^Web")
     target_compile_options(game
         PRIVATE
             "-o MIN_WEBGL_VERSION=1"
@@ -234,10 +364,10 @@ elseif (("${PLATFORM}" STREQUAL "Web") OR ("${PLATFORM}" STREQUAL "WebYandex"))
             "-sMIN_WEBGL_VERSION=1"
             "-sMAX_WEBGL_VERSION=2"
             "-sALLOW_MEMORY_GROWTH=1"
-            "-sINITIAL_MEMORY=56426496" # 63MB heap.
-            "-sSTACK_SIZE=1048576" # 1MB stack.
-            "-sEXPORTED_RUNTIME_METHODS=['ccall']"
+            "-sINITIAL_MEMORY=246022144" # X MB heap.
+            "-sSTACK_SIZE=2097152" # 2MB stack.
             --preload-file resources
+            -lembind
     )
     set_target_properties(game
         PROPERTIES
@@ -246,38 +376,41 @@ elseif (("${PLATFORM}" STREQUAL "Web") OR ("${PLATFORM}" STREQUAL "WebYandex"))
     )
 
     if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
-        target_compile_options(game
-            PRIVATE
-                "-O0"
-                "-oASSERTIONS=2"
-        )
         target_link_options(game
             PRIVATE
-                "-sASSERTIONS=2"
-                "-g"
-                "-O0"
                 "-sFORCE_FILESYSTEM=1"
                 "--shell-file=${CMAKE_SOURCE_DIR}/vendor/shell_debug.html"
+                # "-sSAFE_HEAP=1"
         )
     else()
-        target_compile_options(game
-            PRIVATE
-                "-O3"
-                "-oASSERTIONS=0"
-        )
-        target_link_options(game
-            PRIVATE
-                "-O3"
-                "-sASSERTIONS=0"
-                "-sEXIT_RUNTIME=0"
-                "--closure 1"
-        )
-        if ("${PLATFORM}" STREQUAL "WebYandex")
+        if ("${PLATFORM}" STREQUAL "WebItch")
+            target_link_options(game PRIVATE
+                "--shell-file=${CMAKE_SOURCE_DIR}/.temp/shell_release_itch.html")
+        elseif ("${PLATFORM}" STREQUAL "WebYandex")
             target_link_options(game PRIVATE
                 "--shell-file=${CMAKE_SOURCE_DIR}/.temp/shell_release_yandex.html")
-        else()
+        elseif ("${PLATFORM}" STREQUAL "Web")
+            target_compile_options(game
+                PRIVATE
+                    # "-oASSERTIONS=2"
+                    # "-gsource-map"
+                    # "-fsanitize=undefined"
+                    # "-fsanitize-minimal-runtime"
+                    # "-fsanitize=address"
+            )
+            target_link_options(game
+                PRIVATE
+                    # "-sSAFE_HEAP=1"
+                    # "-sASSERTIONS=2"
+                    # "-gsource-map"
+                    # "-fsanitize=undefined"
+                    # "-fsanitize-minimal-runtime"
+                    # "-fsanitize=address"
+            )
             target_link_options(game PRIVATE
                 "--shell-file=${CMAKE_SOURCE_DIR}/.temp/shell_release.html")
+        else()
+            message(FATAL_ERROR "Not supported platform: ${PLATFORM}")
         endif()
     endif()
 else()
@@ -308,20 +441,20 @@ endif()
 
 # Tests.
 #-----------------------------------------------------------------------------------
-add_executable(tests "${CMAKE_SOURCE_DIR}/src/engine/bf_game_exe.cpp")
+add_executable(tests "${CMAKE_SOURCE_DIR}/src/engine/bf_engine.cpp")
 target_link_libraries(tests
     PRIVATE
+        # GameAnalytics
         SDL3-static
+        basisu_transcoder
         bgfx
         box2d
-        vendor_and_codegen
-        basisu_transcoder
-        GameAnalytics
+        bx
+        imgui
         miniaudio
-)
-target_link_libraries(tests
-    PRIVATE
-        GameAnalytics
+        readerwriterqueue
+        vendor_and_codegen
+        zstd
 )
 target_include_directories(tests
     PRIVATE
@@ -334,45 +467,30 @@ target_compile_definitions(tests
         DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 )
 
-# GameAnalytics post setup.
-#-----------------------------------------------------------------------------------
-if ("${PLATFORM}" STREQUAL "Win")
-    add_custom_command(
-        TARGET game PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/curl/lib/win64
-            ${CMAKE_BINARY_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/openssl/1.1.1d/libs/win64
-            ${CMAKE_BINARY_DIR}
-        DEPENDS GameAnalytics
-    )
-    add_custom_command(
-        TARGET tests PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/curl/lib/win64
-            ${CMAKE_BINARY_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-            ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/openssl/1.1.1d/libs/win64
-            ${CMAKE_BINARY_DIR}
-        DEPENDS GameAnalytics
-    )
-endif()
-
-# Copying resources.
-#-----------------------------------------------------------------------------------
-add_custom_command(
-    TARGET game PRE_BUILD
-    COMMAND ${CMAKE_COMMAND}
-      -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:game>/resources
-    DEPENDS GameAnalytics
-)
-add_custom_command(
-    TARGET tests PRE_BUILD
-    COMMAND ${CMAKE_COMMAND}
-      -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:tests>/resources
-    DEPENDS GameAnalytics
-)
+# # GameAnalytics post setup.
+# #-----------------------------------------------------------------------------------
+# if ("${PLATFORM}" STREQUAL "Win")
+#     add_custom_command(
+#         TARGET game PRE_BUILD
+#         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+#             ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/curl/lib/win64
+#             ${CMAKE_BINARY_DIR}
+#         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+#             ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/openssl/1.1.1d/libs/win64
+#             ${CMAKE_BINARY_DIR}
+#         DEPENDS GameAnalytics
+#     )
+#     add_custom_command(
+#         TARGET tests PRE_BUILD
+#         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+#             ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/curl/lib/win64
+#             ${CMAKE_BINARY_DIR}
+#         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+#             ${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/externals/openssl/1.1.1d/libs/win64
+#             ${CMAKE_BINARY_DIR}
+#         DEPENDS GameAnalytics
+#     )
+# endif()
 
 # Enabling Linting On Windows.
 #-----------------------------------------------------------------------------------
@@ -405,7 +523,7 @@ if(WIN32 AND CMAKE_GENERATOR STREQUAL Ninja)
         "${CMAKE_SOURCE_DIR}/vendor/box2d/include"
         "${CMAKE_SOURCE_DIR}/vendor/bx/include"
         "${CMAKE_SOURCE_DIR}/vendor/flatbuffers"
-        "${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/include"
+        # "${CMAKE_SOURCE_DIR}/vendor/gameanalytics-sdk-cpp/include"
         "${CMAKE_SOURCE_DIR}/vendor/glm"
         "${CMAKE_SOURCE_DIR}/vendor/miniaudio/include"
         "${CMAKE_SOURCE_DIR}/vendor/SDL3/include"

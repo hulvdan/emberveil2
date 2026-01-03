@@ -1,4 +1,5 @@
 *.reapeaks
+*.rpp-PROX
 *.rpp-bak
 /.cache/
 /.cmake/
@@ -19,3 +20,4 @@
 /vendor/gameanalytics-sdk-cpp/gtest_build/
 CMakeFiles/
 __pycache__/
+/assets/art/src/screenshots_processed

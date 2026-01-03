@@ -1,9 +1,12 @@
 # Imports.  {  ###
 import colorsys
+import csv
 import hashlib
 import re
+import socket
 import subprocess
 import sys
+from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -12,6 +15,7 @@ from pathlib import Path
 from typing import Any, Iterator, Sequence, TypeVar
 
 import fnvhash
+import pyfiglet
 import yaml
 from bf_typer import log
 
@@ -26,6 +30,7 @@ class _GameSettings:
     itch_target: str = "hulvdan/game-template"
     languages: list[str] = field(default_factory=lambda: ["russian", "english"])
     generate_flatbuffers_api_for: list[str] = field(default_factory=list)
+    yandex_metrica_counter_id: int | None = None
     # }
 
 
@@ -68,6 +73,7 @@ class BuildPlatform(StrEnum):
     Win = "Win"
     Web = "Web"
     WebYandex = "WebYandex"
+    WebItch = "WebItch"
 
 
 class BuildTarget(StrEnum):
@@ -81,6 +87,7 @@ ALLOWED_BUILDS = (  ###
     (BuildTarget.game, BuildPlatform.Win, BuildType.Release),
     (BuildTarget.game, BuildPlatform.Web, BuildType.Debug),
     (BuildTarget.game, BuildPlatform.Web, BuildType.Release),
+    (BuildTarget.game, BuildPlatform.WebItch, BuildType.Release),
     (BuildTarget.game, BuildPlatform.WebYandex, BuildType.Release),
     (BuildTarget.tests, BuildPlatform.Win, BuildType.Debug),
 )
@@ -90,9 +97,14 @@ REPLACING_SPACES_PATTERN = re.compile(r"\ +")
 REPLACING_NEWLINES_PATTERN = re.compile(r"\n+")
 
 
-# Constants.
-# ============================================================
-# {  ###
+# !banner: constants
+#  ██████╗ ██████╗ ███╗   ██╗███████╗████████╗ █████╗ ███╗   ██╗████████╗███████╗
+# ██╔════╝██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝██╔══██╗████╗  ██║╚══██╔══╝██╔════╝
+# ██║     ██║   ██║██╔██╗ ██║███████╗   ██║   ███████║██╔██╗ ██║   ██║   ███████╗
+# ██║     ██║   ██║██║╚██╗██║╚════██║   ██║   ██╔══██║██║╚██╗██║   ██║   ╚════██║
+# ╚██████╗╚██████╔╝██║ ╚████║███████║   ██║   ██║  ██║██║ ╚████║   ██║   ███████║
+#  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝
+
 PROJECT_DIR = Path(__file__).parent.parent
 TEMP_DIR = PROJECT_DIR / ".temp"
 TEMP_ART_DIR = TEMP_DIR / "art"
@@ -119,11 +131,17 @@ MSBUILD_PATH = r"c:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild
 CLANG_CL_PATH = r"c:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin\clang-cl.exe"
 
 AUDIO_EXTENSIONS = {".wav", ".mp3", ".flac", ".aac", ".m4a", ".wma", ".ogg"}
-# }
 
 
-# Utility functions.
-# ============================================================
+# !banner: utils
+# ██╗   ██╗████████╗██╗██╗     ███████╗
+# ██║   ██║╚══██╔══╝██║██║     ██╔════╝
+# ██║   ██║   ██║   ██║██║     ███████╗
+# ██║   ██║   ██║   ██║██║     ╚════██║
+# ╚██████╔╝   ██║   ██║███████╗███████║
+#  ╚═════╝    ╚═╝   ╚═╝╚══════╝╚══════╝
+
+
 def replace_double_spaces(string: str) -> str:
     return re.sub(REPLACING_SPACES_PATTERN, " ", string)
 
@@ -194,15 +212,8 @@ def run_command(
     # }
 
 
-def recursive_mkdir(path: Path) -> None:
-    # {  ###
-    parents = list(path.parents)
-    parents.insert(0, path)
-    count = len(parents)
-
-    for i in range(count):
-        parents[-i - 1].mkdir(exist_ok=True)
-    # }
+def recursive_mkdir(path: Path | str) -> None:
+    Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def batched(list_: list[T], n: int) -> Iterator[list[T]]:
@@ -239,12 +250,29 @@ def test_only_one_is_not_none() -> None:
     # }
 
 
-def all_are_not_none(values: list) -> bool:
+def all_are_not_none(values: Iterator) -> bool:
     return all(v is not None for v in values)
 
 
-# Codegen helpers.
-# ============================================================
+def all_are_none(values: Iterator) -> bool:
+    return all(v is None for v in values)
+
+
+def get_local_ip() -> str:
+    ip_address = socket.gethostbyname(socket.gethostname())
+    assert ip_address != "127.0.0.1"
+    return ip_address
+
+
+# !banner: codegen
+#  ██████╗ ██████╗ ██████╗ ███████╗ ██████╗ ███████╗███╗   ██╗
+# ██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔════╝ ██╔════╝████╗  ██║
+# ██║     ██║   ██║██║  ██║█████╗  ██║  ███╗█████╗  ██╔██╗ ██║
+# ██║     ██║   ██║██║  ██║██╔══╝  ██║   ██║██╔══╝  ██║╚██╗██║
+# ╚██████╗╚██████╔╝██████╔╝███████╗╚██████╔╝███████╗██║ ╚████║
+#  ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝
+
+
 def generate_binary_file_header(genline, source_path: Path, variable_name: str) -> None:
     # {  ###
     data = source_path.read_bytes()
@@ -502,8 +530,23 @@ def recursive_flattenizer(
     # }
 
 
-# Git helpers.
-# ============================================================
+# !banner: git
+#  ██████╗ ██╗████████╗
+# ██╔════╝ ██║╚══██╔══╝
+# ██║  ███╗██║   ██║
+# ██║   ██║██║   ██║
+# ╚██████╔╝██║   ██║
+#  ╚═════╝ ╚═╝   ╚═╝
+
+
+def git_check_no_unstashed() -> None:
+    process = subprocess.run(
+        "git status --porcelain", check=True, shell=True, capture_output=True, text=True
+    )
+    git_status_text = process.stdout.strip()
+    assert not git_status_text, "You have unstashed changes! Won't proceed!"
+
+
 @contextmanager
 def git_stash():
     # {  ###
@@ -520,11 +563,13 @@ def git_stash():
     else:
         log.info("git_stash: no changes - not stashing")
 
-    yield
+    try:
+        yield
 
-    if should_stash:
-        log.info("git_stash: applying previously stashed changes...")
-        subprocess.run("git stash apply", check=True, shell=True)
+    finally:
+        if should_stash:
+            log.info("git_stash: applying previously stashed changes...")
+            subprocess.run("git stash apply", check=True, shell=True)
     # }
 
 
@@ -553,13 +598,13 @@ def _git_get_current_branch() -> str:
     # }
 
 
-def git_bump_tag() -> None:
+def git_bump_tag() -> str:
     # {  ###
     assert _git_get_current_branch() in ("master", "main")
 
-    if _git_get_current_commit_version_tag():
+    if version := _git_get_current_commit_version_tag():
         log.info("Skipping bumping tag")
-        return
+        return version
 
     version_tags = subprocess.run(
         'git tag -l "v1\\.*"', check=True, shell=True, capture_output=True, text=True
@@ -580,15 +625,22 @@ def git_bump_tag() -> None:
     run_command("git reset")
     run_command("git add src/bf_version.cpp")
     run_command(f'git commit -m "Release v1.{next_version}"')
-    run_command("git push")
-
     run_command(f"git tag v1.{next_version}")
-    run_command(f"git push origin v1.{next_version}")
+    # run_command("git push")
+    # run_command(f"git push origin v1.{next_version}")
+    return f"v1.{next_version}"
     # }
 
 
-# Color helpers.
-# ============================================================
+# !banner: color
+#  ██████╗ ██████╗ ██╗      ██████╗ ██████╗
+# ██╔════╝██╔═══██╗██║     ██╔═══██╗██╔══██╗
+# ██║     ██║   ██║██║     ██║   ██║██████╔╝
+# ██║     ██║   ██║██║     ██║   ██║██╔══██╗
+# ╚██████╗╚██████╔╝███████╗╚██████╔╝██║  ██║
+#  ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝
+
+
 def hex_to_rgb_ints(hex_color: str) -> tuple[int, int, int]:
     # {  ###
     hex_color = hex_color.lstrip("#")
@@ -605,11 +657,7 @@ def hex_to_rgb_floats(hex_color: str) -> tuple[float, float, float]:
     r = int(hex_color[0:2], 16)
     g = int(hex_color[2:4], 16)
     b = int(hex_color[4:6], 16)
-    r_float = r / 255.0
-    g_float = g / 255.0
-    b_float = b / 255.0
-    r_float = min(1, r_float)
-    return (r_float, g_float, b_float)
+    return (r / 255, g / 255, b / 255)
     # }
 
 
@@ -630,13 +678,6 @@ def transform_color(
     value_scale: float = 1.0,
 ) -> tuple[float, float, float]:
     # {  ###
-    """
-    Saturate an RGB color (tuple of 3 floats in 0-1) by a given amount.
-
-    :param rgb: (r, g, b) tuple, each component in [0, 1]
-    :param amount: How much to increase saturation (e.g., 1.2 = 20% more saturated)
-    :return: new (r, g, b) tuple
-    """
     assert saturation_scale >= 0
     assert value_scale >= 0
     r, g, b = rgb
@@ -647,8 +688,15 @@ def transform_color(
     # }
 
 
-# Hashing helpers.
-# ==================================================
+# !banner: hashing
+# ██╗  ██╗ █████╗ ███████╗██╗  ██╗██╗███╗   ██╗ ██████╗
+# ██║  ██║██╔══██╗██╔════╝██║  ██║██║████╗  ██║██╔════╝
+# ███████║███████║███████╗███████║██║██╔██╗ ██║██║  ███╗
+# ██╔══██║██╔══██║╚════██║██╔══██║██║██║╚██╗██║██║   ██║
+# ██║  ██║██║  ██║███████║██║  ██║██║██║ ╚████║╚██████╔╝
+# ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝
+
+
 def stable_hash(value: str | int) -> int:
     # {  ###
     if isinstance(value, int):
@@ -673,6 +721,162 @@ def hash32_file_utf8(filepath) -> int:
     return hash32_utf8(d)
 
 
+# !banner: banners
+# ██████╗  █████╗ ███╗   ██╗███╗   ██╗███████╗██████╗ ███████╗
+# ██╔══██╗██╔══██╗████╗  ██║████╗  ██║██╔════╝██╔══██╗██╔════╝
+# ██████╔╝███████║██╔██╗ ██║██╔██╗ ██║█████╗  ██████╔╝███████╗
+# ██╔══██╗██╔══██║██║╚██╗██║██║╚██╗██║██╔══╝  ██╔══██╗╚════██║
+# ██████╔╝██║  ██║██║ ╚████║██║ ╚████║███████╗██║  ██║███████║
+# ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚══════╝
+
+# {  ###
+BANNERIFY_PATTERN = "!" + "banner: "
+
+
+def bannerify(lines: list[str]) -> str:
+    out = ""
+    bannering_prefix = ""
+    current_line_index = 0
+    off = 0
+    while current_line_index + off < len(lines):
+        line = lines[current_line_index + off]
+
+        if BANNERIFY_PATTERN in line:
+            if bannering_prefix:
+                print("Found line inside bannering")
+                exit(1)
+
+            if line.count(BANNERIFY_PATTERN) > 1:
+                print("Found line with more than 1 pattern inside")
+                exit(1)
+
+            bannering_prefix = line[: line.find(BANNERIFY_PATTERN)]
+            if not bannering_prefix:
+                print("Found line with no prefix")
+                exit(1)
+
+            if not line.removeprefix(bannering_prefix + BANNERIFY_PATTERN).strip():
+                print("Found line that has prefix but no content to bannerify")
+                exit(1)
+
+            for i in range(current_line_index + off + 1, len(lines)):
+                if lines[i].startswith(bannering_prefix):
+                    off += 1
+                else:
+                    out += lines[i]
+                    break
+
+            out += line
+            out += "\n"
+            out += "\n".join(
+                bannering_prefix + x.rstrip()
+                for x in pyfiglet.figlet_format(
+                    line.removeprefix(bannering_prefix + BANNERIFY_PATTERN),
+                    font="ansi_shadow",
+                    width=90,
+                ).splitlines()
+                if x.strip()
+            )
+            out += "\n"
+            bannering_prefix = ""
+
+        else:
+            out += line + "\n"
+
+        current_line_index += 1
+
+    return out
+
+
+def test_bannerify():
+    assert bannerify([]) == ""
+    assert bannerify(["a"]) == "a\n"
+    assert bannerify(["a", " b"]) == "a\n b\n"
+
+    got = bannerify(
+        [
+            f"// {BANNERIFY_PATTERN}a",
+            "// ASDASAD",
+            "",
+            f"// {BANNERIFY_PATTERN}b",
+            "",
+            "a",
+            "b",
+            "c",
+            "",
+            "",
+            "d",
+        ]
+    )
+    expected = "".join(
+        x.rstrip() + "\n"
+        for x in (
+            f"// {BANNERIFY_PATTERN}a",
+            "//  █████╗",
+            "// ██╔══██╗",
+            "// ███████║",
+            "// ██╔══██║",
+            "// ██║  ██║",
+            "// ╚═╝  ╚═╝",
+            "",
+            f"// {BANNERIFY_PATTERN}b",
+            "// ██████╗",
+            "// ██╔══██╗",
+            "// ██████╔╝",
+            "// ██╔══██╗",
+            "// ██████╔╝",
+            "// ╚═════╝",
+            "",
+            "a",
+            "b",
+            "c",
+            "",
+            "",
+            "d",
+        )
+    )
+    if got != expected:
+        print("EXPECTED:")
+        print(expected)
+        print("\nGOT:")
+        print(got)
+    assert got == expected
+
+
+# }
+
+
+@dataclass
+class LocalizationResult:
+    loc_ids: list[str] = field(default_factory=list)
+    loc_by_languages: dict[str, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+
+
+def read_localization_csv() -> LocalizationResult:
+    # {  ###
+    result = LocalizationResult()
+
+    with open(ASSETS_DIR / "localization.csv", encoding="utf-8") as in_file:
+        not_language_columns = ("id", "\ufeffid", "comment")
+        for row in csv.DictReader(in_file, delimiter=";"):
+            row_id = row.get("id") or row.get("\ufeffid")
+            assert isinstance(row_id, str)
+            result.loc_ids.append(row_id)
+            for c in row:
+                if c not in not_language_columns:
+                    assert c in game_settings.languages
+                    translation = row[c]
+                    result.loc_by_languages[c].append(
+                        translation.strip() or "<<NOT_TRANSLATED>>"
+                    )
+
+    return result
+    # }
+
+
 from bf_game import *  # noqa
+
 
 ###

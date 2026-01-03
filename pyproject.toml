@@ -19,13 +19,16 @@ dependencies = [
     "pillow>=12.0.0",
     "pydantic>=2.12.5",
     "pydub>=0.25.1",
+    "pyfiglet>=1.0.4",
     "pyjson5>=2.0.0",
     "pytest>=9.0.1",
     "pyyaml>=6.0.3",
     "rich>=14.2.0",
+    "rpp>=0.5",
     "ruff>=0.14.6",
     "typer>=0.20.0",
     "types-pyyaml>=6.0.12.20250915",
+    "websockets>=15.0.1",
 ]
 packages = [
     { include = "cli" },
@@ -63,6 +66,8 @@ livereload = "^2.7.1"
 pydub = "^0.25.1"
 
 [tool.ruff]
+line-length = 90
+
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [

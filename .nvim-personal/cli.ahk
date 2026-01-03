@@ -1,11 +1,8 @@
 SendMode Input
 SetKeyDelay, 150, 150
 
-command := a_args[1]
-arg1 := a_args[2]
-; command := %1%
-; arg1 := %2%
-; msgbox %command%
+command := A_Args[1]
+arg1 := A_Args[2]
 
 switch command, 0
 {

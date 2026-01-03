@@ -1,10 +1,10 @@
 local opts = { remap = false, silent = true }
 
-vim.keymap.set("n", "gD", "<C-w>o:vs<CR>gd", opts)
 vim.keymap.set("n", "<leader>fc", ":e codegen/hands/bf_codegen.cpp<CR>", opts)
-
-vim.keymap.set("n", "<leader>C", "o  continue;<ESC>", opts)
-vim.keymap.set("n", "<leader>B", "o  break;<ESC>", opts)
+vim.keymap.set("n", "<leader>fl", ":e src/bf_lib.cpp<CR>", opts)
+vim.keymap.set("n", "<C-S-g>v", function()
+    vim.fn.system([[start .cmake/vs17/game.sln]])
+end, opts)
 
 function cli_command(cmd)
     return [[uvx ruff check --output-format concise cli && uv run mypy --check-untyped-defs cli && uv run cli\bf_cli.py ]]
@@ -18,7 +18,7 @@ build_type = "Debug"
 function select_target()
     targets = { "game" }
     build_types = { "Debug", "Release", "RelWithDebInfo" }
-    platforms = { "Win", "Web", "WebYandex" }
+    platforms = { "Win", "Web", "WebYandex", "WebItch" }
 
     function platform_build_type_choose()
         require("fastaction").select(platforms, {}, function(selected_platform)
@@ -72,16 +72,33 @@ function rebuild_tasks()
         {
             "c_serve_webyandex_release",
             function()
-                vim.fn.execute([[term npx @yandex-games/sdk-dev-proxy -h localhost --dev-mode=true]])
-                vim.fn.execute([[term python -m http.server -d .cmake\WebYandex_Release 80]])
+                vim.fn.execute(
+                    [[term npx @yandex-games/sdk-dev-proxy --dev-mode=true -c -p .cmake\WebYandex_Release --port 8082]]
+                )
             end,
         },
         { "o_deploy_itch", cli_command("deploy_itch") },
         { "p_deploy_yandex", cli_command("deploy_yandex") },
         { "i_make_swatch", cli_command("make_swatch") },
+        { "l_process_images", cli_command("process_images") },
         { "g_codegen", cli_command("codegen Win Debug") },
         -- -- { "killall", [[start .nvim-personal\cli.ahk killall]] },
         { "l_lint_cpp", cli_command("lint") },
+        {
+            "b_banner",
+            function()
+                vim.fn.execute([[term uv run python cli\bf_cli.py banner ]] .. vim.fn.expand("%"))
+            end,
+        },
+        { "h_shaders", cli_command("shaders") },
+        {
+            "v_receive_ws_logs",
+            function()
+                vim.fn.execute([[term uv run python cli\bf_cli.py receive_ws_logs 8003]])
+            end,
+        },
+        { "w_temp", cli_command("temp") },
+        -- { "list_sounds", cli_command("list_sounds") },
         -- { "z_clean_cmake", [[del /f/s/q .cmake]] },
         -- { "x_clean_temp", [[del /f/s/q .temp]] },
         -- ----------
@@ -93,6 +110,14 @@ function rebuild_tasks()
 end
 
 rebuild_tasks()
+
+-- Insert ZoneScopedN below comment line.
+vim.keymap.set(
+    "n",
+    "<leader>z",
+    '^wy$o<BS><BS><BS>ZoneScopedN("<ESC>pa");<ESC>VJ>o<ESC>',
+    { remap = true, silent = true }
+)
 
 vim.keymap.set("n", "<F4>", "<leader>aa", { remap = true, silent = true })
 vim.keymap.set("n", "<F5>", "<leader>ae", { remap = true, silent = true })

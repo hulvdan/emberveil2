@@ -5,9 +5,12 @@ box2d-3.1.1
 bx-d858859
 clay-91c6d05
 flatbuffers-24.3.25
+freetype-2.14.1
 gameanalytics-sdk-cpp-4.1.1
 glm-1.0.1-light
-miniaudio-v0.11.22
+imgui-1.92.5
+miniaudio-v0.11.23
+randrew_layout -  Oct 15, 2020 - https://github.com/randrew/layout/commit/b0c02829df41b066c5aaedcb946498209bcb38e5
+readerwriterqueue - 1.0.7 - Arp 28, 2025 - https://github.com/cameron314/readerwriterqueue/releases/tag/v1.0.7
 sort.h - Feb 13, 2024 - https://github.com/swenson/sort/commit/24f5b8b13810ad130109c7b56daf8e99ab0fe1b8
 tracy-0.12.2
-randrew_layout -  Oct 15, 2020 - https://github.com/randrew/layout/commit/b0c02829df41b066c5aaedcb946498209bcb38e5
