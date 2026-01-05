@@ -295,11 +295,6 @@ struct Breathing {
     .set = true, .color = (color_)     \
   }
 
-#define BF_CLAY_CUSTOM_SCREEN_BACKGROUND \
-  .screenBackground {                    \
-    .set = true                          \
-  }
-
 struct Beautify {
   f32     alpha     = 1;
   Vector2 translate = {0, 0};
