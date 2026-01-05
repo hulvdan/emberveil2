@@ -191,6 +191,11 @@ endif()
 add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/SDL3")
 # target_link_libraries(SDL3-static PRIVATE optimization)
 
+target_compile_definitions(SDL3-static PRIVATE
+    -D SDL_AUDIO_DISABLED=1
+    -D SDL_HAPTIC_DISABLED=1
+)
+
 # box2d.
 #-----------------------------------------------------------------------------------
 add_subdirectory("${CMAKE_SOURCE_DIR}/vendor/box2d")
@@ -360,13 +365,15 @@ elseif ("${PLATFORM}" MATCHES "^Web")
     )
     target_link_options(game
         PRIVATE
+            "-sFETCH=1"
+            "-sFILESYSTEM=1"
             "-sUSE_WEBGL2=1"
             "-sMIN_WEBGL_VERSION=1"
             "-sMAX_WEBGL_VERSION=2"
             "-sALLOW_MEMORY_GROWTH=1"
             "-sINITIAL_MEMORY=246022144" # X MB heap.
             "-sSTACK_SIZE=2097152" # 2MB stack.
-            --preload-file resources
+            --preload-file res
             -lembind
     )
     set_target_properties(game

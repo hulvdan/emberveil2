@@ -451,7 +451,7 @@ struct Texture2D {  ///
   bgfx::TextureHandle handle = {};
 };
 
-constexpr auto             GAMELIB_PATH = "resources/gamelib.bin";
+constexpr auto             GAMELIB_PATH = "res/gamelib.bin";
 void*                      glibFile     = nullptr;
 const BFGame::GameLibrary* glib         = nullptr;
 SDL_Time                   glibTime     = {};
@@ -954,6 +954,8 @@ struct EngineData {
     bool        _drawing       = false;
     bool        _scheduledSave = false;
     FrameVisual _lastSaveAt    = {};
+
+    int postloading = -1;
   } meta;
 
   struct SoundManager {
@@ -1789,6 +1791,117 @@ void _OnMiniaudioNotification(const ma_device_notification* notification) {  ///
   }
 }
 
+bool _LoadSounds(bool postload) {  ///
+  ZoneScopedN("_LoadSounds");
+
+  LOGI("_LoadSounds(%d)", (int)postload);
+
+  auto&      m       = ge.soundManager;
+  const auto oldBase = m._soundVariationsLoadedFromFiles.base;
+
+  ma_fence fence{};
+  if (ma_fence_init(&fence) != MA_SUCCESS) {
+    LOGW("Error during ma_fence_init");
+    INVALID_PATH;
+    return true;
+  }
+  DEFER {
+    ma_fence_uninit(&fence);
+  };
+
+  bool errored = false;
+
+  int lastVariationIndex = -1;
+
+  for (auto fb : *glib->sounds()) {
+    u32 customFlags = MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT;
+    if (fb->pitch_min() == fb->pitch_max())
+      customFlags |= MA_SOUND_FLAG_NO_PITCH;
+
+    static_assert(sizeof(MA_SOUND_FLAG_DECODE) == sizeof(u32));
+    u32 flags = MA_SOUND_FLAG_ASYNC | MA_SOUND_FLAG_NO_SPATIALIZATION | customFlags;
+    ma_sound_group* group = nullptr;
+
+    if (fb->is_music()) {
+      flags |= MA_SOUND_FLAG_STREAM;
+      group = &m._groupMusic;
+    }
+    else {
+      flags |= MA_SOUND_FLAG_DECODE;
+      group = &m._groupSFX;
+    }
+
+    if (!postload) {
+      *m._soundVariationRanges.Add() = {
+        .start = m._soundVariationsLoadedFromFiles.count,
+        .end   = m._soundVariationsLoadedFromFiles.count + (int)fb->variations()->size(),
+      };
+    }
+
+    int variationIndex = -1;
+    for (auto fb_variation : *fb->variations()) {
+      variationIndex++;
+      lastVariationIndex++;
+
+      _SoundVariation* slot = nullptr;
+      if (postload)
+        slot = m._soundVariationsLoadedFromFiles.base + lastVariationIndex;
+      else {
+        slot  = m._soundVariationsLoadedFromFiles.Add();
+        *slot = {
+          .filepath       = fb_variation->filepath()->c_str(),
+          .soundHashValue = fb->enum_value_id(),
+          .variation      = variationIndex,
+          .flags          = customFlags,
+        };
+      }
+
+      if (postload != (bool)fb_variation->postload_index())
+        continue;
+
+      auto fencePtr = &fence;
+      if (fb->is_music())
+        fencePtr = nullptr;
+
+      {
+        ZoneScopedN("ma_sound_init_from_file");
+
+#if 0
+        LOGI(
+          "_LoadSounds(%d): ma_sound_init_from_file: %s", (int)postload, slot->filepath
+        );
+#endif
+
+        if (ma_sound_init_from_file(
+              &m.engine, slot->filepath, flags, group, fencePtr, &slot->ma_sound
+            )
+            != MA_SUCCESS)
+        {
+          INVALID_PATH;
+          LOGE(
+            "_LoadSounds(postload=%d): Couldn't load sound: %s",
+            (int)postload,
+            slot->filepath
+          );
+          errored = true;
+        }
+      }
+    }
+  }
+
+  ASSERT(oldBase == m._soundVariationsLoadedFromFiles.base);
+  if (ma_fence_wait(&fence) != MA_SUCCESS) {
+    INVALID_PATH;
+    LOGE("_LoadSounds(postload=%d): Fence failed", (int)postload);
+    errored = true;
+  }
+
+  if (errored)
+    m._works = false;
+
+  return errored;
+}
+
 void _ReloadSounds() {  ///
   if (BF_DISABLE_AUDIO) {
     LOGI("_ReloadSounds. BF_DISABLE_AUDIO");
@@ -1894,23 +2007,12 @@ void _ReloadSounds() {  ///
     &m.engine, MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT, nullptr, &m._groupMusic
   );
 
-  ma_fence fence{};
-  if (ma_fence_init(&fence) != MA_SUCCESS) {
-    LOGW("Error during ma_fence_init");
-    INVALID_PATH;
-    return;
-  }
-  DEFER {
-    ma_fence_uninit(&fence);
-  };
-
   int filesToLoad = 0;
   for (auto fb : *fb_sounds)
     filesToLoad += fb->variations()->size();
 
   m._soundVariationsLoadedFromFiles.Reset();
   m._soundVariationsLoadedFromFiles.Reserve(filesToLoad);
-  const auto oldBase = m._soundVariationsLoadedFromFiles.base;
 
   bool _errored = false;
   LAMBDA (bool, checkErr, (ma_result res)) {
@@ -1936,61 +2038,7 @@ void _ReloadSounds() {  ///
     ));
   }
 
-  {
-    ZoneScopedN("Sounds initialization");
-
-    for (auto fb : *fb_sounds) {
-      u32 customFlags = MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT;
-      if (fb->pitch_min() == fb->pitch_max())
-        customFlags |= MA_SOUND_FLAG_NO_PITCH;
-
-      static_assert(sizeof(MA_SOUND_FLAG_DECODE) == sizeof(u32));
-      u32 flags = MA_SOUND_FLAG_ASYNC | MA_SOUND_FLAG_NO_SPATIALIZATION | customFlags;
-      ma_sound_group* group = nullptr;
-
-      if (fb->is_music()) {
-        flags |= MA_SOUND_FLAG_STREAM;
-        group = &m._groupMusic;
-      }
-      else {
-        flags |= MA_SOUND_FLAG_DECODE;
-        group = &m._groupSFX;
-      }
-
-      *m._soundVariationRanges.Add() = {
-        .start = m._soundVariationsLoadedFromFiles.count,
-        .end   = m._soundVariationsLoadedFromFiles.count + (int)fb->variations()->size(),
-      };
-
-      int variationIndex = -1;
-      for (auto fb_variation : *fb->variations()) {
-        variationIndex++;
-
-        auto slot = m._soundVariationsLoadedFromFiles.Add();
-
-        *slot = {
-          .filepath       = fb_variation->filepath()->c_str(),
-          .soundHashValue = fb->enum_value_id(),
-          .variation      = variationIndex,
-          .flags          = customFlags,
-        };
-
-        auto fencePtr = &fence;
-        if (fb->is_music())
-          fencePtr = nullptr;
-
-        {
-          ZoneScopedN("ma_sound_init_from_file");
-          checkErr(ma_sound_init_from_file(
-            &m.engine, slot->filepath, flags, group, fencePtr, &slot->ma_sound
-          ));
-        }
-      }
-    }
-
-    ASSERT(oldBase == m._soundVariationsLoadedFromFiles.base);
-    checkErr(ma_fence_wait(&fence));
-  }
+  _errored |= _LoadSounds(false);
 
   m._works = !_errored;
   LOGI("_ReloadSounds. manager._works = %d", (int)m._works);
@@ -2287,6 +2335,14 @@ PlayingSound PlaySound(u32 soundHashValue, PlaySoundData data = {}) {  ///
   ASSERT(variationIndex >= 0);
   auto& original = m._soundVariationsLoadedFromFiles[loadedFileIndex];
 
+  const auto fb_variation = fb_sound->variations()->Get(variationIndex);
+
+  if (fb_variation->postload_index() && ge.meta.postloading) {
+    INVALID_PATH;
+    LOGE("PlaySound: Called before postloading finished!");
+    return {};
+  }
+
   ma_sound* s = nullptr;
 
   PlayingSound result{};
@@ -2375,8 +2431,6 @@ PlayingSound PlaySound(u32 soundHashValue, PlaySoundData data = {}) {  ///
       s, Lerp(fb_sound->pitch_min(), fb_sound->pitch_max(), VRAND.FRand11())
     );
   }
-
-  auto fb_variation = fb_sound->variations()->Get(variationIndex);
 
   ASSERT_FALSE(strcmp(
     fb_variation->filepath()->c_str(),
@@ -4147,9 +4201,8 @@ void InitEngine() {  ///
   glibFile = LoadFile(GAMELIB_PATH, nullptr);
   glib     = BFGame::GetGameLibrary(glibFile);
 
-  ge.meta.atlas = _LoadTexture(
-    "resources/atlas_d2.basis", {glib->atlas_size_x(), glib->atlas_size_y()}
-  );
+  ge.meta.atlas
+    = _LoadTexture("res/atlas_d2.basis", {glib->atlas_size_x(), glib->atlas_size_y()});
 
   static const bgfx::EmbeddedShader s_embeddedShaders[] = {
     BGFX_EMBEDDED_SHADER(quad_tex_vs),
@@ -4801,57 +4854,7 @@ lframe FrameVisual::Elapsed() const {  ///
   return lframe::Unscaled(ge.meta.frameVisual - _value);
 }
 
-SavedataLoadedType LoadSaveDataOnce() {  ///
-  if (ge.meta._loaded == SavedataLoadedType_JUST_FISNIHED)
-    ge.meta._loaded = SavedataLoadedType_FISNIHED;
-  if (ge.meta._loaded == SavedataLoadedType_FISNIHED)
-    return SavedataLoadedType_FISNIHED;
-
-  TEMP_USAGE(&ge.meta.trashArena);
-
-  const u8* decodedSavedata = {};
-
-  if (ge.meta._loaded == SavedataLoadedType_NOT_LOADED) {
-#if defined(SDL_PLATFORM_DESKTOP)
-
-    // Desktop loads immediately.
-    decodedSavedata = (const u8*)TryLoadFile("save.bin", nullptr);
-    ge.meta._loaded = SavedataLoadedType_JUST_FISNIHED;
-
-#elif defined(SDL_PLATFORM_EMSCRIPTEN)
-
-    // JS loads asynchronously.
-    const char* savedata = jsLoad();
-    if (ge.meta._jsLoadedSavedata)
-      ge.meta._loaded = SavedataLoadedType_JUST_FISNIHED;
-    else
-      return SavedataLoadedType_NOT_LOADED;
-
-    if (ge.meta._jsLoadedSavedata == 2) {
-      decodedSavedata = DecodeFromAscii(savedata, &ge.meta.trashArena);
-      free((void*)savedata);
-    }
-
-#else
-#  error "Not implemented yet"
-#endif
-  }
-  else
-    INVALID_PATH;
-
-  if (decodedSavedata) {
-    GameLoad(BFSave::GetSave(decodedSavedata));
-
-#if defined(SDL_PLATFORM_DESKTOP)
-    UnloadFile((void*)decodedSavedata);
-#endif
-  }
-
-  ASSERT(ge.meta._loaded == SavedataLoadedType_JUST_FISNIHED);
-  return ge.meta._loaded;
-}
-
-flatbuffers::FlatBufferBuilder _DumpStateForSaving() {
+flatbuffers::FlatBufferBuilder _DumpStateForSaving() {  ///
   BFSave::SaveT save{};
   GameDumpStateForSaving(save);
 
@@ -4903,7 +4906,7 @@ void _Save() {
 
 #elif defined(SDL_PLATFORM_EMSCRIPTEN)
 
-void fromJS_markReturnedSavedata(int value) {  ///
+void fromJS_markReturnedSavedata(int value) {
   ge.meta._jsLoadedSavedata = value;
 }
 
@@ -4994,6 +4997,112 @@ void _Save() {
 #endif
 // }
 
+SavedataLoadedType LoadSaveDataOnce() {  ///
+  if (ge.meta._loaded == SavedataLoadedType_JUST_FISNIHED)
+    ge.meta._loaded = SavedataLoadedType_FISNIHED;
+  if (ge.meta._loaded == SavedataLoadedType_FISNIHED)
+    return SavedataLoadedType_FISNIHED;
+
+  TEMP_USAGE(&ge.meta.trashArena);
+
+  const u8* decodedSavedata = {};
+
+  if (ge.meta._loaded == SavedataLoadedType_NOT_LOADED) {
+#if defined(SDL_PLATFORM_DESKTOP)
+
+    // Desktop loads immediately.
+    decodedSavedata = (const u8*)TryLoadFile("save.bin", nullptr);
+    ge.meta._loaded = SavedataLoadedType_JUST_FISNIHED;
+
+#elif defined(SDL_PLATFORM_EMSCRIPTEN)
+
+    // JS loads asynchronously.
+    const char* savedata = jsLoad();
+    if (ge.meta._jsLoadedSavedata)
+      ge.meta._loaded = SavedataLoadedType_JUST_FISNIHED;
+    else
+      return SavedataLoadedType_NOT_LOADED;
+
+    if (ge.meta._jsLoadedSavedata == 2) {
+      decodedSavedata = DecodeFromAscii(savedata, &ge.meta.trashArena);
+      free((void*)savedata);
+    }
+
+#else
+#  error "Not implemented yet"
+#endif
+  }
+  else
+    INVALID_PATH;
+
+  if (decodedSavedata) {
+    GameLoad(BFSave::GetSave(decodedSavedata));
+
+#if defined(SDL_PLATFORM_DESKTOP)
+    UnloadFile((void*)decodedSavedata);
+#endif
+  }
+
+  ASSERT(ge.meta._loaded == SavedataLoadedType_JUST_FISNIHED);
+  return ge.meta._loaded;
+}
+
+#ifdef SDL_PLATFORM_EMSCRIPTEN
+
+void _FetchSuccess(emscripten_fetch_t* fetch) {  ///
+  FILE* f = fopen((const char*)fetch->userData, "wb");
+  if (!f) {
+    LOGE("_FetchSuccess: Failed to open file: %s", fetch->userData);
+    return;
+  }
+
+  bool errored = false;
+
+  auto wrote = fwrite(fetch->data, 1, fetch->numBytes, f);
+  if (wrote != fetch->numBytes) {
+    LOGE(
+      "_FetchSuccess: Wrote incorrect number of bytes for %s %d != %d",
+      fetch->userData,
+      (int)fetch->numBytes,
+      (int)wrote
+    );
+    errored = true;
+  }
+  else if (0)
+    LOGI("_FetchSuccess: Wrote %s", fetch->userData);
+
+  fclose(f);
+
+  emscripten_fetch_close(fetch);
+
+  if (!errored)
+    ge.meta.postloading--;
+  if (!ge.meta.postloading)
+    LOGI("Postloading finished successfully!");
+}
+
+void _FetchFailed(emscripten_fetch_t* fetch) {  ///
+  LOGE("Postload: Fetch failed for %s", (const char*)fetch->userData);
+  emscripten_fetch_close(fetch);
+}
+
+// NOTE: url must be in static memory!
+// Or guaranteed to live until _FetchSuccess / _FetchFailed is called.
+void _FetchFileAsync(const char* url) {  ///
+  emscripten_fetch_attr_t attr;
+  emscripten_fetch_attr_init(&attr);
+
+  strcpy(attr.requestMethod, "GET");
+  attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_PERSIST_FILE;
+  attr.onsuccess  = _FetchSuccess;
+  attr.onerror    = _FetchFailed;
+  attr.userData   = (void*)url;
+
+  emscripten_fetch(&attr, url);
+}
+
+#endif
+
 SDL_AppResult EngineUpdate() {  ///
   ZoneScoped;
 
@@ -5012,7 +5121,7 @@ SDL_AppResult EngineUpdate() {  ///
       glib = BFGame::GetGameLibrary(glibFile);
       _UnloadTexture(&ge.meta.atlas);
       ge.meta.atlas = _LoadTexture(
-        "../../../resources/atlas_d2.basis", {glib->atlas_size_x(), glib->atlas_size_y()}
+        "../../../res/atlas_d2.basis", {glib->atlas_size_x(), glib->atlas_size_y()}
       );
       reloadSounds = 1;
       LOGI("Gamelib reloaded!");
@@ -5021,7 +5130,8 @@ SDL_AppResult EngineUpdate() {  ///
 #endif
 
   if (reloadSounds) {
-    reloadSounds = 0;
+    reloadSounds        = 0;
+    ge.meta.postloading = (int)glib->postload_files()->size();
     _ReloadSounds();
   }
 
@@ -5091,10 +5201,32 @@ SDL_AppResult EngineUpdate() {  ///
       if (loaded == SavedataLoadedType_JUST_FISNIHED) {
         GameInitAfterLoadingSavedata();
         GameReady();
+
+// Starting async loading of postload files.
+#ifdef SDL_PLATFORM_EMSCRIPTEN
+        if (loaded == SavedataLoadedType_JUST_FISNIHED) {
+          EM_ASM({
+            if (!FS.analyzePath('/resp').exists)
+              FS.mkdir('/resp');
+          });
+
+          for (const auto f : *glib->postload_files())
+            _FetchFileAsync(f->c_str());
+        }
+#endif
+
         canFixedUpdate = true;
       }
       else if (loaded == SavedataLoadedType_FISNIHED)
         canFixedUpdate = true;
+
+#ifdef SDL_PLATFORM_EMSCRIPTEN
+      static bool once = false;
+      if (!ge.meta.postloading && !once) {
+        once = true;
+        _LoadSounds(true);
+      }
+#endif
 
       if (canFixedUpdate) {
         TEMP_USAGE(&ge.meta.trashArena);
@@ -5700,7 +5832,7 @@ SDL_AppResult SDL_AppIterate(void* /* appstate */) {  ///
             .size  = ge.meta.scaledLogicalResolution,
             .color = Fade(ge.settings.screenFadeColor, MODAL_OVERLAY_COLOR_FADE),
           },
-          DrawZ_SCREEN_FADE
+          DrawZ_INACTIVE_WINDOW_DIM
         );
       }
 

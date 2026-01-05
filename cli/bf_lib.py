@@ -75,6 +75,9 @@ class BuildPlatform(StrEnum):
     WebYandex = "WebYandex"
     WebItch = "WebItch"
 
+    def is_web(self) -> bool:
+        return self.lower().startswith("web")
+
 
 class BuildTarget(StrEnum):
     game = "game"
@@ -113,7 +116,7 @@ ASSETS_DIR = PROJECT_DIR / "assets"
 ART_DIR = ASSETS_DIR / "art"
 ART_TEXTURES_DIR = ART_DIR / "textures"
 SRC_DIR = Path("src")
-RESOURCES_DIR = PROJECT_DIR / "resources"
+RES_DIR = PROJECT_DIR / "res"
 VENDOR_DIR = PROJECT_DIR / "vendor"
 GAME_DIR = PROJECT_DIR / "src" / "game"
 HANDS_GENERATED_DIR = PROJECT_DIR / "codegen" / "hands"

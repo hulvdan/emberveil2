@@ -25,7 +25,7 @@ from bf_lib import (
     GAME_DIR,
     HANDS_GENERATED_DIR,
     PROJECT_DIR,
-    RESOURCES_DIR,
+    RES_DIR,
     SHADERC_PATH,
     SRC_DIR,
     TEMP_ART_DIR,
@@ -533,14 +533,22 @@ def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
 
 
 @timing
-def do_audio() -> None:
+def do_audio(platform: BuildPlatform) -> None:
     # {  ###
     AUDIO_SRC_DIR = ASSETS_DIR / "sfx"
-    AUDIO_DST_DIR = RESOURCES_DIR
+    AUDIO_DST_DIR = RES_DIR
+    AUDIO_POST_DST_DIR = RES_DIR
+    if platform.is_web():
+        AUDIO_POST_DST_DIR = PROJECT_DIR / "resp"
+    recursive_mkdir(AUDIO_DST_DIR)
+    recursive_mkdir(AUDIO_POST_DST_DIR)
+    for folder in {AUDIO_DST_DIR, AUDIO_POST_DST_DIR}:
+        for f in folder.glob("*.ogg"):
+            f.unlink()
 
     src_files = {p for p in AUDIO_SRC_DIR.glob("*.ogg") if p.is_file()}
 
-    # Removing sounds files that wouldn't be exported by reaper.
+    # Removing sound files that wouldn't be exported by reaper.
     allowed_sounds = get_sounds_that_reaper_would_export()
     for src_file in src_files:
         if src_file.stem.startswith("music_"):
@@ -553,48 +561,24 @@ def do_audio() -> None:
         if (x.stem in allowed_sounds) or (x.stem.startswith("music_"))
     }
 
-    if 1:
-        # Making symlinks.
-        for src_file in src_files:
-            dst_file = AUDIO_DST_DIR / (src_file.stem + ".ogg")
-            if dst_file.exists():
-                if dst_file.is_symlink():
-                    continue
-                else:
-                    dst_file.unlink()
-            dst_file.symlink_to(src_file)
+    # Making symlinks.
+    for src_file in src_files:
+        dst_folder = AUDIO_DST_DIR
+        if src_file.name.startswith("music_"):
+            dst_folder = AUDIO_POST_DST_DIR
+        dst_file = dst_folder / (src_file.stem + ".ogg")
+        dst_file.symlink_to(src_file)
 
-        log.info(f"Make symlinks for {len(src_files)} audio files")
+    log.info(f"Make symlinks for {len(src_files)} audio files")
 
-    else:
-        # Copying.
-        copied = 0
-        for src_file in src_files:
-            dst_file = AUDIO_DST_DIR / (src_file.stem + ".ogg")
-
-            if dst_file.exists():
-                src_mtime = src_file.stat().st_mtime_ns
-                dst_mtime = dst_file.stat().st_mtime_ns
-                if dst_mtime == src_mtime:
-                    continue
-
-            copied += 1
-            log.info(f"Copying {src_file} -> {dst_file}")
-
-            shutil.copyfile(src_file, dst_file)
-            shutil.copystat(src_file, dst_file)
-
-        log.info(
-            f"Found {len(src_files)} total files. (copied {copied}, others have the same modified time)"
-        )
-
-    # Removing orphan audio files from `resources` dir.
+    # Removing orphan audio files from `res` dir.
     orphans = []
-    for dst_file in AUDIO_DST_DIR.glob("*.ogg"):
-        src_file = AUDIO_SRC_DIR / dst_file.relative_to(AUDIO_DST_DIR)
-        if not src_file.exists():
-            orphans.append(dst_file.name)
-            dst_file.unlink()
+    for folder in {AUDIO_DST_DIR, AUDIO_POST_DST_DIR}:
+        for dst_file in folder.glob("*.ogg"):
+            src_file = AUDIO_SRC_DIR / dst_file.relative_to(folder)
+            if not src_file.exists():
+                orphans.append(dst_file)
+                dst_file.unlink()
     if orphans:
         log.info(
             "Removed {} orphan audio files:\n{}".format(
@@ -606,7 +590,11 @@ def do_audio() -> None:
 
 @timing
 def convert_gamelib_json_to_binary(
-    texture_name_2_id: dict[str, int], genline, atlas_data, original_texture_sizes
+    platform: BuildPlatform,
+    texture_name_2_id: dict[str, int],
+    genline,
+    atlas_data,
+    original_texture_sizes,
 ) -> None:
     # {  ###
     gamelib = load_gamelib_cached()
@@ -669,11 +657,19 @@ def convert_gamelib_json_to_binary(
                     raise NotImplementedError
         genline("}\n")
 
+    postload_files = []
+
+    def next_postload_file_index(path: Path) -> int:
+        postload_files.append(path.as_posix())
+        return len(postload_files)
+
     # Enriching gamelib with sounds.
     if 1:
-        do_audio()
+        do_audio(platform)
 
-        sound_paths = list(RESOURCES_DIR.glob("*.ogg"))
+        sound_paths = [*RES_DIR.glob("*.ogg")]
+        if platform.is_web():
+            sound_paths.extend((PROJECT_DIR / "resp").glob("*.ogg"))
 
         m = 2**32
         sound_types_ = [
@@ -702,9 +698,19 @@ def convert_gamelib_json_to_binary(
         genline("VIEW_FROM_ARRAY_DANGER(SOUND_TO_HASH_VALUE);\n")
 
         sound_variations_per_type: dict[str, list[Any]] = defaultdict(list)
+
         for sound_path in sound_paths:
+            filepath = sound_path.relative_to(PROJECT_DIR)
+
+            postload_index = 0
+            if (sound_path.parent.name == "resp") and platform.is_web():
+                postload_index = next_postload_file_index(filepath)
+
             sound_variations_per_type[sound_path.stem.split("__", 1)[0].upper()].append(
-                {"filepath": "resources/" + sound_path.name}
+                {
+                    "filepath": filepath.as_posix(),
+                    "postload_index": postload_index,
+                }
             )
 
         existing_sounds_by_type = {x.pop("type"): x for x in gamelib.get("sounds", [])}
@@ -782,6 +788,11 @@ def convert_gamelib_json_to_binary(
     recursive_replace_transform(gamelib, "locale", "locales", locale_to_index)
     recursive_replace_transform(gamelib, "sound_hash", "sound_hashes", dict(sound_types_))
 
+    genline(
+        f"constexpr int BF_TOTAL_POSTLOAD_FILES_PLUS_ONE = {len(postload_files) + 1};\n"
+    )
+    gamelib["postload_files"] = postload_files
+
     # Creation of `gamelib.bin`.
     intermediate_path = TEMP_DIR / "gamelib.intermediate.jsonc"
     intermediate_path.write_text(json.dumps(gamelib, indent=4))
@@ -797,7 +808,7 @@ def convert_gamelib_json_to_binary(
     )
 
     intermediate_binary_path = Path(str(intermediate_path).rsplit(".", 1)[0] + ".bin")
-    shutil.move(intermediate_binary_path, RESOURCES_DIR / "gamelib.bin")
+    shutil.move(intermediate_binary_path, RES_DIR / "gamelib.bin")
     # }}
 
 
@@ -913,9 +924,9 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
                 name = texture["debug_name"].removeprefix(f"d{factor}/")
                 texture_name_2_id[name] = i
 
-        recursive_mkdir(RESOURCES_DIR)
+        recursive_mkdir(RES_DIR)
 
-        out_atlas_path = RESOURCES_DIR / (path.stem + ".basis")
+        out_atlas_path = RES_DIR / (path.stem + ".basis")
         if not out_atlas_path.exists() or should_regenerate_atlas:
             run_command(
                 [
@@ -1104,15 +1115,15 @@ def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType
     # {  ###
     match platform:
         case BuildPlatform.Win:
-            target_dir_ = f".cmake/vs17/{build_type}/resources"
+            target_dir_ = f".cmake/vs17/{build_type}/res"
 
         case _:
-            if platform.lower().startswith("web"):
-                target_dir_ = f".cmake/{platform}_{build_type}/resources"
+            if platform.is_web():
+                target_dir_ = f".cmake/{platform}_{build_type}/res"
             else:
                 assert False, f"Not supported platform: {platform}"
 
-    src_files = {f.name for f in RESOURCES_DIR.iterdir() if f.is_file()}
+    src_files = {f.name for f in RES_DIR.iterdir() if f.is_file()}
 
     target_dir = Path(target_dir_)
 
@@ -1122,7 +1133,7 @@ def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType
     for file in target_dir.iterdir():
         if file.is_file() and file.name not in src_files:
             file.unlink()
-            log.info(f"Removed orphan resources/ file '{file}'")
+            log.info(f"Removed orphan res/ file '{file}'")
     # }
 
 
@@ -1284,7 +1295,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
     cfy_fonts()
 
     # Generating shell.
-    if build_type == BuildType.Release and platform.lower().startswith("web"):
+    if build_type == BuildType.Release and platform.is_web():
         shell_file = VENDOR_DIR / "shell_release.html"
         shell_contents = shell_file.read_text(encoding="utf-8")
 
@@ -1453,7 +1464,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         assert "##" not in shell_contents
 
         name = "shell_release"
-        if suffix := str(platform).lower().removeprefix("web"):
+        if suffix := platform.lower().removeprefix("web"):
             name += "_" + suffix
         (TEMP_DIR / f"{name}.html").write_text(shell_contents, encoding="utf-8")
 
@@ -1462,7 +1473,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
 
     recursive_mkdir(HANDS_GENERATED_DIR)
 
-    if platform.lower().startswith("web"):
+    if platform.is_web():
         bind_function_names: set[str] = set()
         for f in (SRC_DIR / "engine" / "bf_engine.cpp",):
             m = re.findall(r"\s+(fromJS_\w+)", f.read_text(encoding="utf-8"))
@@ -1514,7 +1525,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         texture_name_2_id, atlases_data = make_atlases(downscale_factors)
         assert len(downscale_factors) == 1
         convert_gamelib_json_to_binary(
-            texture_name_2_id, genline, atlases_data[0], original_texture_sizes
+            platform, texture_name_2_id, genline, atlases_data[0], original_texture_sizes
         )
 
         genline("///")
@@ -1540,14 +1551,19 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
 
     recursive_mkdir(dist_dir)
 
+    resources_folders = ["res"]
+    if platform.is_web():
+        resources_folders.append("resp")
+
     if (platform, build_type) in symlink_resources_for:
-        p = Path(dist_dir + "resources")
-        if not p.exists():
-            p.symlink_to(RESOURCES_DIR, target_is_directory=True)
+        for folder in resources_folders:
+            p = Path(dist_dir + folder)
+            if not p.exists():
+                p.symlink_to(PROJECT_DIR / folder, target_is_directory=True)
     else:
-        dst_resources = dist_dir + "resources/"
-        remove_excessive_files_by_pattern(RESOURCES_DIR, dst_resources, "*")
-        shutil.copytree(RESOURCES_DIR, dst_resources, dirs_exist_ok=True)
+        dst_resources = dist_dir + "res/"
+        remove_excessive_files_by_pattern(RES_DIR, dst_resources, "*")
+        shutil.copytree(RES_DIR, dst_resources, dirs_exist_ok=True)
     # }
 
 

@@ -4,4 +4,6 @@ draw_z: # {  ###
   - DEFAULT
   - VIGNETTE
   - SCREEN_FADE
+  - UI
+  - INACTIVE_WINDOW_DIM
   - GIZMOS

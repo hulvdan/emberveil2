@@ -69,6 +69,7 @@ struct Pos {
 table SoundVariation {
     filepath: string (required);
     delay_milliseconds: uint64;
+    postload_index: int;
 }
 
 table Sound {

@@ -41,7 +41,7 @@ from bf_typer import app, command, global_timing_manager_instance, timing
 
 
 @timing
-def make_web_build_archive(zip_path: Path, base_path: Path) -> None:
+def make_web_build_archive(zip_path: Path, cmake_build_out_path: Path) -> None:
     # {  ###
     with zipfile.ZipFile(zip_path, "w") as archive:
         for filepath in (
@@ -50,7 +50,10 @@ def make_web_build_archive(zip_path: Path, base_path: Path) -> None:
             "index.js",
             "index.wasm",
         ):
-            archive.write(base_path / filepath, filepath)
+            archive.write(cmake_build_out_path / filepath, filepath)
+        RESOURCES_POSTLOAD_DIR = PROJECT_DIR / "resp"
+        for f in RESOURCES_POSTLOAD_DIR.glob("*"):
+            archive.write(f, "{}/{}".format(RESOURCES_POSTLOAD_DIR.name, f.name))
     # }
 
 

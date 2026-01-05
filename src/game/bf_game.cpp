@@ -29,6 +29,18 @@
 
 #pragma once
 
+#include "box2d/box2d.h"
+
+#include "bf_constants.cpp"
+
+b2Vec2 ToB2Vec2(Vector2 value) {  ///
+  return {value.x, value.y};
+}
+
+Vector2 ToVector2(b2Vec2 value) {  ///
+  return {value.x, value.y};
+}
+
 const char* GetWindowTitle() {  ///
   return "The Game"
 #if BF_DEBUG
@@ -82,10 +94,10 @@ void GameInitAfterLoadingSavedata() {
 // logically reacting to `Clay_Hovered()`, changing game's state, etc.
 void DoUI() {
 #define BF_UI_PRE
-#include "bf_clay_ui.cpp"
+#include "engine/bf_clay_ui.cpp"
 
 #define BF_UI_POST
-#include "bf_clay_ui.cpp"
+#include "engine/bf_clay_ui.cpp"
 }
 
 void GameFixedUpdate() {  ///
@@ -120,7 +132,6 @@ void GameDraw() {
         IM::Checkbox("Gizmos", &gdebug.gizmos);
         IM::Checkbox("Emulating Mobile", &gdebug.emulatingMobile);
         IM::Checkbox("Hide UI For Video", &gdebug.hideUIForVideo);
-
         ge.meta.device
           = (gdebug.emulatingMobile ? DeviceType_MOBILE : DeviceType_DESKTOP);
 
