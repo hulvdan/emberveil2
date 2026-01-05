@@ -13,3 +13,10 @@ USAGE:
         for tile in gamelib["tiles"]:
             t = tile["type"]
 """
+
+# Imports.  {  ###
+import bf_lib as bf
+
+# }
+
+###

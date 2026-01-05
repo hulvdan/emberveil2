@@ -380,6 +380,13 @@ struct ClayImageData {
   // ImageFitType fitType   = {};
 };
 
+struct ClayCustomScreenBackground {  ///
+  bool set = false;
+};
+
+// nocheckin
+#define BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA X(ClayCustomScreenBackground, screenBackground)
+
 struct ClayCustomData {
   struct {
     bool    set       = false;
@@ -398,21 +405,22 @@ struct ClayCustomData {
   } overlay = {};
 
   struct {
-    bool set = false;
-  } screenBackground;
-
-  struct {
     bool                     set       = false;
     const BFGame::NineSlice* nineSlice = nullptr;
   } shadow = {};
 
   struct {
     bool                     set            = false;
-    Breathing                breathing      = {};
     const BFGame::NineSlice* nineSlice      = nullptr;
     Color                    nineSliceColor = WHITE;
     Color                    nineSliceFlash = TRANSPARENT_BLACK;
   } nineSlice = {};
+
+#ifdef BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
+#  define X(type, fieldName) type fieldName = {};
+  BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
+#  undef X
+#endif
 };
 
 Clay_Vector2 ToClayVector2(Vector2 value) {  ///
@@ -5407,6 +5415,12 @@ struct FBFlattened {  ///
     return start >= end;
   }
 };
+
+#ifdef BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
+#  define X(_, fieldName) void ClayRender_##fieldName(Clay_BoundingBox _bb, Beautify b);
+BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
+#  undef X
+#endif
 
 #include "game/bf_game.cpp"
 
