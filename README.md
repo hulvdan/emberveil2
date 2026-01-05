@@ -84,13 +84,9 @@ Press F5 in cursor to build the game (there is also a configuration for building
 mkdir NEWGAME
 cd NEWGAME
 git init
-touch a.txt
-git add a.txt
-git commit -m "f"
 git remote add template https://github.com/Hulvdan/game-template.git
 git fetch template
 git rebase template/template
-mklink src\bf_lib.cpp c:\Users\user\dev\.dotfiles\bf_lib\bf_lib.cpp
 uv python install 3.11
 uv sync
 pre-commit install
