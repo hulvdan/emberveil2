@@ -6,7 +6,6 @@ import re
 import socket
 import subprocess
 import sys
-from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -851,15 +850,15 @@ def test_bannerify():
 
 @dataclass
 class LocalizationResult:
-    loc_ids: list[str] = field(default_factory=list)
-    loc_by_languages: dict[str, list[str]] = field(
-        default_factory=lambda: defaultdict(list)
-    )
+    loc_ids: list[str]
+    loc_by_languages: dict[str, list[str]]
 
 
 def read_localization_csv() -> LocalizationResult:
     # {  ###
-    result = LocalizationResult()
+    result = LocalizationResult(
+        loc_ids=[], loc_by_languages={x: [] for x in game_settings.languages}
+    )
 
     with open(ASSETS_DIR / "localization.csv", encoding="utf-8") as in_file:
         not_language_columns = ("id", "\ufeffid", "comment")
