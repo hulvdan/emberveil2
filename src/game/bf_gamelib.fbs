@@ -111,6 +111,7 @@ table GameLibrary {
     // It goes through the field names in the following TABLE_GEN_START/END region.
     // Then makes code generation magic (enums in `bf_codegen.cpp`, recursive replaces)
     // TABLE_GEN_START
+    placeholders: [Placeholder] (required);
     // TABLE_GEN_END
     // GAME STUFF END
 }

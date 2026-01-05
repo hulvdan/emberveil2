@@ -1,0 +1,4 @@
+#pragma once
+
+#define UI_PADDING_OUTER_VERTICAL (10)
+#define UI_PADDING_OUTER_HORIZONTAL (12)

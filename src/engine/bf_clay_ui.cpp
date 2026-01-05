@@ -115,18 +115,6 @@ LAMBDA (void, markControlAsDefault, (Clay_ElementId id)) {
 
 const auto fb_atlas_textures      = glib->atlas_textures();
 const auto original_texture_sizes = glib->original_texture_sizes();
-const auto fb_items               = glib->items();
-const auto fb_stats               = glib->stats();
-const auto fb_weapon_properties   = glib->weapon_properties();
-const auto fb_weapons             = glib->weapons();
-const auto fb_projectiles         = glib->projectiles();
-const auto fb_pickupables         = glib->pickupables();
-const auto fb_difficulties        = glib->difficulties();
-const auto fb_achievements        = glib->achievements();
-const auto fb_builds              = glib->builds();
-const auto fb_effectConditions    = glib->effect_conditions();
-const auto fb_creatures           = glib->creatures();
-const auto fb_damageScalings      = glib->damage_scalings();
 
 static int _disallowTouchNumber = {};
 
@@ -181,14 +169,6 @@ Clay_BeginLayout();
 auto& beautifiers      = ge._ui.clayBeautifiers;
 auto& beautifiersCount = ge._ui.clayBeautifiersCount;
 
-#  define GAP_FLEX (2)
-#  define GAP_SMALL (8)
-#  define GAP_BIG (20)
-#  define PADDING_FRAME (12)
-#  define PADDING_FRAME_SHADOW (94 * ASSETS_TO_LOGICAL_RATIO)
-#  define PADDING_OUTER_VERTICAL (10)
-#  define PADDING_OUTER_HORIZONTAL (12)
-
 int _wheel = 0;
 if (!draw) {
   _wheel = GetMouseWheel();
@@ -198,31 +178,6 @@ if (!draw) {
 const int wheel = _wheel;
 
 auto& zIndex = ge._ui.clayZIndex;
-
-const Color secondaryTextColor{0xef, 0xcb, 0x84, 255};
-
-const auto fb_slotColors = glib->ui_itemslot_colors();
-auto slotColors_ = ALLOCATE_ARRAY(&ge.meta.trashArena, Color, fb_slotColors->size());
-FOR_RANGE (int, i, fb_slotColors->size())
-  slotColors_[i] = ColorFromRGBA(fb_slotColors->Get(i));
-
-const View<Color> slotColors{.count = (int)fb_slotColors->size(), .base = slotColors_};
-
-constexpr int CARD_WIDTH          = 240;
-constexpr int CARD_HEIGHT         = 400;
-constexpr int UPGRADE_FRAME_WIDTH = 200;
-constexpr int ACHIEVEMENT_WIDTH   = CARD_WIDTH;
-
-const f32 ACHIEVEMENT_HEIGHT =                      //
-  0                                                 //
-  + g.meta.fontUI.size / g.meta.fontUI._scaleToFit  // Name.
-  + GAP_SMALL                                       // Gap between name and description.
-  + 2 * g.meta.fontStats.size / g.meta.fontUI._scaleToFit  // 2 lines of description.
-  + GAP_FLEX;                                              // Gap between them.
-
-const auto slotSize
-  = ToVector2(glib->original_texture_sizes()->Get(glib->ui_itemslot_texture_id()))
-    * ASSETS_TO_LOGICAL_RATIO;
 // }
 
 LAMBDA (void, BF_CLAY_TEXT_LOCALIZED, (int locale, ClayTextOptions opts = {})) {  ///
@@ -329,8 +284,6 @@ ASSERT_FALSE(currentContext);
 
 // Control groups navigation.
 if (!draw) {  ///
-  ControlsGroupConnect(groupDetails, Direction_RIGHT, groupDetails);
-
   ControlsContext currentContext = {};
   for (int i = 1; i < ControlsContext_COUNT; i++) {
     auto& context = controlsContexts[i];
@@ -453,11 +406,9 @@ if (!gdebug.hideUIForVideo) {  ///
   showVersion = true;
 #  endif
 
-  FontBegin(&g.meta.fontUIOutlined);
-
   CLAY({
     .floating{
-      .offset{PADDING_OUTER_HORIZONTAL, -PADDING_OUTER_VERTICAL},
+      .offset{UI_PADDING_OUTER_HORIZONTAL, -UI_PADDING_OUTER_VERTICAL},
       .zIndex = i16_max,
       .attachPoints{
         .element = CLAY_ATTACH_POINT_LEFT_BOTTOM,
@@ -477,8 +428,6 @@ if (!gdebug.hideUIForVideo) {  ///
     if (BUILD_WARNINGS)
       BF_CLAY_TEXT(TextFormat("[WARNINGS: %d]", BUILD_WARNINGS));
   }
-
-  FontEnd();
 }
 
 ASSERT(ge._ui.clayZIndex == 0);
@@ -503,22 +452,20 @@ if (draw) {  ///
     FOR_RANGE (int, i, drawCommands.length) {
       auto& cmd = drawCommands.internalArray[i];
 
-      auto    beautifierAlpha = 1.0f;
-      Vector2 beautifierTranslate{0, 0};
-      Vector2 beautifierScale{1, 1};
+      Beautify beautify{};
       FOR_RANGE (int, k, beautifiersCount) {
-        auto& beautifier = beautifiers[k];
-        beautifierAlpha *= beautifier.alpha;
-        beautifierTranslate += beautifier.translate;
-        beautifierScale *= beautifier.scale;
+        auto& b = beautifiers[k];
+        beautify.alpha *= b.alpha;
+        beautify.translate += b.translate;
+        beautify.scale *= b.scale;
       }
-      ASSERT(beautifierAlpha <= 1.0f);
+      ASSERT(beautify.alpha <= 1.0f);
 
       cmd.boundingBox.x -= (g.meta.screenSizeUI.x - LOGICAL_RESOLUTION.x) / 2.0f;
       cmd.boundingBox.y -= (g.meta.screenSizeUI.y - LOGICAL_RESOLUTION.y) / 2.0f;
 
-      cmd.boundingBox.x += beautifierTranslate.x;
-      cmd.boundingBox.y += beautifierTranslate.y;
+      cmd.boundingBox.x += beautify.translate.x;
+      cmd.boundingBox.y += beautify.translate.y;
 
       auto bb = cmd.boundingBox;
       bb.y    = LOGICAL_RESOLUTION.y - bb.y - bb.height;
@@ -538,7 +485,7 @@ if (draw) {  ///
               (u8)d.backgroundColor.r,
               (u8)d.backgroundColor.g,
               (u8)d.backgroundColor.b,
-              (u8)((f32)d.backgroundColor.a * beautifierAlpha)
+              (u8)((f32)d.backgroundColor.a * beautify.alpha)
             },
           });
         } break;
@@ -559,24 +506,23 @@ if (draw) {  ///
               data.color.r,
               data.color.g,
               data.color.b,
-              (u8)((f32)data.color.a * beautifierAlpha)
+              (u8)((f32)data.color.a * beautify.alpha)
             },
             .flash = data.flash,
           });
         } break;
 
         case CLAY_RENDER_COMMAND_TYPE_TEXT: {
-          // TODO: uint16_t text.fontSize
           // TODO: letterSpacing
           // TODO: lineHeight
           auto& d    = cmd.renderData.text;
-          auto  font = &g.meta.fontUI + d.fontId;
+          auto  font = ge._ui.baseFont + d.fontId;
 
           Color c{
             (u8)d.textColor.r,
             (u8)d.textColor.g,
             (u8)d.textColor.b,
-            (u8)((f32)d.textColor.a * beautifierAlpha),
+            (u8)((f32)d.textColor.a * beautify.alpha),
           };
           DrawGroup_CommandText({
             .pos{bb.x, bb.y},
@@ -618,75 +564,13 @@ if (draw) {  ///
             });
           }
 
-          if (data.screenBackground.set) {
-            DrawGroup_CommandRect({
-              .pos   = LOGICAL_RESOLUTIONf / 2.0f,
-              .size  = ge.meta.scaledLogicalResolution,
-              .color = Darken({49, 25, 23, 255}, 0.3f),
-            });
-
-            const int  texID = glib->ui_background_rect_texture_id();
-            const auto gap   = GAP_SMALL;
-            const auto size  = ToVector2(glib->original_texture_sizes()->Get(texID))
-                              * ASSETS_TO_LOGICAL_RATIO;
-
-            const int rectsXToSide = 9;
-            const int rectsYToSide = 5;
-
-#  define BF_BACKGROUND_CYCLE_ENABLED 1
-
-#  if BF_BACKGROUND_CYCLE_ENABLED
-            const int cycleDur = 20 * FIXED_FPS;
-            const f32 cycleP   = (f32)(ge.meta.frameVisual % cycleDur) / (f32)cycleDur;
+#  ifdef BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
+#    define X(_, fieldName)   \
+      if (data.fieldName.set) \
+        ClayRender_##fieldName(bb, beautify);
+          BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
+#    undef X
 #  endif
-
-            const Color rectColor{22, 16, 13, 255};
-
-            FOR_RANGE (int, y, rectsYToSide) {
-              FOR_RANGE (int, n, 2) {
-                FOR_RANGE (int, x, rectsXToSide) {
-                  FOR_RANGE (int, m, 2) {
-                    if (!x && m)
-                      continue;
-
-                    if ((x == rectsXToSide - 1) && (y >= rectsYToSide - 1))
-                      continue;
-
-                    f32 offY = (size.y + gap) / 2.0f;
-                    if (x % 2)
-                      offY = 0;
-
-                    auto center = LOGICAL_RESOLUTIONf / 2.0f;
-                    auto off    = Vector2(x * (size.x + gap), offY + y * (size.y + gap));
-                    if (n)
-                      off.y *= -1;
-
-                    f32 angle = -PI32 / 6;
-
-                    f32 fade = 1;
-
-#  if BF_BACKGROUND_CYCLE_ENABLED
-                    off.y += (((x + m) % 2) ? 1 : -1) * (size.y + gap) * 0.1f
-                             * cosf(2 * PI32 * cycleP);
-
-                    // if ((y == rectsYToSide - 1) && ((x + m + n) % 2)) {
-                    //   const f32 p = 10 * cycleP - 9;
-                    //   if (p > 0)
-                    //     fade = 1 - p;
-                    // }
-#  endif
-
-                    DrawGroup_CommandTexture({
-                      .texID    = texID,
-                      .rotation = angle,
-                      .pos      = center + Vector2Rotate(off, angle + (m ? PI32 : 0)),
-                      .color    = Fade(rectColor, fade),
-                    });
-                  }
-                }
-              }
-            }
-          }
 
           if (data.shadow.set) {
             const auto& d = data.shadow;
@@ -701,7 +585,7 @@ if (draw) {  ///
                 bb.y - (f32)fb->outer_bottom() / downscaleFactor,
               },
               .anchor{},
-              .color = Fade(WHITE, beautifierAlpha * 3.0f / 5.0f),
+              .color = Fade(WHITE, beautify.alpha * 3.0f / 5.0f),
               .nineSliceMargins{
                 (f32)fb->left() / downscaleFactor,
                 (f32)fb->right() / downscaleFactor,
@@ -724,9 +608,7 @@ if (draw) {  ///
             const auto fb              = d.nineSlice;
 
             Color color{d.nineSliceColor.r, d.nineSliceColor.g, d.nineSliceColor.b, 255};
-            if (d.breathing.set)
-              color = BreatheColor(color, {.breathing = d.breathing});
-            color.a = (u8)((f32)d.nineSliceColor.a * beautifierAlpha);
+            color.a = (u8)((f32)d.nineSliceColor.a * beautify.alpha);
 
             DrawGroup_CommandTextureNineSlice({
               .texID = fb->texture_id(),
@@ -763,14 +645,6 @@ if (draw) {  ///
   }
 }
 
-#  undef GAP_FLEX
-#  undef GAP_SMALL
-#  undef GAP_BIG
-#  undef PADDING_FRAME
-#  undef PADDING_FRAME_SHADOW
-#  undef PADDING_OUTER_VERTICAL
-#  undef PADDING_OUTER_HORIZONTAL
-#  undef BF_UI_POST
 #endif
 
 ///

@@ -7,3 +7,24 @@ draw_z: # {  ###
   - UI
   - INACTIVE_WINDOW_DIM
   - GIZMOS
+# }
+
+placeholders: # {  ###
+  - type: INVALID
+  - type: STRING
+  - type: BROKEN_LOCALE
+  - type: IMAGE
+# }
+
+debug_variables: # {  ###
+  # Engine stuff:
+  - name: gizmos
+    type: bool
+  - name: emulatingMobile
+    type: bool
+  - name: hideUIForVideo
+    type: bool
+    # Game stuff:
+# }
+
+###

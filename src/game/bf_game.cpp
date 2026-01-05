@@ -69,18 +69,37 @@ static const char* const g_gameVersion = BF_VERSION
   ;
 // }
 
+enum ControlsContext {  ///
+  ControlsContext_INVALID,
+  ControlsContext_COUNT,
+};
+
 struct GameData {
+  struct Meta {
+    Vector2 screenSizeUI       = {};
+    Vector2 screenSizeUIMargin = {};
+
+    bool playerUsesKeyboardOrController = false;
+  } meta;
 } g = {};
 
-void GamePreInit() {  ///
+void GameLoad(const BFSave::Save* save) {  ///
+}
+
+void GameDumpStateForSaving(BFSave::SaveT& save) {  ///
+}
+
+void GamePreInit(GamePreInitOpts opts) {  ///
   ZoneScoped;
+
+  ge.meta.logicRand = Random(SDL_GetPerformanceCounter());
 }
 
 void GameInit() {  ///
   ZoneScoped;
 }
 
-void GameInitAfterLoadingSavedata() {
+void GameInitAfterLoadingSavedata() {  ///
   ZoneScoped;
 
   LOGI("GameInitAfterLoadingSavedata...");
@@ -156,10 +175,6 @@ void GameDraw() {
         debugTextArena("ge.meta.trashArena", ge.meta.trashArena);
         debugTextArena("ge.meta._transientDataArena", ge.meta._transientDataArena);
 
-#define X(type_, name_) \
-  IM::Text("g.run." #name_ ": %d/%d", g.run.name_.count, g.run.name_.maxCount);
-        VECTORS_TABLE;
-#undef X
         IM::EndTabItem();
       }
 
