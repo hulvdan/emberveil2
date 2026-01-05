@@ -98,6 +98,7 @@ table GameLibrary {
 
     localization_debug_strings: [string] (required);
     localizations: [Localization] (required);
+    postload_files: [string];
 
     sounds: [Sound];
 
