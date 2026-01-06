@@ -60,6 +60,22 @@ def _process_gamelib(
 
     transforms: list[tuple[str, str, str, dict[str, int]]] = []
 
+    # Levels.
+    # ============================================================
+    if 1:
+        d = bf.ldtk_load(bf.ASSETS_DIR / "level.ldtk")
+        levels = []
+
+        for level in d.levels:
+            walls = level.get_layer("Walls")
+            levels.append(
+                {
+                    "sx": walls.cWid_,
+                    "sy": walls.cHei_,
+                    "tile_types": walls.intGridCsv,
+                }
+            )
+
     # Placeholders.
     # ============================================================
     if 1:  # {  ###

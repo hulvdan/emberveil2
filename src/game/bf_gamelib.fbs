@@ -87,6 +87,11 @@ table Flattened {
 }
 
 // GAME STUFF
+table Level {
+    sx: int;
+    sy: int;
+    tile_types: [int] (required);
+}
 // GAME STUFF END
 
 table GameLibrary {

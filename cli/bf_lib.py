@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Iterator, Sequence, TypeVar
 
 import fnvhash
+import pydantic_core
 import pyfiglet
 import yaml
 from bf_typer import log
@@ -964,7 +965,7 @@ class LdtkTileset(BaseModel):
 class LdtkIntGridValueDef(BaseModel):
     # {  ###
     value: int
-    identifier: str
+    identifier: str | None
     # }
 
 
@@ -1145,6 +1146,13 @@ class LdtkLevel(BaseModel):
 
     field = ldtk_field_function
     field_ref = ldtk_field_ref_function
+
+    def get_layer(self, name: str) -> LdtkLayerInstance:
+        for layer in self.layerInstances:
+            if layer.identifier_ == name:
+                return layer
+        assert False
+
     # }
 
 
@@ -1182,6 +1190,36 @@ def ldtk_get_referenced_entity(
     layer: LdtkLayerInstance, referenced_iid: str
 ) -> LdtkEntityInstance:
     return next(e for e in layer.entityInstances if e.iid == referenced_iid)
+
+
+def _ldtk_transform_field_names(data) -> None:
+    """Перевод полей формата `__aboba` в `aboba_`."""
+    # {  ###
+    if not isinstance(data, dict):
+        return
+
+    for key in [k for k in data if k.startswith("__")]:
+        new_key = key[2:] + "_"
+        data[new_key] = data.pop(key)
+
+    for value in data.values():
+        if isinstance(value, dict):
+            _ldtk_transform_field_names(value)
+        elif isinstance(value, list):
+            for v in value:
+                if isinstance(v, dict):
+                    _ldtk_transform_field_names(v)
+    # }
+
+
+def ldtk_load(filepath: Path | str) -> Ldtk:
+    # {  ###
+    with open(filepath) as in_file:
+        data = in_file.read()
+    loaded_json = pydantic_core.from_json(data)
+    _ldtk_transform_field_names(loaded_json)
+    return Ldtk.model_validate(loaded_json)
+    # }
 
 
 from bf_game import *  # noqa
