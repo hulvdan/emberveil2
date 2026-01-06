@@ -274,6 +274,9 @@ struct GameData {
       .texturesScale = 1.0f / METER_LOGICAL_SIZE,
     };
 
+    int passengersTotal     = 0;
+    int passengersDelivered = 0;
+
     struct Player {
       Vector2   pos       = {};
       f32       rotation  = {};
@@ -621,6 +624,7 @@ void RunInit() {
           while (needsZoneIndex == zoneIndex)
             needsZoneIndex = GRAND.Rand() % fb_level->zones()->size();
           *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
+          g.run.passengersTotal++;
         };
       }
     }
@@ -1029,7 +1033,7 @@ void GameFixedUpdate() {
         b2World_CastRay(
           g.run.world,
           ToB2Vec2({
-            pl.pos.x + PLAYER_COLLIDER_SIZE.x * 0.98f * (int)i,
+            pl.pos.x + PLAYER_COLLIDER_SIZE.x * 0.48f * (int)i,
             pl.pos.y,
           }),
           {0, -PLAYER_COLLIDER_SIZE.y / 1.95f},
@@ -1058,8 +1062,10 @@ void GameFixedUpdate() {
       {
         const auto& z = g.run.zones[pl.passenger.needsZoneIndex];
 
-        if (z.Rect().ContainsInside(pl.pos))
+        if (z.Rect().ContainsInside(pl.pos)) {
           pl.passenger = {};
+          g.run.passengersDelivered++;
+        }
       }
     }
 

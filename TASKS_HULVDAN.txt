@@ -26,26 +26,25 @@ x 20 ldtk levels
 x parse ldtk into levels gamelib
 x gamelib levels work in game
 x levels: zones
+x levels: player spawn
 
-* levels: player spawn
-* levels:
-* levels:
-* levels:
-* levels:
-*
 * advance levels after winning
 * show progress on top (sortirovka po polochkam-like)
-* can die
+* can die because of falling to void
+* can die because of fast falling
 *
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
+*
 * find casual game palette
   * check yandex casual games -> steal their palettes
+*
 BEFORE RELEASE
 * 2nd level shows табличку death
 * change yandex metrika
 FEELING
 * упругость
 * rotate helicopter when moving horizontally
+* reward player for good control (PERFECT! GOOD! etc.)
 PROGRESSION
 * progression: different helicopters
 * progression: helicopter colors?
