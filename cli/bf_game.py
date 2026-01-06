@@ -70,7 +70,8 @@ def _process_gamelib(
             walls = level.get_layer("Walls")
             sy = walls.cHei_
             zones = []
-            for entity in level.get_layer("Entities").entityInstances:
+            layer_entities = level.get_layer("Entities")
+            for entity in layer_entities.entityInstances:
                 if entity.identifier_ == "Zone":
                     zones.append(
                         {
@@ -80,10 +81,12 @@ def _process_gamelib(
                             "passengers_right": entity.field("RightLeft") == "Left",
                         }
                     )
+            player = bf.ldtk_get_single_entity(layer_entities, "Player")
             levels.append(
                 {
                     "sx": walls.cWid_,
                     "sy": sy,
+                    "player": (player.grid_[0] + 1, sy - player.grid_[1] - 1),
                     "zones": zones,
                     "tiles": [
                         x

@@ -11,7 +11,7 @@
 	"iid": "f9201ac0-d380-11f0-894e-43ef24ecfc5d",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 27,
+	"nextUid": 28,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -190,6 +190,41 @@
 					"tilesetUid": null
 				}
 			]
+		},
+		{
+			"identifier": "Player",
+			"uid": 27,
+			"tags": [],
+			"exportToToc": false,
+			"allowOutOfBounds": false,
+			"doc": null,
+			"width": 32,
+			"height": 32,
+			"resizableX": false,
+			"resizableY": false,
+			"minWidth": null,
+			"maxWidth": null,
+			"minHeight": null,
+			"maxHeight": null,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 1,
+			"lineOpacity": 1,
+			"hollow": false,
+			"color": "#2CE8F5",
+			"renderMode": "Rectangle",
+			"showName": true,
+			"tilesetId": null,
+			"tileRenderMode": "FitInside",
+			"tileRect": null,
+			"uiTileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 1,
+			"limitScope": "PerLevel",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": []
 		}
 	], "tilesets": [
 		{
@@ -297,20 +332,20 @@
 							"__worldY": 32
 						},
 						{
-							"__identifier": "Zone",
-							"__grid": [4,12],
+							"__identifier": "Player",
+							"__grid": [13,11],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 },
-							"__smartColor": "#63C74D",
-							"iid": "9577ffd0-d380-11f0-894e-97471beb5feb",
-							"width": 192,
-							"height": 16,
-							"defUid": 21,
-							"px": [64,192],
-							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
-							"__worldX": 64,
-							"__worldY": 192
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "eb6ece70-d380-11f0-894e-e9a3a309d92e",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [208,176],
+							"fieldInstances": [],
+							"__worldX": 208,
+							"__worldY": 176
 						}
 					]
 				},
@@ -448,6 +483,22 @@
 							}] }],
 							"__worldX": 576,
 							"__worldY": 224
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [4,12],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "032b7770-d380-11f0-894e-c593117c107b",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [64,192],
+							"fieldInstances": [],
+							"__worldX": 448,
+							"__worldY": 192
 						}
 					]
 				},
@@ -478,7 +529,7 @@
 						0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,
+						0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,
 						2,2,2,2,1
 					],
 					"autoLayerTiles": [],
@@ -588,6 +639,22 @@
 							}] }],
 							"__worldX": 928,
 							"__worldY": 224
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [7,1],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "0549eaa0-d380-11f0-894e-0907a8410212",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [112,16],
+							"fieldInstances": [],
+							"__worldX": 864,
+							"__worldY": 16
 						}
 					]
 				},
@@ -728,6 +795,22 @@
 							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
 							"__worldX": 1312,
 							"__worldY": 112
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [17,10],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "08dd4a90-d380-11f0-894e-ef84b02be9e0",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [272,160],
+							"fieldInstances": [],
+							"__worldX": 1392,
+							"__worldY": 160
 						}
 					]
 				},
@@ -884,6 +967,22 @@
 							}] }],
 							"__worldX": 1568,
 							"__worldY": 208
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [13,6],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "0e62dd90-d380-11f0-894e-898ee803a50a",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [208,96],
+							"fieldInstances": [],
+							"__worldX": 1696,
+							"__worldY": 96
 						}
 					]
 				},
@@ -1005,6 +1104,22 @@
 							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
 							"__worldX": 2048,
 							"__worldY": 16
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [6,0],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "10abbc20-d380-11f0-894e-31a48d72ae11",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [96,0],
+							"fieldInstances": [],
+							"__worldX": 1968,
+							"__worldY": 0
 						}
 					]
 				},
@@ -1177,6 +1292,22 @@
 							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
 							"__worldX": 2352,
 							"__worldY": 224
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [12,9],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "1357a240-d380-11f0-894e-7bf53b4ba64e",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [192,144],
+							"fieldInstances": [],
+							"__worldX": 2448,
+							"__worldY": 144
 						}
 					]
 				},
@@ -1205,7 +1336,7 @@
 						1,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,0,
 						0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,
 						1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,
-						0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,2,2,2,2,1,
+						0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,2,2,2,2,1,
 						1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,
 						0,0,0,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,
 						1,1,1,1,1
@@ -1349,6 +1480,22 @@
 							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
 							"__worldX": 2656,
 							"__worldY": 224
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [8,7],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "1899c3a0-d380-11f0-894e-55088b36c041",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [128,112],
+							"fieldInstances": [],
+							"__worldX": 2784,
+							"__worldY": 112
 						}
 					]
 				},
@@ -1521,6 +1668,22 @@
 							}] }],
 							"__worldX": 3200,
 							"__worldY": 208
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [13,7],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "1c1ad410-d380-11f0-894e-1f21f1b0304f",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [208,112],
+							"fieldInstances": [],
+							"__worldX": 3248,
+							"__worldY": 112
 						}
 					]
 				},
@@ -1680,6 +1843,22 @@
 							}] }],
 							"__worldX": 3600,
 							"__worldY": 208
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [7,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "1dc10a00-d380-11f0-894e-45a49b419398",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [112,64],
+							"fieldInstances": [],
+							"__worldX": 3520,
+							"__worldY": 64
 						}
 					]
 				},
@@ -1852,6 +2031,22 @@
 							}] }],
 							"__worldX": 240,
 							"__worldY": 528
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [9,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "21e92fe0-d380-11f0-894e-bd658fffeaee",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [144,32],
+							"fieldInstances": [],
+							"__worldX": 144,
+							"__worldY": 336
 						}
 					]
 				},
@@ -1989,6 +2184,22 @@
 							}] }],
 							"__worldX": 544,
 							"__worldY": 400
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [7,1],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "2477a2f0-d380-11f0-894e-6581f7490f89",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [112,16],
+							"fieldInstances": [],
+							"__worldX": 496,
+							"__worldY": 320
 						}
 					]
 				},
@@ -2012,7 +2223,7 @@
 					"optionalRules": [],
 					"intGridCsv": [
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
+						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
 						1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,
 						1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,0,1,1,1,1,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,
@@ -2145,6 +2356,22 @@
 							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
 							"__worldX": 752,
 							"__worldY": 512
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [13,9],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "2f755b70-d380-11f0-894e-2165160cdb7f",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [208,144],
+							"fieldInstances": [],
+							"__worldX": 960,
+							"__worldY": 448
 						}
 					]
 				},
@@ -2301,6 +2528,22 @@
 							}] }],
 							"__worldX": 1344,
 							"__worldY": 368
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [14,12],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "31af1ed0-d380-11f0-894e-137088f8411a",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [224,192],
+							"fieldInstances": [],
+							"__worldX": 1344,
+							"__worldY": 496
 						}
 					]
 				},
@@ -2476,6 +2719,22 @@
 							}] }],
 							"__worldX": 1664,
 							"__worldY": 512
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [8,3],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "35732bb0-d380-11f0-894e-291ad769a911",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [128,48],
+							"fieldInstances": [],
+							"__worldX": 1616,
+							"__worldY": 352
 						}
 					]
 				},
@@ -2500,8 +2759,8 @@
 					"intGridCsv": [
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,1,1,0,0,0,
-						0,1,1,1,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,
+						0,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,1,1,1,1,1,
+						1,1,1,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,2,2,2,2,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,
 						0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,
@@ -2632,6 +2891,22 @@
 							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
 							"__worldX": 2096,
 							"__worldY": 528
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [3,13],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "3e5f9060-d380-11f0-894e-7785b130218b",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [48,208],
+							"fieldInstances": [],
+							"__worldX": 1920,
+							"__worldY": 512
 						}
 					]
 				},
@@ -2807,6 +3082,22 @@
 							}] }],
 							"__worldX": 2496,
 							"__worldY": 448
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [10,8],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "405286c0-d380-11f0-894e-51528e292ffc",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [160,128],
+							"fieldInstances": [],
+							"__worldX": 2416,
+							"__worldY": 432
 						}
 					]
 				},
@@ -2963,6 +3254,22 @@
 							}] }],
 							"__worldX": 2800,
 							"__worldY": 528
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [7,9],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "41aa75a0-d380-11f0-894e-19a73ae73d45",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [112,144],
+							"fieldInstances": [],
+							"__worldX": 2768,
+							"__worldY": 448
 						}
 					]
 				},
@@ -3122,6 +3429,22 @@
 							}] }],
 							"__worldX": 3152,
 							"__worldY": 512
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [16,6],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "433e8320-d380-11f0-894e-bbbd5cb71d37",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [256,96],
+							"fieldInstances": [],
+							"__worldX": 3296,
+							"__worldY": 400
 						}
 					]
 				},
@@ -3297,6 +3620,22 @@
 							}] }],
 							"__worldX": 3680,
 							"__worldY": 448
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [11,4],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "446f3af0-d380-11f0-894e-e7d17294c3b7",
+							"width": 32,
+							"height": 32,
+							"defUid": 27,
+							"px": [176,64],
+							"fieldInstances": [],
+							"__worldX": 3584,
+							"__worldY": 368
 						}
 					]
 				},

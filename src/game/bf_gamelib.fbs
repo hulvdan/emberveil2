@@ -102,6 +102,7 @@ table Zone {
 table Level {
     sx: int;
     sy: int;
+    player: Posf;
     tiles: [int] (required);
     zones: [Zone];
 }

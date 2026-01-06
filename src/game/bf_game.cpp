@@ -550,23 +550,6 @@ void RunInit() {
     g.run.world         = b2CreateWorld(&worldDef);
   }
 
-  // Creating player.
-  {  ///
-    auto pos     = g.run.worldSizef / 2.0f;
-    g.run.player = {
-      .pos  = pos,
-      .body = MakeRectBody({
-        .pos = pos,
-        .size{1.5f, 1.5f},
-        .bodyData{
-          .type     = BodyType_CREATURE,
-          .userData = ShapeUserData::Creature(0),
-          .isPlayer = true,
-        },
-      }),
-    };
-  }
-
   // Placing walls.
   {  ///
     Vector2Int p00{-1, -1};
@@ -637,6 +620,24 @@ void RunInit() {
         };
       }
     }
+  }
+
+  // Creating player.
+  {  ///
+    const auto pos
+      = ToVector2(fb_level->player()) - Vector2(0, 2 - PLAYER_COLLIDER_SIZE.y) / 2.0f;
+    g.run.player = {
+      .pos  = pos,
+      .body = MakeRectBody({
+        .pos = pos,
+        .size{1.5f, 1.5f},
+        .bodyData{
+          .type     = BodyType_CREATURE,
+          .userData = ShapeUserData::Creature(0),
+          .isPlayer = true,
+        },
+      }),
+    };
   }
 }
 

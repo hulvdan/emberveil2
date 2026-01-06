@@ -41,6 +41,7 @@ x levels: zones
 * find casual game palette
   * check yandex casual games -> steal their palettes
 BEFORE RELEASE
+* 2nd level shows табличку death
 * change yandex metrika
 FEELING
 * упругость
