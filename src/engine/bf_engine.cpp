@@ -283,21 +283,15 @@ struct Breathing {
   FrameVisual bonusBreatheAt = {};
 };
 
-#define BF_CLAY_CUSTOM_NINE_SLICE(gamelibNineSlicePtr_, tier_, enabled_, breathing_) \
-  .nineSlice {                                                                       \
-    .set = enabled_, .breathing = breathing_, .nineSlice = (gamelibNineSlicePtr_),   \
-    .nineSliceColor = slotColors[(tier_) * 2],                                       \
-    .nineSliceFlash = slotColors[(tier_) * 2 + 1],                                   \
+#define BF_CLAY_CUSTOM_NINE_SLICE(gamelibNineSlicePtr_, color_, flash_, enabled_)       \
+  .nineSlice {                                                                          \
+    .set = (enabled_), .nineSlice = (gamelibNineSlicePtr_), .nineSliceColor = (color_), \
+    .nineSliceFlash = (flash_),                                                         \
   }
 
 #define BF_CLAY_CUSTOM_OVERLAY(color_) \
   .overlay {                           \
     .set = true, .color = (color_)     \
-  }
-
-#define BF_CLAY_CUSTOM_SCREEN_BACKGROUND \
-  .screenBackground {                    \
-    .set = true                          \
   }
 
 struct Beautify {
