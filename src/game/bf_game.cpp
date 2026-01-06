@@ -584,27 +584,61 @@ void RunInit() {
     MakeWalls({.lines = lines});
   }
 
-  MakePlatform({.pos{0, 8}, .size{7, 1}});
-  MakePlatform({.pos{13, 12}, .size{7, 1}});
-  MakePlatform({.pos{4, 0}, .size{12, 3}});
+  // MakePlatform({.pos{0, 8}, .size{7, 1}});
+  // MakePlatform({.pos{13, 12}, .size{7, 1}});
+  // MakePlatform({.pos{4, 0}, .size{12, 3}});
+  //
+  // ZoneCommonData zones[]{
+  //   {.pos{1, 9}, .width = 5},
+  //   {.pos{14, 13}, .width = 5, .passengersRight = true},
+  //   {.pos{5, 3}, .width = 10},
+  // };
+  // int zoneIndex = -1;
+  // for (const auto& x : zones) {
+  //   ASSERT(x.width > 0);
+  //   zoneIndex++;
+  //
+  //   auto& z = *g.run.zones.Add();
+  //   z       = {.c = x};
+  //   FOR_RANGE (int, i, 3) {
+  //     int needsZoneIndex = zoneIndex;
+  //     while (needsZoneIndex == zoneIndex)
+  //       needsZoneIndex = GRAND.Rand() % ARRAY_COUNT(zones);
+  //     *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
+  //   }
+  // }
 
-  ZoneCommonData zones[]{
-    {.pos{1, 9}, .width = 5},
-    {.pos{14, 13}, .width = 5, .passengersRight = true},
-    {.pos{5, 3}, .width = 10},
-  };
-  int zoneIndex = -1;
-  for (const auto& x : zones) {
-    ASSERT(x.width > 0);
-    zoneIndex++;
+  const auto fb_level = glib->levels()->Get(g.run.state.level);
+  const auto fb_tiles = fb_level->tile_types();
+  const int  sy       = fb_level->sy();
+  const int  sx       = fb_level->sx();
 
-    auto& z = *g.run.zones.Add();
-    z       = {.c = x};
-    FOR_RANGE (int, i, 3) {
-      int needsZoneIndex = zoneIndex;
-      while (needsZoneIndex == zoneIndex)
-        needsZoneIndex = GRAND.Rand() % ARRAY_COUNT(zones);
-      *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
+  g.run.worldSize  = {sx, sy};
+  g.run.worldSizef = (Vector2)g.run.worldSize;
+
+  // Making platforms.
+  FOR_RANGE (int, y, sy) {  ///
+    int platformX = -1;
+    int platformW = 0;
+
+    FOR_RANGE (int, x, sx + 1) {
+      if (x == sx) {
+        if (platformW)
+          MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
+        break;
+      }
+
+      int t = y * sx + x;
+      if (fb_tiles->Get(t)) {
+        if (platformX == -1)
+          platformX = x;
+        platformW++;
+      }
+      else if (platformW) {
+        MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
+        platformW = 0;
+        platformX = -1;
+      }
     }
   }
 }
@@ -1124,7 +1158,7 @@ void GameDraw() {
           .pos{(f32)x, (f32)y},
           .size{1, 1},
           .anchor{},
-          .color = color,
+          .color = Fade(color, 0.2f),
         });
       }
     }
