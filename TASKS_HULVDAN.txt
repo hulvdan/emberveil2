@@ -28,8 +28,9 @@ x gamelib levels work in game
 x levels: zones
 x levels: player spawn
 
-* advance levels after winning
 * show progress on top (sortirovka po polochkam-like)
+*
+* advance levels after winning
 * can die because of falling to void
 * can die because of fast falling
 *
