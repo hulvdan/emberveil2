@@ -221,7 +221,9 @@ struct Creature {  ///
 
 struct GameData {
   struct Meta {
-    Font    fontUI             = {};
+    Font            fontUI      = {};
+    LoadFontsResult loadedFonts = {};
+
     Vector2 screenSizeUI       = {};
     Vector2 screenSizeUIMargin = {};
 
@@ -458,6 +460,7 @@ void GamePreInit(GamePreInitOpts opts) {  ///
   ZoneScoped;
 
   ge.meta.logicRand = Random(SDL_GetPerformanceCounter());
+  *opts.baseFont    = &g.meta.fontUI;
 }
 
 void ReloadFontsIfNeeded() {  ///
@@ -495,9 +498,9 @@ void ReloadFontsIfNeeded() {  ///
   }
 
   static auto fontpath = "res/arialnb.ttf";
-  static int  numberCodepoints[]{
-    ' ', '+', '-', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x'
-  };
+  // static int  numberCodepoints[]{
+  //   ' ', '+', '-', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x'
+  // };
 
   static LoadFontData loadFontData_[]{
     // fontUI.
@@ -508,43 +511,53 @@ void ReloadFontsIfNeeded() {  ///
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
     },
-    // fontUIOutlined.
-    {
-      .filepath        = fontpath,
-      .size            = 18,
-      .FIXME_sizeScale = 45.0f / 30.0f,
-      .codepoints      = g_codepoints,
-      .codepointsCount = ARRAY_COUNT(g_codepoints),
-      .outlineWidth    = 3,
-      .outlineAdvance  = 1,
-    },
-    // fontUIBig.
-    {
-      .filepath        = fontpath,
-      .size            = 22,
-      .FIXME_sizeScale = 45.0f / 30.0f,
-      .codepoints      = g_codepoints,
-      .codepointsCount = ARRAY_COUNT(g_codepoints),
-    },
-    // fontUIBigOutlined.
-    {
-      .filepath        = fontpath,
-      .size            = 26,
-      .FIXME_sizeScale = 45.0f / 30.0f,
-      .codepoints      = g_codepoints,
-      .codepointsCount = ARRAY_COUNT(g_codepoints),
-      .outlineWidth    = 3,
-      .outlineAdvance  = 1,
-    },
-    // fontStats.
-    {
-      .filepath        = fontpath,
-      .size            = 15,
-      .FIXME_sizeScale = 45.0f / 30.0f,
-      .codepoints      = g_codepoints,
-      .codepointsCount = ARRAY_COUNT(g_codepoints),
-    },
-    // // fontPricesOutlined.
+    // // fontUIOutlined.
+    // {
+    //   .filepath        = fontpath,
+    //   .size            = 18,
+    //   .FIXME_sizeScale = 45.0f / 30.0f,
+    //   .codepoints      = g_codepoints,
+    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
+    //   .outlineWidth    = 3,
+    //   .outlineAdvance  = 1,
+    // },
+    // // fontUIBig.
+    // {
+    //   .filepath        = fontpath,
+    //   .size            = 22,
+    //   .FIXME_sizeScale = 45.0f / 30.0f,
+    //   .codepoints      = g_codepoints,
+    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
+    // },
+    // // fontUIBigOutlined.
+    // {
+    //   .filepath        = fontpath,
+    //   .size            = 26,
+    //   .FIXME_sizeScale = 45.0f / 30.0f,
+    //   .codepoints      = g_codepoints,
+    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
+    //   .outlineWidth    = 3,
+    //   .outlineAdvance  = 1,
+    // },
+    // // fontStats.
+    // {
+    //   .filepath        = fontpath,
+    //   .size            = 15,
+    //   .FIXME_sizeScale = 45.0f / 30.0f,
+    //   .codepoints      = g_codepoints,
+    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
+    // },
+    // // // fontPricesOutlined.
+    // // {
+    // //   .filepath        = fontpath,
+    // //   .size            = 20,
+    // //   .FIXME_sizeScale = 45.0f / 30.0f,
+    // //   .codepoints      = numberCodepoints,
+    // //   .codepointsCount = ARRAY_COUNT(numberCodepoints),
+    // //   .outlineWidth    = 3,
+    // //   .outlineAdvance  = 1,
+    // // },
+    // // fontItemCountsOutlined.
     // {
     //   .filepath        = fontpath,
     //   .size            = 20,
@@ -554,36 +567,26 @@ void ReloadFontsIfNeeded() {  ///
     //   .outlineWidth    = 3,
     //   .outlineAdvance  = 1,
     // },
-    // fontItemCountsOutlined.
-    {
-      .filepath        = fontpath,
-      .size            = 20,
-      .FIXME_sizeScale = 45.0f / 30.0f,
-      .codepoints      = numberCodepoints,
-      .codepointsCount = ARRAY_COUNT(numberCodepoints),
-      .outlineWidth    = 3,
-      .outlineAdvance  = 1,
-    },
-    // fontUIGiganticOutlined.
-    {
-      .filepath        = fontpath,
-      .size            = 40 * 5 / 4,
-      .FIXME_sizeScale = 45.0f / 30.0f,
-      .codepoints      = g_codepoints,
-      .codepointsCount = ARRAY_COUNT(g_codepoints),
-      .outlineWidth    = 4,
-      .outlineAdvance  = 0,
-    },
-    // fontUINextWave.
-    {
-      .filepath        = fontpath,
-      .size            = 40,
-      .FIXME_sizeScale = 45.0f / 30.0f,
-      .codepoints      = numberCodepoints,
-      .codepointsCount = ARRAY_COUNT(numberCodepoints),
-      .outlineWidth    = 3,
-      .outlineAdvance  = 0,
-    },
+    // // fontUIGiganticOutlined.
+    // {
+    //   .filepath        = fontpath,
+    //   .size            = 40 * 5 / 4,
+    //   .FIXME_sizeScale = 45.0f / 30.0f,
+    //   .codepoints      = g_codepoints,
+    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
+    //   .outlineWidth    = 4,
+    //   .outlineAdvance  = 0,
+    // },
+    // // fontUINextWave.
+    // {
+    //   .filepath        = fontpath,
+    //   .size            = 40,
+    //   .FIXME_sizeScale = 45.0f / 30.0f,
+    //   .codepoints      = numberCodepoints,
+    //   .codepointsCount = ARRAY_COUNT(numberCodepoints),
+    //   .outlineWidth    = 3,
+    //   .outlineAdvance  = 0,
+    // },
   };
   VIEW_FROM_ARRAY_DANGER(loadFontData);
 
