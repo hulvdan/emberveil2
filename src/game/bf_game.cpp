@@ -546,7 +546,7 @@ void RunInit() {
   // Creating box2d world.
   {  ///
     b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity    = b2Vec2{0, 0};
+    worldDef.gravity    = {0, 0};
     g.run.world         = b2CreateWorld(&worldDef);
   }
 
@@ -972,7 +972,7 @@ void GameFixedUpdate() {
   {  ///
     ZoneScopedN("Player moving.");
 
-    b2Body_ApplyForceToCenter(pl.body.id, {0, glib->nohotreload_gravity()}, true);
+    b2Body_ApplyForceToCenter(pl.body.id, {0, glib->gravity()}, true);
 
     auto mov = g.run.player.movement;
     if (!pl.CanMoveHorizontally())
@@ -983,7 +983,7 @@ void GameFixedUpdate() {
       pl.body.id,
       ToB2Vec2({
         mov.x * glib->player_speed_x(),
-        mov.y * (glib->player_speed_y() - glib->nohotreload_gravity()),
+        mov.y * (glib->player_speed_y() - glib->gravity()),
       }),
       true
     );

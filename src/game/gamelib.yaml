@@ -40,7 +40,7 @@ tiles:
     solid: true
   - type: INVALID3
   - type: ZONE
-nohotreload_gravity: -40
+gravity: -40
 nohotreload_player_linear_damping: 1
 nohotreload_player_angular_damping: 1
 player_vertical_restoration_stiffness: 20
