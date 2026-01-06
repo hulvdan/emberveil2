@@ -10,6 +10,7 @@ x draw player rect
 x gravity
 x level outer walls
 
+* draw body gizmos
 * camera zoom shows full level
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
 * draw door zone rect

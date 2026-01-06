@@ -90,7 +90,6 @@ table Flattened {
 table Creature {
     type: string (required);
     color: uint32 = 0xffffffff;
-    speed: float;
 }
 // GAME STUFF END
 
@@ -112,7 +111,13 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
-    gravity: float;
+    nohotreload_gravity: float;
+    nohotreload_player_linear_damping: float;
+    nohotreload_player_angular_damping: float;
+    player_vertical_restoration_stiffness: float;
+    player_vertical_restoration_damping: float;
+    player_speed_x: float;
+    player_speed_y: float;
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.

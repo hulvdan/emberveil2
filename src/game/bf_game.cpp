@@ -214,9 +214,10 @@ struct MakeBodyData {  ///
 };
 
 struct Creature {  ///
-  CreatureType type = {};
-  Vector2      pos  = {};
-  Body         body = {};
+  CreatureType type     = {};
+  Vector2      pos      = {};
+  f32          rotation = {};
+  Body         body     = {};
 };
 
 struct GameData {
@@ -295,8 +296,9 @@ MakeBodyResult MakeBody(Vector2 pos, MakeBodyData data) {  ///
   b2BodyDef bodyDef = b2DefaultBodyDef();
   if (data.type == BodyType_CREATURE)
     bodyDef.type = b2_dynamicBody;
-  bodyDef.position      = ToB2Vec2(pos);
-  bodyDef.linearDamping = BODY_LINEAR_DAMPING;
+  bodyDef.position       = ToB2Vec2(pos);
+  bodyDef.linearDamping  = glib->nohotreload_player_linear_damping();
+  bodyDef.angularDamping = glib->nohotreload_player_angular_damping();
 
   b2BodyId body = b2CreateBody(g.run.world, &bodyDef);
 
@@ -693,8 +695,11 @@ void DoUI() {
 #include "engine/bf_clay_ui.cpp"
 }
 
-Vector2 GetCameraTargetPos() {  ///
-  return g.run.worldSizef / 2.0f;
+void UpdateCamera() {  ///
+  g.run.camera.pos = g.run.worldSizef / 2.0f;
+
+  const auto v      = LOGICAL_RESOLUTIONf / g.run.worldSizef;
+  g.run.camera.zoom = MIN(v.x, v.y);
 }
 
 void GameFixedUpdate() {
@@ -777,21 +782,36 @@ void GameFixedUpdate() {
     for (auto& creature : g.run.creatures) {
       const auto fb = fb_creatures->Get(creature.type);
 
-      b2Body_ApplyForceToCenter(creature.body.id, {0, glib->gravity()}, true);
+      b2Body_ApplyForceToCenter(creature.body.id, {0, glib->nohotreload_gravity()}, true);
 
       if (creature.type == CreatureType_PLAYER) {
         b2Body_ApplyForceToCenter(
-          creature.body.id, ToB2Vec2(g.run.playerMovement * fb->speed()), true
+          creature.body.id,
+          ToB2Vec2({
+            g.run.playerMovement.x * glib->player_speed_x(),
+            g.run.playerMovement.y
+              * (glib->player_speed_y() - glib->nohotreload_gravity()),
+          }),
+          true
         );
       }
+    }
+  }
 
-      // f32 speed = GetCreatureSpeed(creature);
-      //
-      // speed *= b2Body_GetMass(creature.body.id) * BODY_LINEAR_DAMPING_SPEED_SCALE;
-      //
-      // b2Body_ApplyLinearImpulseToCenter(
-      //   creature.body.id, ToB2Vec2(creature.controller.move * (FIXED_DT * speed)), true
-      // );
+  // Turning helicopter vertical.
+  {  ///
+    ZoneScopedN("Turning helicopter vertical.");
+
+    for (auto& creature : g.run.creatures) {
+      const auto rot = b2Body_GetRotation(creature.body.id);
+
+      b2Body_ApplyTorque(
+        creature.body.id,
+        -glib->player_vertical_restoration_stiffness() * creature.rotation
+          - glib->player_vertical_restoration_damping()
+              * b2Body_GetAngularVelocity(creature.body.id),
+        true
+      );
     }
   }
 
@@ -801,15 +821,18 @@ void GameFixedUpdate() {
     b2World_Step(g.run.world, FIXED_DT, 4);
   }
 
-  // Updating body positions.
+  // Retrieving body positions and rotations.
   {  ///
-    ZoneScopedN("Updating body positions.");
+    ZoneScopedN("Retrieving body positions and rotations.");
 
-    for (auto& creature : g.run.creatures)
-      creature.pos = ToVector2(b2Body_GetPosition(creature.body.id));
+    for (auto& creature : g.run.creatures) {
+      creature.pos      = ToVector2(b2Body_GetPosition(creature.body.id));
+      const auto rot    = b2Body_GetRotation(creature.body.id);
+      creature.rotation = atan2f(rot.s, rot.c);
+    }
   }
 
-  g.run.camera.pos = GetCameraTargetPos();
+  UpdateCamera();
 
   DoUI();
 }
@@ -824,11 +847,54 @@ void GameDraw() {
     auto& c = g.run.creatures[0];
     DrawGroup_OneShotRect(
       {
-        .pos  = c.pos,
-        .size = PLAYER_COLLIDER_SIZE,
+        .pos      = c.pos,
+        .size     = PLAYER_COLLIDER_SIZE,
+        .rotation = c.rotation,
       },
       DrawZ_DEFAULT
     );
+  }
+
+  // Gizmos. Colliders.
+  if (gdebug.gizmos) {  ///
+    DrawGroup_Begin(DrawZ_GIZMOS);
+    DrawGroup_SetSortY(0);
+
+    for (const auto& shape : g.run.bodyShapes) {
+      if (!shape.active)
+        continue;
+
+      auto pos = ToVector2(b2Body_GetPosition(shape.body.id));
+
+      auto color = shape.color;
+      if (!b2Body_IsEnabled(shape.body.id))
+        color = GRAY;
+
+      switch (shape.type) {
+      case BodyShapeType_CIRCLE: {
+        DrawGroup_CommandCircleLines({
+          .pos    = pos,
+          .radius = shape.DataCircle().radius,
+          .color  = color,
+        });
+      } break;
+
+      case BodyShapeType_RECT: {
+        const auto rot = b2Body_GetRotation(shape.body.id);
+        DrawGroup_CommandRectLines({
+          .pos      = pos,
+          .size     = shape.DataRect().size,
+          .rotation = atan2f(rot.s, rot.c),
+          .color    = color,
+        });
+      } break;
+
+      default:
+        INVALID_PATH;
+      }
+    }
+
+    DrawGroup_End();
   }
 
   EndMode2D();

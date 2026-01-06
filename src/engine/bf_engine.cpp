@@ -3239,33 +3239,109 @@ void FlushDrawCommands() {
           }
           else {
             const auto& data = command.DataRect();
+            ASSERT(data.texID >= 0);
 
-            auto    off = data.anchor * data.size;
-            Vector2 points[]{
-              {data.pos.x - off.x, data.pos.y + data.size.y - off.y},
-              {data.pos.x + data.size.x - off.x, data.pos.y + data.size.y - off.y},
-              {data.pos.x - off.x, data.pos.y - off.y},
-              {data.pos.x + data.size.x - off.x, data.pos.y - off.y},
+            const Rect sourceRec{
+              .pos  = data.pos,
+              .size = data.size,
             };
+            Rect destRec{
+              .pos{
+                data.pos.x + abs(data.scale.x) * data.anchor.x,
+                data.pos.y + abs(data.scale.y) * data.anchor.y,
+              },
+              .size{
+                data.size.x * abs(data.scale.x),
+                data.size.y * abs(data.scale.y),
+              },
+            };
+            destRec.pos -= LOGICAL_RESOLUTION / 2;
 
-            for (auto& point : points) {
-              point -= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
-              point /= (Vector2)(LOGICAL_RESOLUTION) / 2.0f;
+            auto sx0 = sourceRec.pos.x;
+            auto sx1 = sx0 + sourceRec.size.x;
+            auto sy0 = sourceRec.pos.y;
+            auto sy1 = sy0 + sourceRec.size.y;
+            if (data.scale.x < 0) {
+              auto t = sx0;
+              sx0    = sx1;
+              sx1    = t;
             }
+            if (data.scale.y < 0) {
+              auto t = sy0;
+              sy0    = sy1;
+              sy1    = t;
+            }
+
+            Vector2 topLeft{};
+            Vector2 topRight{};
+            Vector2 bottomLeft{};
+            Vector2 bottomRight{};
+
+            auto dsx = destRec.size.x;
+            auto dsy = destRec.size.y;
+
+            if (data.rotation == 0.0f) {
+              auto dx0 = destRec.pos.x;
+              auto dx1 = destRec.pos.x + dsx;
+              auto dy0 = destRec.pos.y;
+              auto dy1 = destRec.pos.y + dsy;
+
+              dx0 -= data.anchor.x * destRec.size.x;
+              dx1 -= data.anchor.x * destRec.size.x;
+              dy0 -= data.anchor.y * destRec.size.y;
+              dy1 -= data.anchor.y * destRec.size.y;
+
+              topLeft     = {dx0, dy0};
+              topRight    = {dx1, dy0};
+              bottomLeft  = {dx0, dy1};
+              bottomRight = {dx1, dy1};
+            }
+            else {
+              auto sinRotation = sinf(data.rotation);
+              auto cosRotation = cosf(data.rotation);
+
+              auto dx = -data.anchor.x * destRec.size.x;
+              auto dy = -data.anchor.y * destRec.size.y;
+
+              topLeft.x = destRec.pos.x + dx * cosRotation - dy * sinRotation;
+              topLeft.y = destRec.pos.y + dx * sinRotation + dy * cosRotation;
+
+              topRight.x = destRec.pos.x + (dx + dsx) * cosRotation - dy * sinRotation;
+              topRight.y = destRec.pos.y + (dx + dsx) * sinRotation + dy * cosRotation;
+
+              bottomLeft.x = destRec.pos.x + dx * cosRotation - (dy + dsy) * sinRotation;
+              bottomLeft.y = destRec.pos.y + dx * sinRotation + (dy + dsy) * cosRotation;
+
+              bottomRight.x
+                = destRec.pos.x + (dx + dsx) * cosRotation - (dy + dsy) * sinRotation;
+              bottomRight.y
+                = destRec.pos.y + (dx + dsx) * sinRotation + (dy + dsy) * cosRotation;
+            }
+
+            topLeft.x /= (f32)LOGICAL_RESOLUTION.x / 2.0f;
+            topRight.x /= (f32)LOGICAL_RESOLUTION.x / 2.0f;
+            bottomLeft.x /= (f32)LOGICAL_RESOLUTION.x / 2.0f;
+            bottomRight.x /= (f32)LOGICAL_RESOLUTION.x / 2.0f;
+            topLeft.y /= (f32)LOGICAL_RESOLUTION.y / 2.0f;
+            topRight.y /= (f32)LOGICAL_RESOLUTION.y / 2.0f;
+            bottomLeft.y /= (f32)LOGICAL_RESOLUTION.y / 2.0f;
+            bottomRight.y /= (f32)LOGICAL_RESOLUTION.y / 2.0f;
 
             const auto r = ge.meta.screenToLogicalRatio;
             if (r >= 1) {  // Window is too wide.
               const auto c = 1 - 1 / r;
-              for (auto& point : points)
-                point.x -= point.x * c;
+              topLeft.x -= topLeft.x * c;
+              topRight.x -= topRight.x * c;
+              bottomLeft.x -= bottomLeft.x * c;
+              bottomRight.x -= bottomRight.x * c;
             }
             else {  // Window is too high.
               const auto c = 1 - r;
-              for (auto& point : points)
-                point.y -= point.y * c;
+              topLeft.y -= topLeft.y * c;
+              topRight.y -= topRight.y * c;
+              bottomLeft.y -= bottomLeft.y * c;
+              bottomRight.y -= bottomRight.y * c;
             }
-
-            const auto color = *(u32*)&data.color;
 
             const int quadIndices[]{0, 1, 2, 1, 3, 2};
             for (const auto index : quadIndices) {
@@ -3273,11 +3349,12 @@ void FlushDrawCommands() {
                 = (u16)(index + drawCallVerticesCount);
             }
 
+            const auto            color = *(u32*)&data.color;
             const _PosColorVertex quadVertices[]{
-              {points[0].x, points[0].y, 0.0f, color},
-              {points[1].x, points[1].y, 0.0f, color},
-              {points[2].x, points[2].y, 0.0f, color},
-              {points[3].x, points[3].y, 0.0f, color},
+              {topLeft.x, topLeft.y, 0.0f, color},
+              {topRight.x, topRight.y, 0.0f, color},
+              {bottomLeft.x, bottomLeft.y, 0.0f, color},
+              {bottomRight.x, bottomRight.y, 0.0f, color},
             };
             for (const auto& vertex : quadVertices)
               ((_PosColorVertex*)tvb.data)[drawCallVerticesCount++] = vertex;
@@ -3354,12 +3431,38 @@ void FlushDrawCommands() {
           }
           else {
             const auto& data = command.DataRect();
+            ASSERT(data.texID >= 0);
 
+            const Rect sourceRec{
+              .pos  = data.pos,
+              .size = data.size,
+            };
             Rect destRec{
-              .pos{data.pos.x, data.pos.y},
-              .size{data.size.x * abs(data.scale.x), data.size.y * abs(data.scale.y)},
+              .pos{
+                data.pos.x + abs(data.scale.x) * data.anchor.x,
+                data.pos.y + abs(data.scale.y) * data.anchor.y,
+              },
+              .size{
+                data.size.x * abs(data.scale.x),
+                data.size.y * abs(data.scale.y),
+              },
             };
             destRec.pos -= LOGICAL_RESOLUTION / 2;
+
+            auto sx0 = sourceRec.pos.x;
+            auto sx1 = sx0 + sourceRec.size.x;
+            auto sy0 = sourceRec.pos.y;
+            auto sy1 = sy0 + sourceRec.size.y;
+            if (data.scale.x < 0) {
+              auto t = sx0;
+              sx0    = sx1;
+              sx1    = t;
+            }
+            if (data.scale.y < 0) {
+              auto t = sy0;
+              sy0    = sy1;
+              sy1    = t;
+            }
 
             Vector2 topLeft{};
             Vector2 topRight{};
