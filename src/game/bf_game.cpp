@@ -215,7 +215,7 @@ struct MakeBodyData {  ///
 };
 
 struct Passenger {  ///
-  int needsZoneID = {};
+  int needsZoneIndex = -1;
 };
 
 struct ZoneCommonData {  ///
@@ -226,9 +226,10 @@ struct ZoneCommonData {  ///
 
 struct Zone {  ///
   ZoneCommonData    c          = {};
-  int               id         = {};
   Vector<Passenger> passengers = {};
 };
+
+Color zoneColors[]{RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA};
 
 struct GameData {
   struct Meta {
@@ -271,10 +272,11 @@ struct GameData {
       .texturesScale = 1.0f / METER_LOGICAL_SIZE,
     };
 
-    struct {
-      Vector2 pos      = {};
-      f32     rotation = {};
-      Body    body     = {};
+    struct Player {
+      Vector2   pos       = {};
+      f32       rotation  = {};
+      Body      body      = {};
+      Passenger passenger = {};
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -566,18 +568,19 @@ void RunInit() {
     {.pos{14, 13}, .width = 5, .passengersRight = true},
     {.pos{5, 3}, .width = 10},
   };
-  int zoneID = 0;
+  int zoneIndex = -1;
   for (const auto& x : zones) {
     ASSERT(x.size.x > 0);
     ASSERT(x.size.y > 0);
-    zoneID++;
+    zoneIndex++;
+
     auto& z = *g.run.zones.Add();
-    z       = {.c = x, .id = zoneID};
+    z       = {.c = x};
     FOR_RANGE (int, i, 3) {
-      int needsZoneID = zoneID;
-      while (needsZoneID == zoneID)
-        needsZoneID = (GRAND.Rand() % ARRAY_COUNT(zones)) + 1;
-      *z.passengers.Add() = {.needsZoneID = needsZoneID};
+      int needsZoneIndex = zoneIndex;
+      while (needsZoneIndex == zoneIndex)
+        needsZoneIndex = (GRAND.Rand() % ARRAY_COUNT(zones)) + 1;
+      *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
     }
   }
 }
@@ -982,16 +985,40 @@ void GameDraw() {
 
   // Drawing zones.
   if (gdebug.drawZones) {  ///
+    int zoneIndex = -1;
     for (const auto& x : g.run.zones) {
+      zoneIndex++;
+
       DrawGroup_OneShotRect(
         {
           .pos = x.c.pos,
           .size{(f32)x.c.width, 1},
           .anchor{},
-          .color = Fade(GREEN, 0.5f),
+          .color = Fade(zoneColors[zoneIndex], 0.5f),
         },
         DrawZ_DEBUG_TILED_BACKGROUND
       );
+
+      const int pcount = MIN(glib->passenger_max_shown(), x.passengers.count);
+      FOR_RANGE (int, i, pcount) {
+        const auto& p = x.passengers[x.passengers.count - i - 1];
+        auto offsetX  = glib->passenger_origin_offset_x() + glib->passenger_gap() * i;
+        auto origin   = x.c.pos;
+        if (x.c.passengersRight) {
+          origin.x += x.c.width;
+          offsetX *= -1;
+        }
+        origin.x += offsetX;
+        DrawGroup_OneShotRect(
+          {
+            .pos  = origin,
+            .size = Vector2One() * glib->passenger_width(),
+            .anchor{0.5f, 0},
+            .color = Fade(zoneColors[p.needsZoneIndex], 0.5f),
+          },
+          DrawZ_DEBUG_TILED_BACKGROUND
+        );
+      }
     }
   }
 
