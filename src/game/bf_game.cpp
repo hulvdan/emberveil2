@@ -221,7 +221,7 @@ struct Passenger {  ///
 struct Zone {  ///
   int               id         = {};
   Vector2Int        pos        = {};
-  Vector2Int        size       = {};
+  int               width      = {};
   Vector<Passenger> passengers = {};
 };
 
@@ -557,11 +557,12 @@ void RunInit() {
   MakePlatform({.pos{4, 0}, .size{12, 3}});
 
   struct {
-    Vector2Int pos  = {};
-    Vector2Int size = {};
+    Vector2Int pos   = {};
+    int        width = {};
   } zones[]{
-    {.pos{}, .size{}},
-    {.pos{}, .size{}},
+    {.pos{1, 9}, .width = 5},
+    {.pos{14, 13}, .width = 5},
+    {.pos{5, 3}, .width = 10},
   };
   int zoneID = 0;
   for (const auto& x : zones) {
@@ -570,9 +571,9 @@ void RunInit() {
     zoneID++;
     auto& z = *g.run.zones.Add();
     z       = {
-            .id   = zoneID,
-            .pos  = x.pos,
-            .size = x.size,
+            .id    = zoneID,
+            .pos   = x.pos,
+            .width = x.width,
     };
     FOR_RANGE (int, i, 3) {
       int needsZoneID = zoneID;
@@ -986,9 +987,10 @@ void GameDraw() {
     for (const auto& x : g.run.zones) {
       DrawGroup_OneShotRect(
         {
-          .pos   = x.pos,
-          .size  = x.size,
-          .color = Fade(WHITE, 0.1f),
+          .pos = x.pos,
+          .size{(f32)x.width, 1},
+          .anchor{},
+          .color = Fade(GREEN, 0.5f),
         },
         DrawZ_DEBUG_TILED_BACKGROUND
       );
