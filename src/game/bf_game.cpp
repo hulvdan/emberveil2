@@ -78,6 +78,7 @@ enum ShapeCategory : u32 {  ///
   ShapeCategory_STATIC   = 1 << 0,
   ShapeCategory_PLAYER   = 1 << 1,
   ShapeCategory_CREATURE = 1 << 2,
+  // ShapeCategory_FOOT     = 1 << 3,
   // ShapeCategory_PROJECTILE = 1 << 3,
 };
 
@@ -213,11 +214,15 @@ struct MakeBodyData {  ///
   bool          isPlayer = {};
 };
 
-struct Creature {  ///
-  CreatureType type     = {};
-  Vector2      pos      = {};
-  f32          rotation = {};
-  Body         body     = {};
+struct Passenger {  ///
+  int needsZoneID = {};
+};
+
+struct Zone {  ///
+  int               id         = {};
+  Vector2Int        pos        = {};
+  Vector2Int        size       = {};
+  Vector<Passenger> passengers = {};
 };
 
 struct GameData {
@@ -238,8 +243,19 @@ struct GameData {
     } stickControl;
   } meta;
 
-  struct {
-    Vector2 playerMovement = {};
+  struct Run {
+    Vector2 playerMovement         = {};
+    int     playerGroundContacts   = 0;
+    bool    playerIsGrounded       = false;
+    bool    playerIsReallyGrounded = false;
+
+    bool PlayerCanMoveHorizontally() {  ///
+      return !playerIsGrounded;
+    }
+
+    bool PlayerCanMove() {  ///
+      return true;
+    }
 
     Vector2Int worldSize  = {20, 16};
     Vector2    worldSizef = {20, 16};
@@ -250,11 +266,18 @@ struct GameData {
       .texturesScale = 1.0f / METER_LOGICAL_SIZE,
     };
 
+    struct {
+      Vector2 pos      = {};
+      f32     rotation = {};
+      Body    body     = {};
+    } player;
+
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
 #define VECTORS_TABLE      \
   X(BodyShape, bodyShapes) \
-  X(Creature, creatures)
+  X(Zone, zones)           \
+  X(Passenger, passengers)
 
 #define X(type_, name_) Vector<type_> name_ = {};
     VECTORS_TABLE;
@@ -487,10 +510,6 @@ void MakeWalls(MakeWallsData data) {  ///
   }
 }
 
-bool IsPlayerGrounded() {  ///
-  return false;
-}
-
 void RunInit() {
   // Creating box2d world.
   {  ///
@@ -501,8 +520,8 @@ void RunInit() {
 
   // Creating player.
   {  ///
-    auto pos               = g.run.worldSizef / 2.0f;
-    *g.run.creatures.Add() = {
+    auto pos     = g.run.worldSizef / 2.0f;
+    g.run.player = {
       .pos  = pos,
       .body = MakeRectBody({
         .pos = pos,
@@ -536,12 +555,41 @@ void RunInit() {
   MakePlatform({.pos{0, 8}, .size{7, 1}});
   MakePlatform({.pos{13, 12}, .size{7, 1}});
   MakePlatform({.pos{4, 0}, .size{12, 3}});
+
+  struct {
+    Vector2Int pos  = {};
+    Vector2Int size = {};
+  } zones[]{
+    {.pos{}, .size{}},
+    {.pos{}, .size{}},
+  };
+  int zoneID = 0;
+  for (const auto& x : zones) {
+    ASSERT(x.size.x > 0);
+    ASSERT(x.size.y > 0);
+    zoneID++;
+    auto& z = *g.run.zones.Add();
+    z       = {
+            .id   = zoneID,
+            .pos  = x.pos,
+            .size = x.size,
+    };
+    FOR_RANGE (int, i, 3) {
+      int needsZoneID = zoneID;
+      while (needsZoneID == zoneID)
+        needsZoneID = (GRAND.Rand() % ARRAY_COUNT(zones)) + 1;
+      *z.passengers.Add() = {.needsZoneID = needsZoneID};
+    }
+  }
 }
 
 void RunReset() {  ///
   ZoneScoped;
 
   b2DestroyWorld(g.run.world);
+
+  for (auto& x : g.run.zones)
+    x.passengers.Deinit();
 
   // Resetting `g.run` to a default value,
   // while preserving allocated memory of it's Vectors.
@@ -736,11 +784,23 @@ void UpdateCamera() {  ///
   g.run.camera.zoom = MIN(v.x, v.y);
 }
 
+f32 MyCastCallback(
+  b2ShapeId shapeId,
+  b2Vec2    _point,
+  b2Vec2    _normal,
+  f32       fraction,
+  void*     _context
+) {  ///
+  const auto shape = ShapeUserData::FromPointer(b2Shape_GetUserData(shapeId)).type;
+  if (shape == ShapeUserDataType_STATIC)
+    g.run.playerGroundContacts += 1;
+  return fraction;
+}
+
 void GameFixedUpdate() {
   ZoneScoped;
 
   // Setup. {  ///
-  const auto fb_creatures = glib->creatures();
   ReloadFontsIfNeeded();
   // }
 
@@ -753,15 +813,10 @@ void GameFixedUpdate() {
     else {
       if (IsKeyDown(SDL_SCANCODE_D) || IsKeyDown(SDL_SCANCODE_RIGHT))
         move.x += 1;
-      if (IsKeyDown(SDL_SCANCODE_W) || IsKeyDown(SDL_SCANCODE_UP))
-        move.y += 1;
       if (IsKeyDown(SDL_SCANCODE_A) || IsKeyDown(SDL_SCANCODE_LEFT))
         move.x -= 1;
-      // if (IsKeyDown(SDL_SCANCODE_S) || IsKeyDown(SDL_SCANCODE_DOWN))
-      //   move.y -= 1;
-
-      // if (move.x || move.y)
-      //   move = Vector2Normalize(move);
+      if (IsKeyDown(SDL_SCANCODE_W) || IsKeyDown(SDL_SCANCODE_UP))
+        move.y += 1;
     }
 
     g.run.playerMovement = move;
@@ -809,44 +864,43 @@ void GameFixedUpdate() {
   //     g.run.playerMovement = c.calculatedDir;
   // }
 
-  // Creatures moving.
+  // Player moving.
   {  ///
-    ZoneScopedN("Creatures moving.");
+    ZoneScopedN("Player moving.");
 
-    for (auto& creature : g.run.creatures) {
-      const auto fb = fb_creatures->Get(creature.type);
+    auto& p = g.run.player;
 
-      b2Body_ApplyForceToCenter(creature.body.id, {0, glib->nohotreload_gravity()}, true);
+    b2Body_ApplyForceToCenter(p.body.id, {0, glib->nohotreload_gravity()}, true);
 
-      if (creature.type == CreatureType_PLAYER) {
-        b2Body_ApplyForceToCenter(
-          creature.body.id,
-          ToB2Vec2({
-            g.run.playerMovement.x * glib->player_speed_x(),
-            g.run.playerMovement.y
-              * (glib->player_speed_y() - glib->nohotreload_gravity()),
-          }),
-          true
-        );
-      }
-    }
+    auto mov = g.run.playerMovement;
+    if (!g.run.PlayerCanMoveHorizontally())
+      mov.x = 0;
+    if (!g.run.PlayerCanMove())
+      mov = {};
+    b2Body_ApplyForceToCenter(
+      p.body.id,
+      ToB2Vec2({
+        mov.x * glib->player_speed_x(),
+        mov.y * (glib->player_speed_y() - glib->nohotreload_gravity()),
+      }),
+      true
+    );
   }
 
   // Turning helicopter vertical.
   {  ///
     ZoneScopedN("Turning helicopter vertical.");
 
-    for (auto& creature : g.run.creatures) {
-      const auto rot = b2Body_GetRotation(creature.body.id);
+    auto&      p   = g.run.player;
+    const auto rot = b2Body_GetRotation(p.body.id);
 
-      b2Body_ApplyTorque(
-        creature.body.id,
-        -glib->player_vertical_restoration_stiffness() * creature.rotation
-          - glib->player_vertical_restoration_damping()
-              * b2Body_GetAngularVelocity(creature.body.id),
-        true
-      );
-    }
+    b2Body_ApplyTorque(
+      p.body.id,
+      -glib->player_vertical_restoration_stiffness() * p.rotation
+        - glib->player_vertical_restoration_damping()
+            * b2Body_GetAngularVelocity(p.body.id),
+      true
+    );
   }
 
   // Updating box2d world.
@@ -859,10 +913,42 @@ void GameFixedUpdate() {
   {  ///
     ZoneScopedN("Retrieving body positions and rotations.");
 
-    for (auto& creature : g.run.creatures) {
-      creature.pos      = ToVector2(b2Body_GetPosition(creature.body.id));
-      const auto rot    = b2Body_GetRotation(creature.body.id);
-      creature.rotation = atan2f(rot.s, rot.c);
+    auto& p        = g.run.player;
+    p.pos          = ToVector2(b2Body_GetPosition(p.body.id));
+    const auto rot = b2Body_GetRotation(p.body.id);
+    p.rotation     = atan2f(rot.s, rot.c);
+  }
+
+  // Checking if player is grounded.
+  {  ///
+    g.run.playerIsGrounded       = false;
+    g.run.playerIsReallyGrounded = false;
+    g.run.playerGroundContacts   = 0;
+
+    auto& c = g.run.player;
+    if (abs(c.rotation) < 0.001f) {
+      for (int i = -1; i <= 1; i += 1) {
+        b2World_CastRay(
+          g.run.world,
+          ToB2Vec2({
+            c.pos.x + PLAYER_COLLIDER_SIZE.x * 0.98f * (int)i,
+            c.pos.y,
+          }),
+          {0, -PLAYER_COLLIDER_SIZE.y / 1.95f},
+          {
+            .categoryBits = ShapeCategory_PLAYER,
+            .maskBits     = ShapeCategory_STATIC,
+          },
+          MyCastCallback,
+          nullptr
+        );
+      }
+
+      if (g.run.playerGroundContacts >= 2) {
+        g.run.playerIsGrounded = true;
+        g.run.playerIsReallyGrounded
+          = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(c.body.id))) < 0.001f);
+      }
     }
   }
 
@@ -876,15 +962,53 @@ void GameDraw() {
 
   BeginMode2D(&g.run.camera);
 
+  // Drawing tiled background.
+  if (gdebug.drawTiledBackground) {  ///
+    FOR_RANGE (int, y, g.run.worldSize.y) {
+      FOR_RANGE (int, x, g.run.worldSize.x) {
+        if ((x + y) % 2)
+          continue;
+        DrawGroup_OneShotRect(
+          {
+            .pos{(f32)x, (f32)y},
+            .size{1, 1},
+            .anchor{},
+            .color = Fade(WHITE, 0.1f),
+          },
+          DrawZ_DEBUG_TILED_BACKGROUND
+        );
+      }
+    }
+  }
+
+  // Drawing zones.
+  if (gdebug.drawZones) {  ///
+    for (const auto& x : g.run.zones) {
+      DrawGroup_OneShotRect(
+        {
+          .pos   = x.pos,
+          .size  = x.size,
+          .color = Fade(WHITE, 0.1f),
+        },
+        DrawZ_DEBUG_TILED_BACKGROUND
+      );
+    }
+  }
+
   // Drawing player.
   {  ///
-    auto& c = g.run.creatures[0];
+    auto& c     = g.run.player;
+    auto  color = WHITE;
+    if (g.run.playerIsGrounded)
+      color = YELLOW;
+    if (g.run.playerIsReallyGrounded)
+      color = RED;
     DrawGroup_OneShotRect(
       {
         .pos      = c.pos,
         .size     = PLAYER_COLLIDER_SIZE,
         .rotation = c.rotation,
-        .color    = (IsPlayerGrounded() ? RED : WHITE),
+        .color    = color,
       },
       DrawZ_DEFAULT
     );
@@ -1008,6 +1132,9 @@ void GameDraw() {
         debugTextArena("ge.meta._arena", ge.meta._arena);
         debugTextArena("ge.meta.trashArena", ge.meta.trashArena);
         debugTextArena("ge.meta._transientDataArena", ge.meta._transientDataArena);
+
+        IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
+        IM::Checkbox("Draw Zones", &gdebug.drawZones);
 
         IM::EndTabItem();
       }

@@ -13,13 +13,9 @@ x draw body gizmos
 x camera zoom shows full level
 x correct camera pos
 x make platform
+x ground check
 
-* ground check: rotation == 0
-* ground check: no input from player
-* ground check: position is static
-* ground check: foot check
-*
-*
+* doors zones
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
 * draw door zone rect
 * draw door has passenger
@@ -27,6 +23,9 @@ x make platform
   * check yandex casual games -> steal their palettes
 BEFORE RELEASE
 * change metrika
+FEELING
+* упругость
+* rotate helicopter when moving horizontally
 RELEASED
 ENGINE
 * fix ui gizmos positioning
