@@ -17,9 +17,11 @@ x ground check
 x doors zones
 x draw passengers
 x passenger gets on boat
+x passenger gets out of boat
+x correct passenger gets on boat: index
+x draw passenger on boat
 
-* passenger gets out of boat
-* draw passenger on boat
+* correct passenger gets on boat: timing
 * game win
 *
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)

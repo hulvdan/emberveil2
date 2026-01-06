@@ -808,7 +808,7 @@ f32 GetPassengerPickupProgress();
 f32 GetPassengerPosX(int zoneIndex, int i, bool drawing) {  ///
   const auto& z = g.run.zones[zoneIndex];
 
-  const auto& p       = z.passengers[z.passengers.count - i - 1];
+  const auto& p       = z.passengers[i];
   auto        offsetX = glib->passenger_origin_offset_x() + glib->passenger_gap() * i;
   auto        origin  = z.c.pos.x;
   if (z.c.passengersRight) {
@@ -821,7 +821,7 @@ f32 GetPassengerPosX(int zoneIndex, int i, bool drawing) {  ///
   if (drawing                                    //
       && (pl.state.v == PlayerState_PICKING_UP)  //
       && (zoneIndex == pl.state.zoneIndex)       //
-      && !i)
+      && (i == z.passengers.count - 1))
   {
     const auto p = GetPassengerPickupProgress();
     result       = Lerp(result, pl.pos.x, EaseInOutQuad(p));
@@ -836,7 +836,9 @@ f32 GetPassengerPickupProgress() {  ///
   const auto& z = g.run.zones[pl.state.zoneIndex];
   ASSERT(z.passengers.count >= 0);
 
-  auto dist   = GetPassengerPosX(pl.state.zoneIndex, 0, false) - z.c.pos.x;
+  auto dist = abs(
+    GetPassengerPosX(pl.state.zoneIndex, z.passengers.count - 1, false) - z.c.pos.x
+  );
   auto e      = pl.state.startedAt.Elapsed();
   auto result = e.Progress(lframe::FromSeconds(dist / glib->passenger_speed()));
   return result;
@@ -1001,7 +1003,7 @@ void GameFixedUpdate() {
       if (pl.groundContacts >= 2) {
         pl.isGrounded = true;
         pl.isReallyGrounded
-          = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(pl.body.id))) < 0.001f);
+          = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(pl.body.id)))) < 0.001f;
       }
     }
   }
@@ -1085,36 +1087,39 @@ void GameDraw() {
     }
   }
 
+  LAMBDA (void, drawPassenger, (Vector2 pos, const Passenger& p)) {  ///
+    DrawGroup_CommandRect({
+      .pos  = pos,
+      .size = Vector2One() * glib->passenger_width(),
+      .anchor{0.5f, 0},
+      .color = Fade(ZONE_COLORS[p.needsZoneIndex], 0.5f),
+    });
+  };
+
   // Drawing zones.
   if (gdebug.drawZones) {  ///
+    DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
+    DrawGroup_SetSortY(0);
+
     int zoneIndex = -1;
     for (const auto& z : g.run.zones) {
       zoneIndex++;
 
-      DrawGroup_OneShotRect(
-        {
-          .pos = z.c.pos,
-          .size{(f32)z.c.width, 1},
-          .anchor{},
-          .color = Fade(ZONE_COLORS[zoneIndex], 0.5f),
-        },
-        DrawZ_DEBUG_TILED_BACKGROUND
-      );
+      DrawGroup_CommandRect({
+        .pos = z.c.pos,
+        .size{(f32)z.c.width, 1},
+        .anchor{},
+        .color = Fade(ZONE_COLORS[zoneIndex], 0.5f),
+      });
 
       const int pcount = MIN(glib->passenger_max_shown(), z.passengers.count);
-      FOR_RANGE (int, i, pcount) {
-        const auto& p = z.passengers[z.passengers.count - i - 1];
-        DrawGroup_OneShotRect(
-          {
-            .pos{GetPassengerPosX(zoneIndex, i, true), z.c.pos.y},
-            .size = Vector2One() * glib->passenger_width(),
-            .anchor{0.5f, 0},
-            .color = Fade(ZONE_COLORS[p.needsZoneIndex], 0.5f),
-          },
-          DrawZ_DEBUG_TILED_BACKGROUND
-        );
+      FOR_RANGE (int, i_, pcount) {
+        auto i = z.passengers.count - i_ - 1;
+        drawPassenger({GetPassengerPosX(zoneIndex, i, true), z.c.pos.y}, z.passengers[i]);
       }
     }
+
+    DrawGroup_End();
   }
 
   // Drawing player.
@@ -1134,6 +1139,8 @@ void GameDraw() {
       .rotation = pl.rotation,
       .color    = color,
     });
+    if (pl.passenger.needsZoneIndex >= 0)
+      drawPassenger(pl.pos - Vector2(0, PLAYER_COLLIDER_SIZE.y / 2.0f), pl.passenger);
 
     DrawGroup_End();
   }

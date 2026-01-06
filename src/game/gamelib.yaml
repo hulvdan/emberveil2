@@ -39,8 +39,8 @@ player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
 player_speed_x: 30
 player_speed_y: 15
-passenger_origin_offset_x: 1
-passenger_gap: 1.2
+passenger_origin_offset_x: 0.35
+passenger_gap: 0.6
 passenger_max_shown: 3
 passenger_speed: 3
 passenger_width: 0.5
