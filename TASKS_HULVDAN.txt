@@ -21,9 +21,10 @@ x passenger gets out of boat
 x correct passenger gets on boat: index
 x draw passenger on boat
 x passenger rotation
+x correct passenger gets on boat: timing
 
-* correct passenger gets on boat: timing
 * game win
+* levels
 * advance levels
 *
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)

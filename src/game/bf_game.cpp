@@ -836,9 +836,8 @@ f32 GetPassengerPickupProgress() {  ///
   const auto& z = g.run.zones[pl.state.zoneIndex];
   ASSERT(z.passengers.count >= 0);
 
-  auto dist = abs(
-    GetPassengerPosX(pl.state.zoneIndex, z.passengers.count - 1, false) - z.c.pos.x
-  );
+  auto dist
+    = abs(GetPassengerPosX(pl.state.zoneIndex, z.passengers.count - 1, false) - pl.pos.x);
   auto e      = pl.state.startedAt.Elapsed();
   auto result = e.Progress(lframe::FromSeconds(dist / glib->passenger_speed()));
   return result;
