@@ -38,8 +38,6 @@ tiles:
     solid: true
   - type: BRIDGE
     solid: true
-  - type: INVALID3
-  - type: ZONE
 gravity: -40
 nohotreload_player_linear_damping: 1
 nohotreload_player_angular_damping: 1

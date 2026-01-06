@@ -68,10 +68,23 @@ def _process_gamelib(
 
         for level in d.levels:
             walls = level.get_layer("Walls")
+            sy = walls.cHei_
+            zones = []
+            for entity in level.get_layer("Entities").entityInstances:
+                if entity.identifier_ == "Zone":
+                    zones.append(
+                        {
+                            "px": entity.grid_[0],
+                            "py": sy - entity.grid_[1] - 1,
+                            "w": entity.width // 16,
+                            "passengers_right": entity.field("RightLeft") == "Left",
+                        }
+                    )
             levels.append(
                 {
                     "sx": walls.cWid_,
-                    "sy": walls.cHei_,
+                    "sy": sy,
+                    "zones": zones,
                     "tiles": [
                         x
                         for line in reversed(

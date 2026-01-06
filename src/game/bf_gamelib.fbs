@@ -92,10 +92,18 @@ table Tile {
     solid: bool;
 }
 
+table Zone {
+    px: int;
+    py: int;
+    w: int;
+    passengers_right: bool;
+}
+
 table Level {
     sx: int;
     sy: int;
     tiles: [int] (required);
+    zones: [Zone];
 }
 // GAME STUFF END
 

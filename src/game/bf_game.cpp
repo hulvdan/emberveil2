@@ -584,10 +584,6 @@ void RunInit() {
     MakeWalls({.lines = lines});
   }
 
-  // MakePlatform({.pos{0, 8}, .size{7, 1}});
-  // MakePlatform({.pos{13, 12}, .size{7, 1}});
-  // MakePlatform({.pos{4, 0}, .size{12, 3}});
-  //
   // ZoneCommonData zones[]{
   //   {.pos{1, 9}, .width = 5},
   //   {.pos{14, 13}, .width = 5, .passengersRight = true},
@@ -598,14 +594,6 @@ void RunInit() {
   //   ASSERT(x.width > 0);
   //   zoneIndex++;
   //
-  //   auto& z = *g.run.zones.Add();
-  //   z       = {.c = x};
-  //   FOR_RANGE (int, i, 3) {
-  //     int needsZoneIndex = zoneIndex;
-  //     while (needsZoneIndex == zoneIndex)
-  //       needsZoneIndex = GRAND.Rand() % ARRAY_COUNT(zones);
-  //     *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
-  //   }
   // }
 
   const auto fb_level      = glib->levels()->Get(g.run.state.level);
@@ -617,30 +605,56 @@ void RunInit() {
   g.run.worldSize  = {sx, sy};
   g.run.worldSizef = (Vector2)g.run.worldSize;
 
-  // Making platforms.
-  FOR_RANGE (int, y, sy) {  ///
-    int platformX = -1;
-    int platformW = 0;
+  LAMBDA (void, platformify, (auto checkLambda, auto implLambda)) {  ///
+    FOR_RANGE (int, y, sy) {
+      int platformX = -1;
+      int platformW = 0;
 
-    FOR_RANGE (int, x, sx + 1) {
-      if (x == sx) {
-        if (platformW)
-          MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
-        break;
+      FOR_RANGE (int, x, sx + 1) {
+        if (x == sx) {
+          if (platformW)
+            implLambda({platformX, y}, {platformW, 1});
+          break;
+        }
+
+        const int  t    = y * sx + x;
+        const auto type = (TileType)fb_levelTiles->Get(t);
+
+        if (checkLambda(type, fb_tiles->Get(type))) {
+          if (platformX == -1)
+            platformX = x;
+          platformW++;
+        }
+        else if (platformW) {
+          implLambda({platformX, y}, {platformW, 1});
+          platformW = 0;
+          platformX = -1;
+        }
       }
+    }
+  };
 
-      const int  t       = y * sx + x;
-      const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(t));
+  // Placing solid blocks.
+  platformify(  ///
+    [&](TileType _type, auto fb_tile) BF_FORCE_INLINE_LAMBDA { return fb_tile->solid(); },
+    [&](Vector2Int pos, Vector2Int size)
+      BF_FORCE_INLINE_LAMBDA { MakePlatform({.pos = pos, .size = size}); }
+  );
 
-      if (fb_tile->solid()) {
-        if (platformX == -1)
-          platformX = x;
-        platformW++;
-      }
-      else if (platformW) {
-        MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
-        platformW = 0;
-        platformX = -1;
+  // Placing zones.
+  if (fb_level->zones()) {  ///
+    int zoneIndex = -1;
+    for (auto fb_zone : *fb_level->zones()) {
+      zoneIndex++;
+      auto& z = *g.run.zones.Add();
+      z       = {.c{.pos{fb_zone->px(), fb_zone->py()}, .width = fb_zone->w()}};
+      if (fb_level->zones()->size() > 1) {
+        FOR_RANGE (int, i, 3) {
+          int needsZoneIndex = zoneIndex;
+          while (needsZoneIndex == zoneIndex)
+            needsZoneIndex = GRAND.Rand() % fb_level->zones()->size();
+          *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
+        };
       }
     }
   }
@@ -1160,7 +1174,7 @@ void GameDraw() {
           .pos{(f32)x, (f32)y},
           .size{1, 1},
           .anchor{},
-          .color = Fade(WHITE, 0.2f),
+          .color = Fade(WHITE, 0.5f),
         });
       }
     }
