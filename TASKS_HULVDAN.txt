@@ -23,9 +23,11 @@ x draw passenger on boat
 x passenger rotation
 x correct passenger gets on boat: timing
 x 20 ldtk levels
+x parse ldtk into levels gamelib
+x gamelib levels work in game
 
-* parse ldtk into levels gamelib
-* gamelib levels work in game
+* levels: zones
+* levels: player spawn
 * advance levels after winning
 * show progress on top (sortirovka po polochkam-like)
 *

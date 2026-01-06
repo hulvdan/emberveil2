@@ -11,6 +11,7 @@ table Save {
     random_state: uint;
 
     // GAME STUFF
+    level: int;
     // GAME STUFF END
 }
 

@@ -132,6 +132,7 @@ table GameLibrary {
     // TABLE_GEN_START
     placeholders: [Placeholder] (required);
     // TABLE_GEN_END
+    levels: [Level] (required);
     // GAME STUFF END
 }
 

@@ -261,6 +261,10 @@ struct GameData {
   } meta;
 
   struct Run {
+    struct State {
+      int level = 0;
+    } state;
+
     Vector2Int worldSize  = {20, 16};
     Vector2    worldSizef = {20, 16};
     b2WorldId  world      = {};
@@ -477,9 +481,12 @@ void MakePlatform(MakePlatformData data) {               ///
 }
 
 void GameLoad(const BFSave::Save* save) {  ///
+  auto& s = g.run.state;
+  s.level = save->level();
 }
 
 void GameDumpStateForSaving(BFSave::SaveT& save) {  ///
+  save.level = g.run.state.level;
 }
 
 struct Line {  ///
@@ -1095,6 +1102,35 @@ void GameDraw() {
       .color    = Fade(ZONE_COLORS[p.needsZoneIndex], 0.5f),
     });
   };
+
+  const auto fb_level = glib->levels()->Get(g.run.state.level);
+
+  // Drawing tiles.
+  {  ///
+    DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
+    DrawGroup_SetSortY(0);
+
+    const auto sx       = fb_level->sx();
+    const auto fb_tiles = fb_level->tile_types();
+    FOR_RANGE (int, y, fb_level->sy()) {
+      FOR_RANGE (int, x, sx) {
+        const auto tile  = fb_tiles->Get(y * sx + x);
+        auto       color = WHITE;
+        if (!tile)
+          continue;
+        if (tile == 2)
+          color = MAGENTA;
+        DrawGroup_CommandRect({
+          .pos{(f32)x, (f32)y},
+          .size{1, 1},
+          .anchor{},
+          .color = color,
+        });
+      }
+    }
+
+    DrawGroup_End();
+  }
 
   // Drawing zones.
   if (gdebug.drawZones) {  ///

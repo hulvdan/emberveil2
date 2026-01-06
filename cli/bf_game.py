@@ -72,9 +72,17 @@ def _process_gamelib(
                 {
                     "sx": walls.cWid_,
                     "sy": walls.cHei_,
-                    "tile_types": walls.intGridCsv,
+                    "tile_types": [
+                        x
+                        for line in reversed(
+                            list(bf.batched(walls.intGridCsv, walls.cWid_))
+                        )
+                        for x in line
+                    ],
                 }
             )
+
+        gamelib["levels"] = levels
 
     # Placeholders.
     # ============================================================
