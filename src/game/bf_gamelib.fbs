@@ -87,6 +87,11 @@ table Flattened {
 }
 
 // GAME STUFF
+table Creature {
+    type: string (required);
+    color: uint32 = 0xffffffff;
+    speed: float;
+}
 // GAME STUFF END
 
 table GameLibrary {
@@ -112,6 +117,7 @@ table GameLibrary {
     // Then makes code generation magic (enums in `bf_codegen.cpp`, recursive replaces)
     // TABLE_GEN_START
     placeholders: [Placeholder] (required);
+    creatures: [Creature] (required);
     // TABLE_GEN_END
     // GAME STUFF END
 }

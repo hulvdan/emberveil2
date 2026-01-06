@@ -6,6 +6,16 @@ vim.keymap.set("n", "<C-S-g>v", function()
     vim.fn.system([[start .cmake/vs17/game.sln]])
 end, opts)
 
+local danger = false
+vim.keymap.set("n", "<leader>9", function()
+    if danger then
+        vim.fn.execute("hi normal guibg=#300000")
+    else
+        vim.fn.execute("hi normal guibg=clear")
+    end
+    danger = not danger
+end, opts)
+
 function cli_command(cmd)
     return [[uvx ruff check --output-format concise cli && uv run mypy --check-untyped-defs cli && uv run cli\bf_cli.py ]]
         .. cmd

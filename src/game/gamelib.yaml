@@ -27,4 +27,8 @@ debug_variables: # {  ###
     # Game stuff:
 # }
 
+creatures:
+  - type: PLAYER
+    speed: 10100
+
 ###

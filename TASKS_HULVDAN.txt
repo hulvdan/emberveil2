@@ -5,7 +5,16 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 casual
 sort by colors
 
-* door
-* helicopter
-* passenger
+x game runs
+x draw player rect
+
+* gravity
+* level outer walls
+* death resets player to center (GATHER REFS? SUPER MEAT BOY!)
+* draw door zone rect
+* draw door has passenger
+* find casual game palette
+  * check yandex casual games -> steal their palettes
+BEFORE RELEASE
 * change metrika
+RELEASED
