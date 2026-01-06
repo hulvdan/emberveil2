@@ -22,16 +22,18 @@ x correct passenger gets on boat: index
 x draw passenger on boat
 x passenger rotation
 x correct passenger gets on boat: timing
+x 20 ldtk levels
 
-* levels
-* game win
-* advance levels
+* parse ldtk into levels gamelib
+* gamelib levels work in game
+* advance levels after winning
+* show progress on top (sortirovka po polochkam-like)
 *
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
 * find casual game palette
   * check yandex casual games -> steal their palettes
 BEFORE RELEASE
-* change metrika
+* change yandex metrika
 FEELING
 * упругость
 * rotate helicopter when moving horizontally
