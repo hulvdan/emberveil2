@@ -560,7 +560,7 @@ void RunInit() {
       {{p11.x, p00.y}, {p11.x, p11.y}},  // right
       {{p00.x, p11.y}, {p11.x, p11.y}},  // up
       {{p00.x, p00.y}, {p00.x, p11.y}},  // left
-      {{p00.x, p00.y}, {p11.x, p00.y}},  // down
+      // {{p00.x, p00.y}, {p11.x, p00.y}},  // down
     };
     VIEW_FROM_ARRAY_DANGER(lines);
 
@@ -610,7 +610,11 @@ void RunInit() {
     for (auto fb_zone : *fb_level->zones()) {
       zoneIndex++;
       auto& z = *g.run.zones.Add();
-      z       = {.c{.pos{fb_zone->px(), fb_zone->py()}, .width = fb_zone->w()}};
+      z       = {.c{
+              .pos{fb_zone->px(), fb_zone->py()},
+              .width           = fb_zone->w(),
+              .passengersRight = fb_zone->passengers_right(),
+      }};
       if (fb_level->zones()->size() > 1) {
         FOR_RANGE (int, i, 3) {
           int needsZoneIndex = zoneIndex;
