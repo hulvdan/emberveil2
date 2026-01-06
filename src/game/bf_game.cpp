@@ -584,18 +584,6 @@ void RunInit() {
     MakeWalls({.lines = lines});
   }
 
-  // ZoneCommonData zones[]{
-  //   {.pos{1, 9}, .width = 5},
-  //   {.pos{14, 13}, .width = 5, .passengersRight = true},
-  //   {.pos{5, 3}, .width = 10},
-  // };
-  // int zoneIndex = -1;
-  // for (const auto& x : zones) {
-  //   ASSERT(x.width > 0);
-  //   zoneIndex++;
-  //
-  // }
-
   const auto fb_level      = glib->levels()->Get(g.run.state.level);
   const auto fb_tiles      = glib->tiles();
   const auto fb_levelTiles = fb_level->tiles();
@@ -605,41 +593,33 @@ void RunInit() {
   g.run.worldSize  = {sx, sy};
   g.run.worldSizef = (Vector2)g.run.worldSize;
 
-  LAMBDA (void, platformify, (auto checkLambda, auto implLambda)) {  ///
-    FOR_RANGE (int, y, sy) {
-      int platformX = -1;
-      int platformW = 0;
+  // Placing solid blocks.
+  FOR_RANGE (int, y, sy) {  ///
+    int platformX = -1;
+    int platformW = 0;
 
-      FOR_RANGE (int, x, sx + 1) {
-        if (x == sx) {
-          if (platformW)
-            implLambda({platformX, y}, {platformW, 1});
-          break;
-        }
+    FOR_RANGE (int, x, sx + 1) {
+      if (x == sx) {
+        if (platformW)
+          MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
+        break;
+      }
 
-        const int  t    = y * sx + x;
-        const auto type = (TileType)fb_levelTiles->Get(t);
+      const int  t       = y * sx + x;
+      const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(t));
 
-        if (checkLambda(type, fb_tiles->Get(type))) {
-          if (platformX == -1)
-            platformX = x;
-          platformW++;
-        }
-        else if (platformW) {
-          implLambda({platformX, y}, {platformW, 1});
-          platformW = 0;
-          platformX = -1;
-        }
+      if (fb_tile->solid()) {
+        if (platformX == -1)
+          platformX = x;
+        platformW++;
+      }
+      else if (platformW) {
+        MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
+        platformW = 0;
+        platformX = -1;
       }
     }
-  };
-
-  // Placing solid blocks.
-  platformify(  ///
-    [&](TileType _type, auto fb_tile) BF_FORCE_INLINE_LAMBDA { return fb_tile->solid(); },
-    [&](Vector2Int pos, Vector2Int size)
-      BF_FORCE_INLINE_LAMBDA { MakePlatform({.pos = pos, .size = size}); }
-  );
+  }
 
   // Placing zones.
   if (fb_level->zones()) {  ///
