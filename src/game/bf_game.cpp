@@ -227,6 +227,10 @@ struct ZoneCommonData {  ///
 struct Zone {  ///
   ZoneCommonData    c          = {};
   Vector<Passenger> passengers = {};
+
+  Rect Rect() const {
+    return {.pos = Vector2(c.pos), .size = Vector2(c.width, 1)};
+  }
 };
 
 const Color ZONE_COLORS_[]{RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA};
@@ -592,7 +596,7 @@ void RunInit() {
     FOR_RANGE (int, i, 3) {
       int needsZoneIndex = zoneIndex;
       while (needsZoneIndex == zoneIndex)
-        needsZoneIndex = (GRAND.Rand() % ARRAY_COUNT(zones)) + 1;
+        needsZoneIndex = GRAND.Rand() % ARRAY_COUNT(zones);
       *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
     }
   }
@@ -1003,6 +1007,18 @@ void GameFixedUpdate() {
   }
 
   if (pl.isReallyGrounded) {
+    // Putting passenger down.
+    {  ///
+      if ((!pl.state.v || pl.state.v == PlayerState_PUTTING_DOWN)
+          && (pl.passenger.needsZoneIndex >= 0))
+      {
+        const auto& z = g.run.zones[pl.passenger.needsZoneIndex];
+
+        if (z.Rect().ContainsInside(pl.pos))
+          pl.passenger = {};
+      }
+    }
+
     // Picking up passenger.
     if ((!pl.state.v || (pl.state.v == PlayerState_PICKING_UP))
         && (pl.passenger.needsZoneIndex < 0))
@@ -1011,8 +1027,7 @@ void GameFixedUpdate() {
       for (auto& z : g.run.zones) {
         zoneIndex++;
 
-        Rect r{.pos = Vector2(z.c.pos), .size = Vector2(z.c.width, 1)};
-        if (!r.ContainsInside(pl.pos))
+        if (!z.Rect().ContainsInside(pl.pos))
           continue;
 
         if (z.passengers.count <= 0) {
@@ -1034,23 +1049,6 @@ void GameFixedUpdate() {
         }
       }
     }
-
-    // // Putting passenger down.
-    // {  ///
-    //   if ((!pl.state.v || pl.state.v == PlayerState_PUTTING_DOWN) &&
-    //   (pl.passenger.needsZoneIndex >= 0)) {
-    // LOGD("Started putting down");
-    //     pl.state.v = PlayerState_PUTTING_DOWN;
-    //     pl.stateStartedAt.SetNow();
-    //     pl.
-    //   }
-    //
-    //   const auto putDur = lframe::FromSeconds(glib->passenger_put_seconds());
-    //   if ((pl.state == PlayerState_PUTTING_DOWN)
-    //       && (pl.stateStartedAt.Elapsed() >= putDur))
-    // {LOGD("Put down");
-    //     pl.state = {};}
-    // }
   }
 
   UpdateCamera();

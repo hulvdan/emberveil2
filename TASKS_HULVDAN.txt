@@ -16,9 +16,10 @@ x make platform
 x ground check
 x doors zones
 x draw passengers
+x passenger gets on boat
 
-* passenger gets on boat
 * passenger gets out of boat
+* draw passenger on boat
 * game win
 *
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
