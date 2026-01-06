@@ -119,6 +119,7 @@ table GameLibrary {
     passenger_max_shown: int;
     passenger_speed: float;
     passenger_width: float;
+    passenger_put_seconds: float;
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.

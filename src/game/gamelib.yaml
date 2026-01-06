@@ -42,7 +42,8 @@ player_speed_y: 15
 passenger_origin_offset_x: 1
 passenger_gap: 1.2
 passenger_max_shown: 3
-passenger_speed: 1
+passenger_speed: 3
 passenger_width: 0.5
+passenger_put_seconds: 0.2
 
 ###

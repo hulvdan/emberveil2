@@ -229,7 +229,14 @@ struct Zone {  ///
   Vector<Passenger> passengers = {};
 };
 
-Color zoneColors[]{RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA};
+const Color ZONE_COLORS_[]{RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA};
+VIEW_FROM_ARRAY_DANGER(ZONE_COLORS);
+
+enum PlayerState {  ///
+  PlayerState_DEFAULT,
+  PlayerState_PICKING_UP,
+  PlayerState_PUTTING_DOWN,
+};
 
 struct GameData {
   struct Meta {
@@ -250,19 +257,6 @@ struct GameData {
   } meta;
 
   struct Run {
-    Vector2 playerMovement         = {};
-    int     playerGroundContacts   = 0;
-    bool    playerIsGrounded       = false;
-    bool    playerIsReallyGrounded = false;
-
-    bool PlayerCanMoveHorizontally() {  ///
-      return !playerIsGrounded;
-    }
-
-    bool PlayerCanMove() {  ///
-      return true;
-    }
-
     Vector2Int worldSize  = {20, 16};
     Vector2    worldSizef = {20, 16};
     b2WorldId  world      = {};
@@ -277,6 +271,26 @@ struct GameData {
       f32       rotation  = {};
       Body      body      = {};
       Passenger passenger = {};
+
+      Vector2 movement         = {};
+      int     groundContacts   = 0;
+      bool    isGrounded       = false;
+      bool    isReallyGrounded = false;
+
+      struct {
+        PlayerState v         = {};
+        FrameGame   startedAt = {};
+        int         zoneIndex = -1;
+      } state;
+
+      bool CanMove() {  ///
+        return !state.v;
+      }
+
+      bool CanMoveHorizontally() {  ///
+        return CanMove() && !isGrounded;
+      }
+
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -570,8 +584,7 @@ void RunInit() {
   };
   int zoneIndex = -1;
   for (const auto& x : zones) {
-    ASSERT(x.size.x > 0);
-    ASSERT(x.size.y > 0);
+    ASSERT(x.width > 0);
     zoneIndex++;
 
     auto& z = *g.run.zones.Add();
@@ -786,6 +799,45 @@ void UpdateCamera() {  ///
   g.run.camera.zoom = MIN(v.x, v.y);
 }
 
+f32 GetPassengerPickupProgress();
+
+f32 GetPassengerPosX(int zoneIndex, int i, bool drawing) {  ///
+  const auto& z = g.run.zones[zoneIndex];
+
+  const auto& p       = z.passengers[z.passengers.count - i - 1];
+  auto        offsetX = glib->passenger_origin_offset_x() + glib->passenger_gap() * i;
+  auto        origin  = z.c.pos.x;
+  if (z.c.passengersRight) {
+    origin += z.c.width;
+    offsetX *= -1;
+  }
+  auto result = origin + offsetX;
+
+  const auto& pl = g.run.player;
+  if (drawing                                    //
+      && (pl.state.v == PlayerState_PICKING_UP)  //
+      && (zoneIndex == pl.state.zoneIndex)       //
+      && !i)
+  {
+    const auto p = GetPassengerPickupProgress();
+    result       = Lerp(result, pl.pos.x, EaseInOutQuad(p));
+  }
+  return result;
+}
+
+f32 GetPassengerPickupProgress() {  ///
+  const auto& pl = g.run.player;
+  ASSERT(pl.state.v == PlayerState_PICKING_UP);
+
+  const auto& z = g.run.zones[pl.state.zoneIndex];
+  ASSERT(z.passengers.count >= 0);
+
+  auto dist   = GetPassengerPosX(pl.state.zoneIndex, 0, false) - z.c.pos.x;
+  auto e      = pl.state.startedAt.Elapsed();
+  auto result = e.Progress(lframe::FromSeconds(dist / glib->passenger_speed()));
+  return result;
+}
+
 f32 PlayerGroundedRaycastCallback(
   b2ShapeId shapeId,
   b2Vec2    _point,
@@ -795,7 +847,7 @@ f32 PlayerGroundedRaycastCallback(
 ) {  ///
   const auto shape = ShapeUserData::FromPointer(b2Shape_GetUserData(shapeId)).type;
   if (shape == ShapeUserDataType_STATIC)
-    g.run.playerGroundContacts += 1;
+    g.run.player.groundContacts += 1;
   return fraction;
 }
 
@@ -803,6 +855,7 @@ void GameFixedUpdate() {
   ZoneScoped;
 
   // Setup. {  ///
+  auto& pl = g.run.player;
   ReloadFontsIfNeeded();
   // }
 
@@ -821,7 +874,7 @@ void GameFixedUpdate() {
         move.y += 1;
     }
 
-    g.run.playerMovement = move;
+    g.run.player.movement = move;
   }
 
   // TODO: DON'T FORGET THAT IT CAN'T BE DOWN!!!!
@@ -870,17 +923,15 @@ void GameFixedUpdate() {
   {  ///
     ZoneScopedN("Player moving.");
 
-    auto& p = g.run.player;
+    b2Body_ApplyForceToCenter(pl.body.id, {0, glib->nohotreload_gravity()}, true);
 
-    b2Body_ApplyForceToCenter(p.body.id, {0, glib->nohotreload_gravity()}, true);
-
-    auto mov = g.run.playerMovement;
-    if (!g.run.PlayerCanMoveHorizontally())
+    auto mov = g.run.player.movement;
+    if (!pl.CanMoveHorizontally())
       mov.x = 0;
-    if (!g.run.PlayerCanMove())
+    if (!pl.CanMove())
       mov = {};
     b2Body_ApplyForceToCenter(
-      p.body.id,
+      pl.body.id,
       ToB2Vec2({
         mov.x * glib->player_speed_x(),
         mov.y * (glib->player_speed_y() - glib->nohotreload_gravity()),
@@ -893,14 +944,13 @@ void GameFixedUpdate() {
   {  ///
     ZoneScopedN("Turning helicopter vertical.");
 
-    auto&      p   = g.run.player;
-    const auto rot = b2Body_GetRotation(p.body.id);
+    const auto rot = b2Body_GetRotation(pl.body.id);
 
     b2Body_ApplyTorque(
-      p.body.id,
-      -glib->player_vertical_restoration_stiffness() * p.rotation
+      pl.body.id,
+      -glib->player_vertical_restoration_stiffness() * pl.rotation
         - glib->player_vertical_restoration_damping()
-            * b2Body_GetAngularVelocity(p.body.id),
+            * b2Body_GetAngularVelocity(pl.body.id),
       true
     );
   }
@@ -915,26 +965,24 @@ void GameFixedUpdate() {
   {  ///
     ZoneScopedN("Retrieving body positions and rotations.");
 
-    auto& p        = g.run.player;
-    p.pos          = ToVector2(b2Body_GetPosition(p.body.id));
-    const auto rot = b2Body_GetRotation(p.body.id);
-    p.rotation     = atan2f(rot.s, rot.c);
+    pl.pos         = ToVector2(b2Body_GetPosition(pl.body.id));
+    const auto rot = b2Body_GetRotation(pl.body.id);
+    pl.rotation    = atan2f(rot.s, rot.c);
   }
 
   // Checking if player is grounded.
   {  ///
-    g.run.playerIsGrounded       = false;
-    g.run.playerIsReallyGrounded = false;
-    g.run.playerGroundContacts   = 0;
+    pl.isGrounded       = false;
+    pl.isReallyGrounded = false;
+    pl.groundContacts   = 0;
 
-    auto& c = g.run.player;
-    if (abs(c.rotation) < 0.001f) {
+    if (abs(pl.rotation) < 0.001f) {
       for (int i = -1; i <= 1; i += 1) {
         b2World_CastRay(
           g.run.world,
           ToB2Vec2({
-            c.pos.x + PLAYER_COLLIDER_SIZE.x * 0.98f * (int)i,
-            c.pos.y,
+            pl.pos.x + PLAYER_COLLIDER_SIZE.x * 0.98f * (int)i,
+            pl.pos.y,
           }),
           {0, -PLAYER_COLLIDER_SIZE.y / 1.95f},
           {
@@ -946,21 +994,77 @@ void GameFixedUpdate() {
         );
       }
 
-      if (g.run.playerGroundContacts >= 2) {
-        g.run.playerIsGrounded = true;
-        g.run.playerIsReallyGrounded
-          = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(c.body.id))) < 0.001f);
+      if (pl.groundContacts >= 2) {
+        pl.isGrounded = true;
+        pl.isReallyGrounded
+          = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(pl.body.id))) < 0.001f);
       }
     }
+  }
+
+  if (pl.isReallyGrounded) {
+    // Picking up passenger.
+    if ((!pl.state.v || (pl.state.v == PlayerState_PICKING_UP))
+        && (pl.passenger.needsZoneIndex < 0))
+    {  ///
+      int zoneIndex = -1;
+      for (auto& z : g.run.zones) {
+        zoneIndex++;
+
+        Rect r{.pos = Vector2(z.c.pos), .size = Vector2(z.c.width, 1)};
+        if (!r.ContainsInside(pl.pos))
+          continue;
+
+        if (z.passengers.count <= 0) {
+          ASSERT_FALSE(z.passengers.count);
+          continue;
+        }
+
+        if (!pl.state.v) {
+          LOGD("Started picking up");
+          pl.state.v = PlayerState_PICKING_UP;
+          pl.state.startedAt.SetNow();
+          pl.state.zoneIndex = zoneIndex;
+        }
+
+        if (GetPassengerPickupProgress() >= 1) {
+          LOGD("Picked up");
+          pl.state     = {};
+          pl.passenger = z.passengers.Pop();
+        }
+      }
+    }
+
+    // // Putting passenger down.
+    // {  ///
+    //   if ((!pl.state.v || pl.state.v == PlayerState_PUTTING_DOWN) &&
+    //   (pl.passenger.needsZoneIndex >= 0)) {
+    // LOGD("Started putting down");
+    //     pl.state.v = PlayerState_PUTTING_DOWN;
+    //     pl.stateStartedAt.SetNow();
+    //     pl.
+    //   }
+    //
+    //   const auto putDur = lframe::FromSeconds(glib->passenger_put_seconds());
+    //   if ((pl.state == PlayerState_PUTTING_DOWN)
+    //       && (pl.stateStartedAt.Elapsed() >= putDur))
+    // {LOGD("Put down");
+    //     pl.state = {};}
+    // }
   }
 
   UpdateCamera();
 
   DoUI();
+
+  ge.meta.frameGame++;
+  ge.meta.frameVisual++;
 }
 
 void GameDraw() {
   ZoneScoped;
+
+  const auto& pl = g.run.player;
 
   BeginMode2D(&g.run.camera);
 
@@ -986,35 +1090,28 @@ void GameDraw() {
   // Drawing zones.
   if (gdebug.drawZones) {  ///
     int zoneIndex = -1;
-    for (const auto& x : g.run.zones) {
+    for (const auto& z : g.run.zones) {
       zoneIndex++;
 
       DrawGroup_OneShotRect(
         {
-          .pos = x.c.pos,
-          .size{(f32)x.c.width, 1},
+          .pos = z.c.pos,
+          .size{(f32)z.c.width, 1},
           .anchor{},
-          .color = Fade(zoneColors[zoneIndex], 0.5f),
+          .color = Fade(ZONE_COLORS[zoneIndex], 0.5f),
         },
         DrawZ_DEBUG_TILED_BACKGROUND
       );
 
-      const int pcount = MIN(glib->passenger_max_shown(), x.passengers.count);
+      const int pcount = MIN(glib->passenger_max_shown(), z.passengers.count);
       FOR_RANGE (int, i, pcount) {
-        const auto& p = x.passengers[x.passengers.count - i - 1];
-        auto offsetX  = glib->passenger_origin_offset_x() + glib->passenger_gap() * i;
-        auto origin   = x.c.pos;
-        if (x.c.passengersRight) {
-          origin.x += x.c.width;
-          offsetX *= -1;
-        }
-        origin.x += offsetX;
+        const auto& p = z.passengers[z.passengers.count - i - 1];
         DrawGroup_OneShotRect(
           {
-            .pos  = origin,
+            .pos{GetPassengerPosX(zoneIndex, i, true), z.c.pos.y},
             .size = Vector2One() * glib->passenger_width(),
             .anchor{0.5f, 0},
-            .color = Fade(zoneColors[p.needsZoneIndex], 0.5f),
+            .color = Fade(ZONE_COLORS[p.needsZoneIndex], 0.5f),
           },
           DrawZ_DEBUG_TILED_BACKGROUND
         );
@@ -1024,21 +1121,23 @@ void GameDraw() {
 
   // Drawing player.
   {  ///
-    auto& c     = g.run.player;
-    auto  color = WHITE;
-    if (g.run.playerIsGrounded)
+    auto color = WHITE;
+    if (pl.isGrounded)
       color = YELLOW;
-    if (g.run.playerIsReallyGrounded)
+    if (pl.isReallyGrounded)
       color = RED;
-    DrawGroup_OneShotRect(
-      {
-        .pos      = c.pos,
-        .size     = PLAYER_COLLIDER_SIZE,
-        .rotation = c.rotation,
-        .color    = color,
-      },
-      DrawZ_DEFAULT
-    );
+
+    DrawGroup_Begin(DrawZ_DEFAULT);
+    DrawGroup_SetSortY(0);
+
+    DrawGroup_CommandRect({
+      .pos      = pl.pos,
+      .size     = PLAYER_COLLIDER_SIZE,
+      .rotation = pl.rotation,
+      .color    = color,
+    });
+
+    DrawGroup_End();
   }
 
   // Gizmos. Colliders.

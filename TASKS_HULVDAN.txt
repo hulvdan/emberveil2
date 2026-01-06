@@ -15,8 +15,12 @@ x correct camera pos
 x make platform
 x ground check
 x doors zones
+x draw passengers
 
-* draw passengers
+* passenger gets on boat
+* passenger gets out of boat
+* game win
+*
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
 * find casual game palette
   * check yandex casual games -> steal their palettes
