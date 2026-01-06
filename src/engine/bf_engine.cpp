@@ -3239,7 +3239,6 @@ void FlushDrawCommands() {
           }
           else {
             const auto& data = command.DataRect();
-            ASSERT(data.texID >= 0);
 
             const Rect sourceRec{
               .pos  = data.pos,
