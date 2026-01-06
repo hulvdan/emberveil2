@@ -402,6 +402,32 @@ Body MakeCircleBody(MakeCircleBodyData data) {  ///
   return makeBodyResult.body;
 }
 
+struct MakePlatformData {  ///
+  Vector2Int pos  = {};
+  Vector2Int size = {};
+};
+
+void MakePlatform(MakePlatformData data) {               ///
+  if ((data.pos.x < 0) || (data.pos.y < 0)               //
+      || (data.size.x <= 0) || (data.size.y <= 0)        //
+      || (data.pos.x + data.size.x > g.run.worldSize.x)  //
+      || (data.pos.y + data.size.y > g.run.worldSize.y))
+  {
+    INVALID_PATH;
+    return;
+  }
+
+  MakeRectBody({
+    .pos  = Vector2(data.pos),
+    .size = Vector2(data.size),
+    .anchor{0, 0},
+    .bodyData{
+      .type     = BodyType_STATIC,
+      .userData = ShapeUserData::Static(),
+    },
+  });
+}
+
 void GameLoad(const BFSave::Save* save) {  ///
 }
 
@@ -461,6 +487,10 @@ void MakeWalls(MakeWallsData data) {  ///
   }
 }
 
+bool IsPlayerGrounded() {  ///
+  return false;
+}
+
 void RunInit() {
   // Creating box2d world.
   {  ///
@@ -489,7 +519,7 @@ void RunInit() {
   // Placing walls.
   {  ///
     Vector2Int p00{-1, -1};
-    auto       p11 = g.run.worldSize + Vector2Int(1, 1);
+    auto       p11 = g.run.worldSize;
 
     Line lines_[]{
       // Walls around.
@@ -502,6 +532,10 @@ void RunInit() {
 
     MakeWalls({.lines = lines});
   }
+
+  MakePlatform({.pos{0, 8}, .size{7, 1}});
+  MakePlatform({.pos{13, 12}, .size{7, 1}});
+  MakePlatform({.pos{4, 0}, .size{12, 3}});
 }
 
 void RunReset() {  ///
@@ -850,6 +884,7 @@ void GameDraw() {
         .pos      = c.pos,
         .size     = PLAYER_COLLIDER_SIZE,
         .rotation = c.rotation,
+        .color    = (IsPlayerGrounded() ? RED : WHITE),
       },
       DrawZ_DEFAULT
     );

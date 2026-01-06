@@ -9,9 +9,17 @@ x game runs
 x draw player rect
 x gravity
 x level outer walls
+x draw body gizmos
+x camera zoom shows full level
+x correct camera pos
+x make platform
 
-* draw body gizmos
-* camera zoom shows full level
+* ground check: rotation == 0
+* ground check: no input from player
+* ground check: position is static
+* ground check: foot check
+*
+*
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
 * draw door zone rect
 * draw door has passenger
@@ -20,3 +28,5 @@ x level outer walls
 BEFORE RELEASE
 * change metrika
 RELEASED
+ENGINE
+* fix ui gizmos positioning

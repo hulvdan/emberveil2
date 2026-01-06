@@ -27,13 +27,13 @@ debug_variables: # {  ###
     # Game stuff:
 # }
 
-nohotreload_gravity: -50
+nohotreload_gravity: -30
 nohotreload_player_linear_damping: 1
 nohotreload_player_angular_damping: 1
 player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
-player_speed_x: 50
-player_speed_y: 50
+player_speed_x: 30
+player_speed_y: 15
 creatures:
   - type: PLAYER
 
