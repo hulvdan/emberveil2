@@ -23,8 +23,8 @@ x draw passenger on boat
 x passenger rotation
 x correct passenger gets on boat: timing
 
-* game win
 * levels
+* game win
 * advance levels
 *
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
