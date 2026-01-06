@@ -27,8 +27,9 @@ debug_variables: # {  ###
     # Game stuff:
 # }
 
+gravity: -100
 creatures:
   - type: PLAYER
-    speed: 10100
+    speed: 200
 
 ###

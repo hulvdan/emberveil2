@@ -112,6 +112,8 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    gravity: float;
+
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.
     // Then makes code generation magic (enums in `bf_codegen.cpp`, recursive replaces)

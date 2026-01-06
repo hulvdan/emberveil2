@@ -406,6 +406,59 @@ void GameLoad(const BFSave::Save* save) {  ///
 void GameDumpStateForSaving(BFSave::SaveT& save) {  ///
 }
 
+struct Line {  ///
+  Vector2 v1 = {};
+  Vector2 v2 = {};
+};
+
+struct MakeWallsData {  ///
+  const View<Line> lines     = {};
+  View<Body>       outBodies = {};
+};
+
+void MakeWalls(MakeWallsData data) {  ///
+  ASSERT(data.lines.count > 0);
+  if (data.outBodies.count)
+    ASSERT(data.lines.count == data.outBodies.count);
+  ASSERT(data.lines.base);
+
+  FOR_RANGE (int, i, data.lines.count) {
+    const auto& line = data.lines[i];
+
+    auto v1 = line.v1;
+    auto v2 = line.v2;
+
+    if ((v1.x != v2.x) && (v1.y != v2.y))
+      INVALID_PATH;
+    if (v1 == v2)
+      INVALID_PATH;
+
+    if (v1.x > v2.x) {
+      auto t = v1;
+      v1     = v2;
+      v2     = t;
+    }
+    if (v1.y > v2.y) {
+      auto t = v1;
+      v1     = v2;
+      v2     = t;
+    }
+
+    auto body = MakeRectBody({
+      .pos    = v1,
+      .size   = (v2 - v1) + Vector2One(),
+      .anchor = Vector2Zero(),
+      .bodyData{
+        .type     = BodyType_STATIC,
+        .userData = ShapeUserData::Static(),
+      },
+    });
+
+    if (data.outBodies.count)
+      data.outBodies[i] = body;
+  }
+}
+
 void RunInit() {
   // Creating box2d world.
   {  ///
@@ -429,6 +482,23 @@ void RunInit() {
         },
       }),
     };
+  }
+
+  // Placing walls.
+  {  ///
+    Vector2Int p00{-1, -1};
+    auto       p11 = g.run.worldSize + Vector2Int(1, 1);
+
+    Line lines_[]{
+      // Walls around.
+      {{p11.x, p00.y}, {p11.x, p11.y}},  // right
+      {{p00.x, p11.y}, {p11.x, p11.y}},  // up
+      {{p00.x, p00.y}, {p00.x, p11.y}},  // left
+      {{p00.x, p00.y}, {p11.x, p00.y}},  // down
+    };
+    VIEW_FROM_ARRAY_DANGER(lines);
+
+    MakeWalls({.lines = lines});
   }
 }
 
@@ -651,8 +721,8 @@ void GameFixedUpdate() {
       // if (IsKeyDown(SDL_SCANCODE_S) || IsKeyDown(SDL_SCANCODE_DOWN))
       //   move.y -= 1;
 
-      if (move.x || move.y)
-        move = Vector2Normalize(move);
+      // if (move.x || move.y)
+      //   move = Vector2Normalize(move);
     }
 
     g.run.playerMovement = move;
@@ -707,11 +777,11 @@ void GameFixedUpdate() {
     for (auto& creature : g.run.creatures) {
       const auto fb = fb_creatures->Get(creature.type);
 
+      b2Body_ApplyForceToCenter(creature.body.id, {0, glib->gravity()}, true);
+
       if (creature.type == CreatureType_PLAYER) {
         b2Body_ApplyForceToCenter(
-          creature.body.id,
-          ToB2Vec2(g.run.playerMovement * (FIXED_DT * fb->speed())),
-          true
+          creature.body.id, ToB2Vec2(g.run.playerMovement * fb->speed()), true
         );
       }
 

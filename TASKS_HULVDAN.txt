@@ -7,9 +7,10 @@ sort by colors
 
 x game runs
 x draw player rect
+x gravity
+x level outer walls
 
-* gravity
-* level outer walls
+* camera zoom shows full level
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
 * draw door zone rect
 * draw door has passenger
