@@ -87,10 +87,15 @@ table Flattened {
 }
 
 // GAME STUFF
+table Tile {
+    type: string (required);
+    solid: bool;
+}
+
 table Level {
     sx: int;
     sy: int;
-    tile_types: [int] (required);
+    tiles: [int] (required);
 }
 // GAME STUFF END
 
@@ -131,6 +136,7 @@ table GameLibrary {
     // Then makes code generation magic (enums in `bf_codegen.cpp`, recursive replaces)
     // TABLE_GEN_START
     placeholders: [Placeholder] (required);
+    tiles: [Tile] (required);
     // TABLE_GEN_END
     levels: [Level] (required);
     // GAME STUFF END

@@ -608,10 +608,11 @@ void RunInit() {
   //   }
   // }
 
-  const auto fb_level = glib->levels()->Get(g.run.state.level);
-  const auto fb_tiles = fb_level->tile_types();
-  const int  sy       = fb_level->sy();
-  const int  sx       = fb_level->sx();
+  const auto fb_level      = glib->levels()->Get(g.run.state.level);
+  const auto fb_tiles      = glib->tiles();
+  const auto fb_levelTiles = fb_level->tiles();
+  const int  sy            = fb_level->sy();
+  const int  sx            = fb_level->sx();
 
   g.run.worldSize  = {sx, sy};
   g.run.worldSizef = (Vector2)g.run.worldSize;
@@ -628,8 +629,10 @@ void RunInit() {
         break;
       }
 
-      int t = y * sx + x;
-      if (fb_tiles->Get(t)) {
+      const int  t       = y * sx + x;
+      const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(t));
+
+      if (fb_tile->solid()) {
         if (platformX == -1)
           platformX = x;
         platformW++;
@@ -1144,21 +1147,20 @@ void GameDraw() {
     DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
     DrawGroup_SetSortY(0);
 
-    const auto sx       = fb_level->sx();
-    const auto fb_tiles = fb_level->tile_types();
+    const auto sx            = fb_level->sx();
+    const auto fb_levelTiles = fb_level->tiles();
+    const auto fb_tiles      = glib->tiles();
+
     FOR_RANGE (int, y, fb_level->sy()) {
       FOR_RANGE (int, x, sx) {
-        const auto tile  = fb_tiles->Get(y * sx + x);
-        auto       color = WHITE;
-        if (!tile)
+        const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(y * sx + x));
+        if (!fb_tile->solid())
           continue;
-        if (tile == 2)
-          color = MAGENTA;
         DrawGroup_CommandRect({
           .pos{(f32)x, (f32)y},
           .size{1, 1},
           .anchor{},
-          .color = Fade(color, 0.2f),
+          .color = Fade(WHITE, 0.2f),
         });
       }
     }

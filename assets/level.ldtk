@@ -70,7 +70,6 @@
 			"intGridValues": [
 				{ "value": 1, "identifier": null, "color": "#000000", "tile": null, "groupUid": 0 },
 				{ "value": 2, "identifier": null, "color": "#BE4A2F", "tile": null, "groupUid": 0 },
-				{ "value": 3, "identifier": null, "color": "#D77643", "tile": null, "groupUid": 0 },
 				{ "value": 4, "identifier": null, "color": "#63C74D", "tile": null, "groupUid": 0 }
 			],
 			"intGridValuesGroups": [],
