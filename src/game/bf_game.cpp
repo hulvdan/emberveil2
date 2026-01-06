@@ -1087,12 +1087,13 @@ void GameDraw() {
     }
   }
 
-  LAMBDA (void, drawPassenger, (Vector2 pos, const Passenger& p)) {  ///
+  LAMBDA (void, drawPassenger, (Vector2 pos, const Passenger& p, f32 rotation)) {  ///
     DrawGroup_CommandRect({
       .pos  = pos,
       .size = Vector2One() * glib->passenger_width(),
       .anchor{0.5f, 0},
-      .color = Fade(ZONE_COLORS[p.needsZoneIndex], 0.5f),
+      .rotation = rotation,
+      .color    = Fade(ZONE_COLORS[p.needsZoneIndex], 0.5f),
     });
   };
 
@@ -1114,8 +1115,10 @@ void GameDraw() {
 
       const int pcount = MIN(glib->passenger_max_shown(), z.passengers.count);
       FOR_RANGE (int, i_, pcount) {
-        auto i = z.passengers.count - i_ - 1;
-        drawPassenger({GetPassengerPosX(zoneIndex, i, true), z.c.pos.y}, z.passengers[i]);
+        const int i = z.passengers.count - i_ - 1;
+        drawPassenger(
+          {GetPassengerPosX(zoneIndex, i, true), z.c.pos.y}, z.passengers[i], 0
+        );
       }
     }
 
@@ -1139,8 +1142,13 @@ void GameDraw() {
       .rotation = pl.rotation,
       .color    = color,
     });
-    if (pl.passenger.needsZoneIndex >= 0)
-      drawPassenger(pl.pos - Vector2(0, PLAYER_COLLIDER_SIZE.y / 2.0f), pl.passenger);
+    if (pl.passenger.needsZoneIndex >= 0) {
+      drawPassenger(
+        pl.pos - Vector2Rotate(Vector2(0, PLAYER_COLLIDER_SIZE.y / 2.0f), pl.rotation),
+        pl.passenger,
+        pl.rotation
+      );
+    }
 
     DrawGroup_End();
   }
