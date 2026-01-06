@@ -14,11 +14,10 @@ x camera zoom shows full level
 x correct camera pos
 x make platform
 x ground check
+x doors zones
 
-* doors zones
+* draw passengers
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
-* draw door zone rect
-* draw door has passenger
 * find casual game palette
   * check yandex casual games -> steal their palettes
 BEFORE RELEASE
@@ -26,6 +25,14 @@ BEFORE RELEASE
 FEELING
 * упругость
 * rotate helicopter when moving horizontally
+PROGRESSION
+* progression: different helicopters
+* progression: helicopter colors?
+* progression: change doors
+* progression: another passenger sprites
+* progression: helicopter trails
+* progression: platform sprites
+* progression:
 RELEASED
 ENGINE
 * fix ui gizmos positioning

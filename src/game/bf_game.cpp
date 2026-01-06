@@ -218,10 +218,15 @@ struct Passenger {  ///
   int needsZoneID = {};
 };
 
+struct ZoneCommonData {  ///
+  Vector2Int pos             = {};
+  int        width           = {};
+  bool       passengersRight = {};
+};
+
 struct Zone {  ///
+  ZoneCommonData    c          = {};
   int               id         = {};
-  Vector2Int        pos        = {};
-  int               width      = {};
   Vector<Passenger> passengers = {};
 };
 
@@ -556,12 +561,9 @@ void RunInit() {
   MakePlatform({.pos{13, 12}, .size{7, 1}});
   MakePlatform({.pos{4, 0}, .size{12, 3}});
 
-  struct {
-    Vector2Int pos   = {};
-    int        width = {};
-  } zones[]{
+  ZoneCommonData zones[]{
     {.pos{1, 9}, .width = 5},
-    {.pos{14, 13}, .width = 5},
+    {.pos{14, 13}, .width = 5, .passengersRight = true},
     {.pos{5, 3}, .width = 10},
   };
   int zoneID = 0;
@@ -570,11 +572,7 @@ void RunInit() {
     ASSERT(x.size.y > 0);
     zoneID++;
     auto& z = *g.run.zones.Add();
-    z       = {
-            .id    = zoneID,
-            .pos   = x.pos,
-            .width = x.width,
-    };
+    z       = {.c = x, .id = zoneID};
     FOR_RANGE (int, i, 3) {
       int needsZoneID = zoneID;
       while (needsZoneID == zoneID)
@@ -785,7 +783,7 @@ void UpdateCamera() {  ///
   g.run.camera.zoom = MIN(v.x, v.y);
 }
 
-f32 MyCastCallback(
+f32 PlayerGroundedRaycastCallback(
   b2ShapeId shapeId,
   b2Vec2    _point,
   b2Vec2    _normal,
@@ -940,7 +938,7 @@ void GameFixedUpdate() {
             .categoryBits = ShapeCategory_PLAYER,
             .maskBits     = ShapeCategory_STATIC,
           },
-          MyCastCallback,
+          PlayerGroundedRaycastCallback,
           nullptr
         );
       }
@@ -987,8 +985,8 @@ void GameDraw() {
     for (const auto& x : g.run.zones) {
       DrawGroup_OneShotRect(
         {
-          .pos = x.pos,
-          .size{(f32)x.width, 1},
+          .pos = x.c.pos,
+          .size{(f32)x.c.width, 1},
           .anchor{},
           .color = Fade(GREEN, 0.5f),
         },
