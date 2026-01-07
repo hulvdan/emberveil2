@@ -9,12 +9,15 @@ x levels flag that it can be mirrored and cycled
 x fixed passengeres size (pushable array)
 x level number to top left
 x levels cycling alg
+x win: can advance
 
-* win: can advance
+* win: advance timing
 * win:
 * win:
 * win:
-* win:
+*
+* imgui button reset level to 0
+* levels mirroring
 *
 * can die because of falling to void
 * can die because of fast falling
