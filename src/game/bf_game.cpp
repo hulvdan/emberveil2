@@ -303,7 +303,7 @@ struct GameData {
       } state;
 
       bool CanMove() const {  ///
-        return !state.v && !g.run.won.IsSet();
+        return !state.v && !g.run.won.IsSet() && !g.run.drag.active;
       }
 
       bool CanMoveHorizontally() const {  ///
@@ -311,7 +311,7 @@ struct GameData {
       }
     } player;
 
-    struct DraggingPassenger {
+    struct Drag {
       bool    active   = false;
       Vector2 worldPos = {};
 
@@ -1663,7 +1663,7 @@ void GameDraw() {
   LAMBDA (void, drawPassenger, (int zone, Vector2 pos, const Passenger& p, f32 rotation))
   {  ///
     DrawGroup_CommandRect({
-      .pos  = pos + Vector2(p.offYVisual),
+      .pos  = pos + Vector2(0, p.offYVisual),
       .size = ToVector2(glib->passenger_size()),
       .anchor{0.5f, 0},
       .rotation = rotation,
