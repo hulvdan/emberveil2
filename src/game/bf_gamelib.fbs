@@ -145,13 +145,14 @@ table GameLibrary {
     passenger_gap: float;
     passenger_max_shown: int;
     passenger_speed: float;
-    passenger_width: float;
+    passenger_size: Posf;
     passenger_put_seconds: float;
     level_advance_transition_seconds: float;
     nohotreload_platform_rect_radius: float;
     nohotreload_player_rect_radius: float;
     passenger_click_radius: float;
-    passengers_pos_lerp_factor: float;
+    passenger_pos_lerp_factor: float;
+    passenger_hover_distance: float;
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.

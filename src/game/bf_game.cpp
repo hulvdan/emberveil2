@@ -215,9 +215,10 @@ struct MakeBodyData {  ///
 };
 
 struct Passenger {  ///
-  int color      = 0;
-  f32 posX       = {};
-  f32 posXVisual = f32_inf;
+  int  color      = 0;
+  f32  posX       = {};
+  f32  posXVisual = f32_inf;
+  bool hovered    = false;
 
   operator bool() const {
     return color > 0;
@@ -884,10 +885,10 @@ void CheckGamelib() {
   return;
 #endif
 
-  if (!glib) {
-    glibFile = LoadFile(GAMELIB_PATH, nullptr);
-    glib     = BFGame::GetGameLibrary(glibFile);
-  }
+#ifdef TESTS
+  glibFile = LoadFile(GAMELIB_PATH, nullptr);
+  glib     = BFGame::GetGameLibrary(glibFile);
+#endif
 
   // Checking levels cycling and mirroring.
   {  ///
@@ -1006,6 +1007,12 @@ void CheckGamelib() {
       ASSERT(expected == actualIndex);
     }
   }
+
+#ifdef TESTS
+  glib = nullptr;
+  UnloadFile(glibFile);
+  glibFile = nullptr;
+#endif
 }
 
 TEST_CASE ("CheckGamelib") {  ///
@@ -1540,7 +1547,22 @@ void GameFixedUpdate() {
       }
 
       for (auto& p : z.passengers)
-        p.posXVisual = Lerp(p.posXVisual, p.posX, glib->passengers_pos_lerp_factor());
+        p.posXVisual = Lerp(p.posXVisual, p.posX, glib->passenger_pos_lerp_factor());
+    }
+
+    // Dragging passenger to player.
+    if ((pl.zone >= 0) && pl.isReallyGrounded) {
+      Vector2 worldMouseOrTouchPos{};
+
+      auto& z = g.run.zones[pl.zone];
+      FOR_RANGE (int, i, z.passengers.count) {
+        auto&   p = z.passengers[i];
+        Vector2 pos{p.posX, z.pos.y};
+        if (Vector2DistanceSqr(pos, worldMouseOrTouchPos)
+            <= SQR(glib->passenger_click_radius()))
+        {
+        }
+      }
     }
 
     ge.meta.frameGame++;
@@ -1597,7 +1619,7 @@ void GameDraw() {
   {  ///
     DrawGroup_CommandRect({
       .pos  = pos,
-      .size = Vector2One() * glib->passenger_width(),
+      .size = ToVector2(glib->passenger_size()),
       .anchor{0.5f, 0},
       .rotation = rotation,
       .color    = Fade(ZONE_COLORS[p.color - 1], 0.5f),
