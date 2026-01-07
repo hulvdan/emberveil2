@@ -1364,6 +1364,7 @@ void GameFixedUpdate() {
     {
       g.save.level++;
       g.meta.reload = true;
+      ShowInterAd();
     }
   }
 
