@@ -14,9 +14,13 @@ x remove mirroring from c++
 x win: advance transition timing
 x round colliders
 x extended ceiling and floor
+x find tileset video screen it
+x tileset texture
 
-* find tilesheet video screen it
-* draw map using tileset
+* tileset: spritesheetify
+* tileset: get into gamelib
+* tileset: write checks
+* tileset: draw solid blocks using tileset
 *
 * 3 hearts
 * death: falling to void
