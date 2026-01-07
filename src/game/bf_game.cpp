@@ -215,10 +215,10 @@ struct MakeBodyData {  ///
 };
 
 struct Passenger {  ///
-  int  color      = 0;
-  f32  posX       = {};
-  f32  posXVisual = f32_inf;
-  bool hovered    = false;
+  int color      = 0;
+  f32 posX       = {};
+  f32 posXVisual = f32_inf;
+  f32 offYVisual = {};
 
   operator bool() const {
     return color > 0;
@@ -312,10 +312,11 @@ struct GameData {
     } player;
 
     struct DraggingPassenger {
-      bool      active    = false;
+      bool    active   = false;
+      Vector2 worldPos = {};
+
       int       zone      = -1;
       Passenger passenger = {};
-      Vector2   worldPos  = {};
     } drag;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -1270,11 +1271,17 @@ f32 PlayerGroundedRaycastCallback(
   return fraction;
 }
 
+Rect GetPassengerRect(f32 posY, const Passenger& p) {  ///
+  const auto s = ToVector2(glib->passenger_size());
+  return {.pos{p.posX - s.x / 2.0f, posY}, .size = s};
+}
+
 void GameFixedUpdate() {
   ZoneScoped;
 
   // Setup. {  ///
   auto& pl = g.run.player;
+  auto& dr = g.run.drag;
   ReloadFontsIfNeeded();
   // }
 
@@ -1554,27 +1561,28 @@ void GameFixedUpdate() {
         }
       }
 
-      for (auto& p : z.passengers)
+      for (auto& p : z.passengers) {
         p.posXVisual = Lerp(p.posXVisual, p.posX, glib->passenger_pos_lerp_factor());
+        p.offYVisual = Lerp(p.offYVisual, 0, glib->passenger_pos_lerp_factor());
+      }
     }
 
     if (IsTouchDown(ge.meta._latestActiveTouchID)) {
-      g.drag.worldPos
-        = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
+      const auto td = GetTouchData(ge.meta._latestActiveTouchID);
+      dr.worldPos   = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
     }
 
     // Starting dragging passenger from zone.
-    if (!g.run.drag.active && IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
-      const auto td = GetTouchData(ge.meta._latestActiveTouchID);
-
+    if (!dr.active && IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
       if ((pl.zone >= 0) && pl.isReallyGrounded) {
         auto& z = g.run.zones[pl.zone];
         FOR_RANGE (int, i, z.passengers.count) {
           auto& p = z.passengers[i];
-          if (GetPassengerRect(z.pos.y, p).ContainsInside(g.drag.worldPos)) {
-            g.run.drag.active = true;
-            ASSERT_FALSE(g.run.drag.passenger);
-            g.run.drag = p;
+          if (GetPassengerRect(z.pos.y, p).ContainsInside(dr.worldPos)) {
+            dr.active = true;
+            ASSERT_FALSE(dr.passenger);
+            dr.zone      = pl.zone;
+            dr.passenger = p;
             z.passengers.RemoveAt(i);
             break;
           }
@@ -1582,9 +1590,21 @@ void GameFixedUpdate() {
       }
     }
 
+    if (dr.active) {
+      dr.passenger.posX       = dr.worldPos.x;
+      dr.passenger.posXVisual = dr.passenger.posX;
+    }
+
     // Handling drag release.
-    if (g.run.drag.active && !IsTouchDown(ge.meta._latestActiveTouchID)) {  ///
-      g.run.drag.active = false;
+    if (dr.active && !IsTouchDown(ge.meta._latestActiveTouchID)) {  ///
+      auto& z      = g.run.zones[dr.zone];
+      auto& p      = *z.passengers.Add();
+      p            = dr.passenger;
+      p.posXVisual = dr.worldPos.x;
+      p.offYVisual = dr.worldPos.y - z.pos.y;
+      dr.active    = false;
+      dr.zone      = -1;
+      dr.passenger = {};
 
       // TODO released on player / away of player
     }
@@ -1611,17 +1631,13 @@ void GameFixedUpdate() {
   ge.meta.frameVisual++;
 }
 
-Rect GetPassengerRect(f32 posY, const Passenger& p) {  ///
-  const auto s = ToVector2(glib->passenger_size());
-  return {.pos{p.posX - s.x / 2.0f, posY}, .size = s};
-}
-
 void GameDraw() {
   ZoneScoped;
 
   const auto fb_tiles = glib->tiles();
 
   const auto& pl = g.run.player;
+  const auto& dr = g.run.drag;
 
   BeginMode2D(&g.run.camera);
 
@@ -1647,7 +1663,7 @@ void GameDraw() {
   LAMBDA (void, drawPassenger, (int zone, Vector2 pos, const Passenger& p, f32 rotation))
   {  ///
     DrawGroup_CommandRect({
-      .pos  = pos,
+      .pos  = pos + Vector2(p.offYVisual),
       .size = ToVector2(glib->passenger_size()),
       .anchor{0.5f, 0},
       .rotation = rotation,
@@ -1659,7 +1675,7 @@ void GameDraw() {
       DrawGroup_CommandRectLines({
         .pos    = r.pos,
         .size   = r.size,
-        .radius = glib->passenger_click_radius(),
+        .anchor = {},
         .color  = YELLOW,
       });
     }
@@ -1763,9 +1779,11 @@ void GameDraw() {
   }
 
   // Drawing dragging passenger.
-  if (g.drag.active) {  ///
-    Vector2 pos{};
-    drawPassenger(-1, {}, );
+  if (dr.active) {  ///
+    DrawGroup_Begin(DrawZ_DRAG);
+    DrawGroup_SetSortY(0);
+    drawPassenger(-1, dr.worldPos, dr.passenger, 0);
+    DrawGroup_End();
   }
 
   // Drawing player.

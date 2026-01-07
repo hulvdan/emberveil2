@@ -25,6 +25,8 @@ x passenger go away from helicopter
 Сортировка: Вертолётное Такси
 
 * can drag passenger to helicopter
+* can drag passenger from helicopter to zone
+*
 * cant put if too many passengers?
 * max of 3 passengers per platform
 *

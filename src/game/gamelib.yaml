@@ -4,9 +4,10 @@ draw_z: # {  ###
   - DEBUG_TILED_BACKGROUND
   - TILES
   - DEFAULT
+  - DRAG
+  - UI
   - VIGNETTE
   - SCREEN_FADE
-  - UI
   - INACTIVE_WINDOW_DIM
   - GIZMOS
 # }
