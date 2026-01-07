@@ -16,8 +16,8 @@ x round colliders
 x extended ceiling and floor
 x find tileset video screen it
 x tileset texture
+x tileset: spritesheetify
 
-* tileset: spritesheetify
 * tileset: get into gamelib
 * tileset: write checks
 * tileset: draw solid blocks using tileset

@@ -17,6 +17,7 @@ USAGE:
 # Imports.  {  ###
 from itertools import groupby
 
+import bf_image
 import bf_lib as bf
 import bf_swatch
 from bf_typer import command, timing
@@ -239,7 +240,21 @@ def _process_gamelib(
 @command
 @timing
 def process_images():
-    pass
+    # {  ###
+    # Spritesheetifying tileset.
+    for f in (bf.ART_TEXTURES_DIR / "src").glob("game_tileset_*.png"):
+        f.unlink()
+    bf_image.spritesheetify(
+        bf.ART_DIR / "src" / "tileset.png",
+        gap=0,
+        cell_size=32,
+        size=(4, 4),
+        out_filename_prefix="game_tileset_",
+        out_dir=bf.ART_TEXTURES_DIR,
+        trim_transparent=False,
+        stop_on_finding_empty_sprite=False,
+    )
+    # }
 
 
 @command

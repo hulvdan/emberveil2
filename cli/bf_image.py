@@ -385,6 +385,8 @@ def spritesheetify(
     out_dir: Path,
     out_filename_prefix: str = "",
     out_filenames: list[str] | None = None,
+    trim_transparent: bool = True,
+    stop_on_finding_empty_sprite: bool = True,
 ) -> None:
     # {  ###
     recursive_mkdir(out_dir)
@@ -421,14 +423,18 @@ def spritesheetify(
                             str(out_filenames)[:200], x, y
                         )
                     )
-                break
+                if stop_on_finding_empty_sprite:
+                    break
 
             if out_filenames is None:
                 filename = str(t + 1)
             else:
                 filename = out_filenames[t]
 
-            img2 = img.crop(bbox)
+            if trim_transparent:
+                img2 = img.crop(bbox)
+            else:
+                img2 = img
             img2.save(out_dir / (out_filename_prefix + filename + ".png"))
 
     log.info(f"spritesheetify: {image_path}... Success!")
