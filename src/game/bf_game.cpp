@@ -1153,8 +1153,11 @@ void DoUI() {
         FOR_RANGE (int, i, total) {  ///
           auto& p = z.passengers[i - off];
           Loc   loc{};
-          if (pl.passenger)
+          if (pl.passenger) {
             loc = Loc_UI_PASSENGER_EXCHANGE;
+            if (pl.passenger.color == p.color)
+              continue;
+          }
           else
             loc = Loc_UI_PASSENGER_PICK_UP;
           if (card({.loc = loc})) {

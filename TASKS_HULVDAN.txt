@@ -22,6 +22,8 @@ x actions: pickup, exchange, put down
 
 Сортировка: Вертолётное Такси
 
+* can't exchange with the same color
+* cant put if too many passengers?
 *
 * tileset: draw solid blocks using tileset
 *
