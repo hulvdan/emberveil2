@@ -14,17 +14,12 @@ x remove mirroring from c++
 x win: advance transition timing
 x round colliders
 
-* win:
-* win:
-* win:
+* death: falling to void
+* death: heavy crush
 *
 * add mirrored levels python
 *
 * imgui button reset level to 0
-* levels mirroring
-*
-* can die because of falling to void
-* can die because of fast falling
 *
 * show progress on top (sortirovka po polochkam-like)
 *
@@ -43,6 +38,9 @@ BEFORE RELEASE
 * change yandex metrika
 PROGRESSION
 * progression: different helicopters
+  * flyer
+  * balanced
+  * horizontal
 * progression: helicopter colors?
 * progression: change doors
 * progression: another passenger sprites
