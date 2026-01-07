@@ -38,6 +38,8 @@ tiles:
     solid: true
   - type: BRIDGE
     solid: true
+extend_cells_ceiling: 4
+extend_cells_floor: 4
 gravity: -40
 nohotreload_player_linear_damping: 1
 nohotreload_player_angular_damping: 1

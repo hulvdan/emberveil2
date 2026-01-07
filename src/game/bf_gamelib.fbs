@@ -126,6 +126,8 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    extend_cells_ceiling: int;
+    extend_cells_floor: int;
     gravity: float;
     nohotreload_player_linear_damping: float;
     nohotreload_player_angular_damping: float;

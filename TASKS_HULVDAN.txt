@@ -13,9 +13,16 @@ x win: can advance
 x remove mirroring from c++
 x win: advance transition timing
 x round colliders
+x extended ceiling and floor
 
+* find tilesheet video screen it
+* draw map using tileset
+*
+* 3 hearts
 * death: falling to void
 * death: heavy crush
+*
+* player can choose specific passenger?
 *
 * add mirrored levels python
 *

@@ -62,11 +62,15 @@ def _process_gamelib(
 
     # Levels.
     # ============================================================
+    # {  ///
     if 1:
         d = bf.ldtk_load(bf.ASSETS_DIR / "level.ldtk")
         levels = []
 
         cycleable_levels_indices = []
+
+        extf = gamelib["extend_cells_floor"]
+        extc = gamelib["extend_cells_ceiling"]
 
         for level_index, level in enumerate(d.levels):
             walls = level.get_layer("Walls")
@@ -78,25 +82,29 @@ def _process_gamelib(
                     zones.append(
                         {
                             "px": entity.grid_[0],
-                            "py": sy - entity.grid_[1] - 1,
+                            "py": sy - entity.grid_[1] - 1 + extf,
                             "w": entity.width // 16,
                             "passengers_right": entity.field("RightLeft") == "Left",
                         }
                     )
             player = bf.ldtk_get_single_entity(layer_entities, "Player")
+            tile_lines = list(bf.batched(walls.intGridCsv, walls.cWid_))
+            for _ in range(extf):
+                tile_lines.append(tile_lines[-1])
+            tile_lines.reverse()
+            for _ in range(extc):
+                tile_lines.append(tile_lines[-1])
+            tiles = [x for line in tile_lines for x in line]
             levels.append(
                 {
                     "sx": walls.cWid_,
-                    "sy": sy,
-                    "player": (player.grid_[0] + 1, sy - player.grid_[1] - 1),
+                    "sy": sy + extc + extf,
+                    "player": (
+                        player.grid_[0] + 1,
+                        sy - player.grid_[1] - 1 + extf,
+                    ),
                     "zones": zones,
-                    "tiles": [
-                        x
-                        for line in reversed(
-                            list(bf.batched(walls.intGridCsv, walls.cWid_))
-                        )
-                        for x in line
-                    ],
+                    "tiles": tiles,
                 }
             )
             if level.field("Cycle"):
@@ -104,6 +112,7 @@ def _process_gamelib(
 
         gamelib["levels"] = levels
         gamelib["cycleable_levels_indices"] = cycleable_levels_indices
+    # }
 
     # Placeholders.
     # ============================================================

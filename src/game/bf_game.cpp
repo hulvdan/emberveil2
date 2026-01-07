@@ -267,8 +267,8 @@ struct GameData {
   } save;
 
   struct Run {
-    Vector2Int worldSize  = {20, 16};
-    Vector2    worldSizef = {20, 16};
+    Vector2Int worldSize  = {};
+    Vector2    worldSizef = {};
     b2WorldId  world      = {};
 
     Camera camera{
@@ -294,17 +294,19 @@ struct GameData {
       bool    isGrounded       = false;
       bool    isReallyGrounded = false;
 
+      FrameVisual diedAt = {};
+
       struct {
         PlayerState v         = {};
         FrameGame   startedAt = {};
         int         zoneIndex = -1;
       } state;
 
-      bool CanMove() {  ///
+      bool CanMove() const {  ///
         return !state.v && !g.run.won.IsSet();
       }
 
-      bool CanMoveHorizontally() {  ///
+      bool CanMoveHorizontally() const {  ///
         return CanMove() && !isGrounded;
       }
     } player;
@@ -576,6 +578,15 @@ void RunInit() {
     g.run.world         = b2CreateWorld(&worldDef);
   }
 
+  const auto fb_level      = GetFBLevel(g.save.level);
+  const auto fb_tiles      = glib->tiles();
+  const auto fb_levelTiles = fb_level->tiles();
+  const int  sy            = fb_level->sy();
+  const int  sx            = fb_level->sx();
+
+  g.run.worldSize  = {sx, sy};
+  g.run.worldSizef = (Vector2)g.run.worldSize;
+
   // Placing walls.
   {  ///
     Vector2Int p00{-1, -1};
@@ -592,15 +603,6 @@ void RunInit() {
 
     MakeWalls({.lines = lines});
   }
-
-  const auto fb_level      = GetFBLevel(g.save.level);
-  const auto fb_tiles      = glib->tiles();
-  const auto fb_levelTiles = fb_level->tiles();
-  const int  sy            = fb_level->sy();
-  const int  sx            = fb_level->sx();
-
-  g.run.worldSize  = {sx, sy};
-  g.run.worldSizef = (Vector2)g.run.worldSize;
 
   // Placing solid blocks.
   FOR_RANGE (int, y, sy) {  ///
@@ -1079,9 +1081,11 @@ void DoUI() {
 }
 
 void UpdateCamera() {  ///
-  g.run.camera.pos = g.run.worldSizef / 2.0f;
+  const auto ws = g.run.worldSizef
+                  - Vector2(0, glib->extend_cells_floor() + glib->extend_cells_ceiling());
+  g.run.camera.pos = ws / 2.0f + Vector2(0, glib->extend_cells_floor());
 
-  const auto v      = LOGICAL_RESOLUTIONf / g.run.worldSizef;
+  const auto v      = LOGICAL_RESOLUTIONf / ws;
   g.run.camera.zoom = MIN(v.x, v.y);
 }
 
@@ -1353,6 +1357,12 @@ void GameFixedUpdate() {
       Save();
     }
 
+    if (!g.run.won.IsSet() && !pl.diedAt.IsSet()) {
+      // Player dies below the map.
+      if (pl.pos.y < -PLAYER_COLLIDER_SIZE.y / 2.0f)
+        pl.diedAt.SetNow();
+    }
+
     ge.meta.frameGame++;
   }
 
@@ -1411,7 +1421,8 @@ void GameDraw() {
     });
   };
 
-  const auto fb_level = GetFBLevel(g.save.level);
+  int        actualLevelIndex = -1;
+  const auto fb_level         = GetFBLevel(g.save.level, &actualLevelIndex);
 
   // Drawing tiles.
   {  ///
@@ -1470,10 +1481,8 @@ void GameDraw() {
   // Drawing player.
   {  ///
     auto color = WHITE;
-    if (pl.isGrounded)
-      color = YELLOW;
-    if (pl.isReallyGrounded)
-      color = RED;
+    if (!pl.CanMove())
+      color = ColorLerp(color, RED, 0.25f);
 
     DrawGroup_Begin(DrawZ_DEFAULT);
     DrawGroup_SetSortY(0);
@@ -1637,6 +1646,8 @@ void GameDraw() {
 
         if (IM::Button("Win") && !g.run.won.IsSet())
           g.run.won.SetNow();
+
+        IM::Text("Actual level index %d", actualLevelIndex);
 
         IM::EndTabItem();
       }
