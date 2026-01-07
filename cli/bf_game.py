@@ -66,7 +66,9 @@ def _process_gamelib(
         d = bf.ldtk_load(bf.ASSETS_DIR / "level.ldtk")
         levels = []
 
-        for level in d.levels:
+        cycleable_levels_indices = []
+
+        for level_index, level in enumerate(d.levels):
             walls = level.get_layer("Walls")
             sy = walls.cHei_
             zones = []
@@ -97,8 +99,11 @@ def _process_gamelib(
                     ],
                 }
             )
+            if level.field("Cycle"):
+                cycleable_levels_indices.append(level_index)
 
         gamelib["levels"] = levels
+        gamelib["cycleable_levels_indices"] = cycleable_levels_indices
 
     # Placeholders.
     # ============================================================

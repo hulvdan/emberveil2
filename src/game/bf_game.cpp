@@ -225,8 +225,8 @@ struct ZoneCommonData {  ///
 };
 
 struct Zone {  ///
-  ZoneCommonData    c          = {};
-  Vector<Passenger> passengers = {};
+  ZoneCommonData              c          = {};
+  PushableArray<Passenger, 8> passengers = {};
 
   Rect Rect() const {
     return {.pos = Vector2(c.pos), .size = Vector2(c.width, 1)};
@@ -306,10 +306,9 @@ struct GameData {
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
-#define VECTORS_TABLE      \
-  X(BodyShape, bodyShapes) \
-  X(Zone, zones)           \
-  X(Passenger, passengers)
+
+    PushableArray<Zone, 10> zones = {};
+#define VECTORS_TABLE X(BodyShape, bodyShapes)
 
 #define X(type_, name_) Vector<type_> name_ = {};
     VECTORS_TABLE;
@@ -653,9 +652,6 @@ void RunReset() {  ///
   ZoneScoped;
 
   b2DestroyWorld(g.run.world);
-
-  for (auto& x : g.run.zones)
-    x.passengers.Deinit();
 
   // Resetting `g.run` to a default value,
   // while preserving allocated memory of it's Vectors.

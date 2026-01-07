@@ -148,6 +148,7 @@ table GameLibrary {
     tiles: [Tile] (required);
     // TABLE_GEN_END
     levels: [Level] (required);
+    cycleable_levels_indices: [int] (required);
     // GAME STUFF END
 }
 
