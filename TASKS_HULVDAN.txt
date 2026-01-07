@@ -19,11 +19,12 @@ x tileset texture
 x tileset: spritesheetify
 x tileset: get into gamelib
 x actions: pickup, exchange, put down
+x can't exchange with the same color
 
 Сортировка: Вертолётное Такси
 
-* can't exchange with the same color
 * cant put if too many passengers?
+* max of 3 passengers per platform
 *
 * tileset: draw solid blocks using tileset
 *
