@@ -21,10 +21,10 @@ x tileset: get into gamelib
 x actions: pickup, exchange, put down
 x can't exchange with the same color
 x passenger go away from helicopter
+x can drag passenger to helicopter
 
 Сортировка: Вертолётное Такси
 
-* can drag passenger to helicopter
 * can drag passenger from helicopter to zone
 *
 * cant put if too many passengers?

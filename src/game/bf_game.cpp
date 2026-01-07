@@ -1276,6 +1276,13 @@ Rect GetPassengerRect(f32 posY, const Passenger& p) {  ///
   return {.pos{p.posX - s.x / 2.0f, posY}, .size = s};
 }
 
+bool IsDraggingOverPlayer() {  ///
+  if (!g.run.drag.active)
+    return false;
+  return Vector2DistanceSqr(g.run.player.pos, g.run.drag.worldPos)
+         <= SQR(PLAYER_COLLIDER_SIZE.x / 2.0f);
+}
+
 void GameFixedUpdate() {
   ZoneScoped;
 
@@ -1285,7 +1292,8 @@ void GameFixedUpdate() {
   ReloadFontsIfNeeded();
   // }
 
-  if (g.meta.reload) {
+  // Reloading.
+  if (g.meta.reload) {  ///
     g.meta.reload = false;
     RunReset();
     RunInit();
@@ -1597,16 +1605,20 @@ void GameFixedUpdate() {
 
     // Handling drag release.
     if (dr.active && !IsTouchDown(ge.meta._latestActiveTouchID)) {  ///
-      auto& z      = g.run.zones[dr.zone];
-      auto& p      = *z.passengers.Add();
-      p            = dr.passenger;
-      p.posXVisual = dr.worldPos.x;
-      p.offYVisual = dr.worldPos.y - z.pos.y;
-      dr.active    = false;
-      dr.zone      = -1;
-      dr.passenger = {};
+      if (IsDraggingOverPlayer()) {
+        pl.passenger            = dr.passenger;
+        pl.passenger.posXVisual = f32_inf;
+        pl.passenger.offYVisual = {};
+      }
+      else {
+        auto& z      = g.run.zones[dr.zone];
+        auto& p      = *z.passengers.Add();
+        p            = dr.passenger;
+        p.posXVisual = dr.worldPos.x;
+        p.offYVisual = dr.worldPos.y - z.pos.y;
+      }
 
-      // TODO released on player / away of player
+      dr = {};
     }
 
     ge.meta.frameGame++;
@@ -1790,7 +1802,9 @@ void GameDraw() {
   {  ///
     auto color = WHITE;
     if (!pl.CanMove())
-      color = ColorLerp(color, RED, 0.25f);
+      color = ColorLerp(WHITE, RED, 0.25f);
+    if (IsDraggingOverPlayer())
+      color = ColorLerp(WHITE, YELLOW, 0.25f);
 
     DrawGroup_Begin(DrawZ_DEFAULT);
     DrawGroup_SetSortY(0);
