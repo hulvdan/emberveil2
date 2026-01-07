@@ -18,12 +18,11 @@ x find tileset video screen it
 x tileset texture
 x tileset: spritesheetify
 x tileset: get into gamelib
+x actions: pickup, exchange, put down
 
 Сортировка: Вертолётное Такси
 
 *
-* ACTIONS:
-  * draw human
 * tileset: draw solid blocks using tileset
 *
 * 3 hearts

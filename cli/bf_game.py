@@ -268,8 +268,8 @@ def process_images():
         112,
         radius=UI_FRAME_RADIUS,
         width=10,
-        outline=bf.hex_to_rgb_ints("969696"),
-        fill=bf.hex_to_rgb_ints("5a5a5a"),
+        # outline=bf.hex_to_rgb_ints("000000"),
+        fill=bf.hex_to_rgb_ints("ffffff"),
     )
     frame_image.save(bf.ART_TEXTURES_DIR / "ui_frame.png")
 

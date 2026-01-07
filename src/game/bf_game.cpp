@@ -316,7 +316,9 @@ struct GameData {
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
 
-    PushableArray<Zone, 10> zones = {};
+    PushableArray<Zone, 10> zones  = {};
+    int                     colors = {};
+
 #define VECTORS_TABLE X(BodyShape, bodyShapes)
 
 #define X(type_, name_) Vector<type_> name_ = {};
@@ -638,6 +640,7 @@ void RunInit() {
   if (fb_level->zones()) {  ///
     const int PASSENGERS_PER_ZONE = 3;
 
+    ASSERT_FALSE(g.run.zones.count);
     int zoneIndex = -1;
     for (auto fb_zone : *fb_level->zones()) {
       zoneIndex++;
@@ -647,6 +650,7 @@ void RunInit() {
         // .passengersRight = fb_zone->passengers_right(),
       }};
     }
+    g.run.colors = g.run.zones.count + 1;
 
     // Filling zones with passengers.
     {
@@ -655,9 +659,7 @@ void RunInit() {
       for (auto& z : g.run.zones)
         z.passengers.Reset();
 
-      const int colors = g.run.zones.count + 1;
-
-      FOR_RANGE (int, color, colors) {
+      FOR_RANGE (int, color, g.run.colors) {
         FOR_RANGE (int, _passengerIndex, 3) {
           auto& z = g.run.zones[GRAND.Rand() % g.run.zones.count];
           if (z.passengers.count >= z.passengers.maxCount)
@@ -668,8 +670,14 @@ void RunInit() {
         }
       }
 
+      int minPassengersOnPlatform = int_max;
+      int maxPassengersOnPlatform = 0;
+
       for (auto& z : g.run.zones) {
-        FOR_RANGE (int, color, colors) {
+        minPassengersOnPlatform = MIN(minPassengersOnPlatform, z.passengers.count);
+        maxPassengersOnPlatform = MAX(maxPassengersOnPlatform, z.passengers.count);
+
+        FOR_RANGE (int, color, g.run.colors) {
           int passengersOfThisColor = 0;
           for (auto& x : z.passengers) {
             if (x.color == color)
@@ -679,6 +687,9 @@ void RunInit() {
             goto zonesContinue;
         }
       }
+
+      if (maxPassengersOnPlatform - minPassengersOnPlatform > 3)
+        goto zonesContinue;
     }
   }
 
@@ -1061,53 +1072,104 @@ void DoUI() {
 
   // Actions.
   if (pl.isReallyGrounded && (pl.zone >= 0)) {
-    auto& z = g.run.zones[pl.zone];
-
-    LAMBDA (bool, card, (const Passenger& p)) {
-      CLAY({
+    // Screen.
+    CLAY(  ///
+      {
         .layout{
-          .sizing{CLAY_SIZING_FIXED(100), CLAY_SIZING_FIXED(100)},
-          .layoutDirection = CLAY_TOP_TO_BOTTOM,
-        },
-        BF_CLAY_CUSTOM_BEGIN{
-          BF_CLAY_CUSTOM_SHADOW(glib->ui_frame_shadow_small_nine_slice(), true),
-          BF_CLAY_CUSTOM_NINE_SLICE(
-            glib->ui_frame_nine_slice(),
-            ColorFromRGBA(glib->ui_frame_color()),
-            TRANSPARENT_BLACK,
-            true
+          BF_CLAY_SIZING_GROW_XY,
+          BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
+            UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
           ),
-        } BF_CLAY_CUSTOM_END,
-      }) {
-        return clickedOrTouchedThisComponent();
+        },
+        .floating{
+          .zIndex             = zIndex,
+          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+          .attachTo           = CLAY_ATTACH_TO_PARENT,
+        },
       }
-    };
+    ) {
+      FLOATING_BEAUTIFY;
 
-    CLAY({}) {
-      if (pl.passenger) {
-        // Putting passenger down to platform.
-        if (card(pl.passenger)) {
-          *z.passengers.Add() = pl.passenger;
-          pl.passenger        = {};
+      // Bottom row of actions.
+      CLAY(  ///
+        {
+          .layout{.childGap = GAP_SMALL},
+          .floating{
+            .zIndex = zIndex,
+            .attachPoints{
+              .element = CLAY_ATTACH_POINT_CENTER_BOTTOM,
+              .parent  = CLAY_ATTACH_POINT_CENTER_BOTTOM,
+            },
+            .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_CAPTURE,
+            .attachTo           = CLAY_ATTACH_TO_PARENT,
+          },
         }
-      }
+      ) {
+        FLOATING_BEAUTIFY;
 
-      int off   = 0;
-      int total = z.passengers.count;
-      FOR_RANGE (int, i, total) {
-        auto& p = z.passengers[i - off];
-        if (card(p)) {
-          if (pl.passenger) {
-            // Swapping player's passenger with the one on the platform.
-            auto t       = pl.passenger;
-            pl.passenger = p;
-            p            = t;
+        auto& z = g.run.zones[pl.zone];
+
+        struct CardData {  ///
+          Loc loc = {};
+        };
+
+        LAMBDA (bool, card, (CardData data)) {  ///
+          bool result = false;
+          CLAY({
+            .layout{
+              .sizing{CLAY_SIZING_FIXED(100), CLAY_SIZING_FIXED(100)},
+              BF_CLAY_PADDING_ALL(GAP_SMALL),
+              BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+              .layoutDirection = CLAY_TOP_TO_BOTTOM,
+            },
+            BF_CLAY_CUSTOM_BEGIN{
+              BF_CLAY_CUSTOM_SHADOW(glib->ui_frame_shadow_small_nine_slice(), true),
+              BF_CLAY_CUSTOM_NINE_SLICE(
+                glib->ui_frame_nine_slice(),
+                ColorFromRGBA(glib->ui_frame_color()),
+                TRANSPARENT_BLACK,
+                true
+              ),
+            } BF_CLAY_CUSTOM_END,
+          }) {
+            BF_CLAY_SPACER_VERTICAL;
+            BF_CLAY_TEXT_LOCALIZED(data.loc);
+            result = clickedOrTouchedThisComponent();
           }
-          else {
-            // Picking up passenger.
-            pl.passenger = p;
-            z.passengers.RemoveAt(i - off);
-            off++;
+          return result;
+        };
+
+        // Putting passenger down to platform.
+        if (pl.passenger) {  ///
+          if (card({.loc = Loc_UI_PASSENGER_PUT_DOWN})) {
+            *z.passengers.Add() = pl.passenger;
+            pl.passenger        = {};
+          }
+        }
+
+        int off   = 0;
+        int total = z.passengers.count;
+        // Swapping or picking up.
+        FOR_RANGE (int, i, total) {  ///
+          auto& p = z.passengers[i - off];
+          Loc   loc{};
+          if (pl.passenger)
+            loc = Loc_UI_PASSENGER_EXCHANGE;
+          else
+            loc = Loc_UI_PASSENGER_PICK_UP;
+          if (card({.loc = loc})) {
+            if (pl.passenger) {
+              // Swapping player's passenger with the one on the platform.
+              auto t       = pl.passenger;
+              pl.passenger = p;
+              p            = t;
+            }
+            else {
+              // Picking up passenger.
+              pl.passenger = p;
+              z.passengers.RemoveAt(i - off);
+              off++;
+            }
           }
         }
       }
@@ -1397,14 +1459,40 @@ void GameFixedUpdate() {
         pl.reallyGroundedAt = {};
     }
 
-    g.run.player.zone = -1;
-    if (pl.isReallyGrounded) {
-      int zoneIndex = -1;
-      for (auto& z : g.run.zones) {
-        zoneIndex++;
-        if (z.Rect().ContainsInside(g.run.player.pos)) {
-          g.run.player.zone = zoneIndex;
-          break;
+    // Updating player's zone.
+    {  ///
+      g.run.player.zone = -1;
+      if (pl.isReallyGrounded) {
+        int zoneIndex = -1;
+        for (auto& z : g.run.zones) {
+          zoneIndex++;
+          if (z.Rect().ContainsInside(g.run.player.pos)) {
+            g.run.player.zone = zoneIndex;
+            break;
+          }
+        }
+      }
+    }
+
+    // Removing 3-matched passengers.
+    for (auto& z : g.run.zones) {  ///
+      for (int color = 1; color <= g.run.colors; color++) {
+        int passengersOfThisColor = 0;
+        for (auto& p : z.passengers) {
+          if (p.color == color)
+            passengersOfThisColor++;
+        }
+
+        if (passengersOfThisColor >= 3) {
+          for (int i = z.passengers.count - 1; i >= 0; i--) {
+            if (z.passengers[i].color == color) {
+              z.passengers.RemoveAt(i);
+              passengersOfThisColor--;
+              g.run.passengersTotal--;
+              if (!passengersOfThisColor)
+                break;
+            }
+          }
         }
       }
     }
@@ -1747,6 +1835,23 @@ void GameDraw() {
 
         if (IM::Button("Win") && !g.run.won.IsSet())
           g.run.won.SetNow();
+
+        if (IM::Button("Reset Level"))
+          g.meta.reload = true;
+        if (IM::Button("Set Level To 0")) {
+          g.save.level  = 0;
+          g.meta.reload = true;
+        }
+        if (IM::Button("Level++")) {
+          g.save.level++;
+          g.meta.reload = true;
+        }
+        if (IM::Button("Level--")) {
+          g.save.level--;
+          if (g.save.level < 0)
+            g.save.level = 0;
+          g.meta.reload = true;
+        }
 
         IM::Text("Actual level index %d", actualLevelIndex);
 
