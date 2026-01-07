@@ -492,6 +492,10 @@ struct TouchID {  ///
   bool operator==(const TouchID& other) const {
     return (_touchID == other._touchID) && (_fingerID == other._fingerID);
   }
+
+  operator bool() const {
+    return *this != TouchID{};
+  }
 };
 
 constexpr TouchID InvalidTouchID = {};
@@ -2500,6 +2504,15 @@ Vector2 WorldPosToLogical(Vector2 pos, Camera* camera) {  ///
   return pos;
 }
 
+Vector2 LogicalPosToWorld(Vector2 pos, Camera* camera) {  ///
+  ASSERT(camera);
+  ASSERT(camera->zoom > 0);
+  pos -= LOGICAL_RESOLUTIONf / 2.0f;
+  pos /= camera->zoom;
+  pos += camera->pos;
+  return pos;
+}
+
 void _ApplyCurrentCamera(Vector2* point, Vector2* size, bool isTexture = false) {  ///
   if (ge.meta._currentCamera) {
     ASSERT(ge.meta._currentCamera->zoom > 0);
@@ -3943,7 +3956,7 @@ void _ClearControlsCache() {  ///
 bool IsTouchPressed(TouchID id) {  ///
   ASSERT_FALSE(ge.meta._drawing);
 
-  if (id == InvalidTouchID)
+  if (!id)
     return false;
 
   FOR_RANGE (int, i, ge.meta._touches.count) {
@@ -3959,7 +3972,7 @@ bool IsTouchPressed(TouchID id) {  ///
 bool IsTouchReleased(TouchID id) {  ///
   ASSERT_FALSE(ge.meta._drawing);
 
-  if (id == InvalidTouchID)
+  if (!id)
     return false;
 
   FOR_RANGE (int, i, ge.meta._touches.count) {

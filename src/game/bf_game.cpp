@@ -311,6 +311,13 @@ struct GameData {
       }
     } player;
 
+    struct DraggingPassenger {
+      bool      active    = false;
+      int       zone      = -1;
+      Passenger passenger = {};
+      Vector2   worldPos  = {};
+    } drag;
+
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
 
@@ -1022,6 +1029,8 @@ TEST_CASE ("CheckGamelib") {  ///
 void GameInit() {  ///
   ZoneScoped;
 
+  SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
+
   ReloadFontsIfNeeded();
   CheckGamelib();
 }
@@ -1299,7 +1308,6 @@ void GameFixedUpdate() {
       g.run.player.movement = move;
     }
 
-    // TODO: DON'T FORGET THAT IT CAN'T BE DOWN!!!!
     // // Stick controls.
     // {  ///
     //   auto& c = g.meta.stickControl;
@@ -1309,7 +1317,7 @@ void GameFixedUpdate() {
     //     c.startPos    = ScreenPosToLogical(GetMouseScreenPos());
     //     c.targetPos   = c.startPos;
     //   }
-    //   else if (ge.meta._latestActiveTouchID != InvalidTouchID) {
+    //   else if (ge.meta._latestActiveTouchID) {
     //     const auto td = GetTouchData(ge.meta._latestActiveTouchID);
     //
     //     if (IsTouchPressed(ge.meta._latestActiveTouchID)) {
@@ -1550,19 +1558,35 @@ void GameFixedUpdate() {
         p.posXVisual = Lerp(p.posXVisual, p.posX, glib->passenger_pos_lerp_factor());
     }
 
-    // Dragging passenger to player.
-    if ((pl.zone >= 0) && pl.isReallyGrounded) {
-      Vector2 worldMouseOrTouchPos{};
+    if (IsTouchDown(ge.meta._latestActiveTouchID)) {
+      g.drag.worldPos
+        = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
+    }
 
-      auto& z = g.run.zones[pl.zone];
-      FOR_RANGE (int, i, z.passengers.count) {
-        auto&   p = z.passengers[i];
-        Vector2 pos{p.posX, z.pos.y};
-        if (Vector2DistanceSqr(pos, worldMouseOrTouchPos)
-            <= SQR(glib->passenger_click_radius()))
-        {
+    // Starting dragging passenger from zone.
+    if (!g.run.drag.active && IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
+      const auto td = GetTouchData(ge.meta._latestActiveTouchID);
+
+      if ((pl.zone >= 0) && pl.isReallyGrounded) {
+        auto& z = g.run.zones[pl.zone];
+        FOR_RANGE (int, i, z.passengers.count) {
+          auto& p = z.passengers[i];
+          if (GetPassengerRect(z.pos.y, p).ContainsInside(g.drag.worldPos)) {
+            g.run.drag.active = true;
+            ASSERT_FALSE(g.run.drag.passenger);
+            g.run.drag = p;
+            z.passengers.RemoveAt(i);
+            break;
+          }
         }
       }
+    }
+
+    // Handling drag release.
+    if (g.run.drag.active && !IsTouchDown(ge.meta._latestActiveTouchID)) {  ///
+      g.run.drag.active = false;
+
+      // TODO released on player / away of player
     }
 
     ge.meta.frameGame++;
@@ -1585,6 +1609,11 @@ void GameFixedUpdate() {
   DoUI();
 
   ge.meta.frameVisual++;
+}
+
+Rect GetPassengerRect(f32 posY, const Passenger& p) {  ///
+  const auto s = ToVector2(glib->passenger_size());
+  return {.pos{p.posX - s.x / 2.0f, posY}, .size = s};
 }
 
 void GameDraw() {
@@ -1626,8 +1655,10 @@ void GameDraw() {
     });
 
     if ((zone == pl.zone) && pl.isReallyGrounded) {
-      DrawGroup_CommandCircleLines({
-        .pos{p.posX, pos.y},
+      const auto r = GetPassengerRect(pos.y, p);
+      DrawGroup_CommandRectLines({
+        .pos    = r.pos,
+        .size   = r.size,
         .radius = glib->passenger_click_radius(),
         .color  = YELLOW,
       });
@@ -1729,6 +1760,12 @@ void GameDraw() {
     }
 
     DrawGroup_End();
+  }
+
+  // Drawing dragging passenger.
+  if (g.drag.active) {  ///
+    Vector2 pos{};
+    drawPassenger(-1, {}, );
   }
 
   // Drawing player.
