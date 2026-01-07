@@ -94,6 +94,8 @@ passenger_put_seconds: 0.2
 level_advance_transition_seconds: 0.5
 nohotreload_platform_rect_radius: 0.2
 nohotreload_player_rect_radius: 0.2
+passenger_click_radius: 1
+passengers_pos_lerp_factor: 0.05
 ui_frame_color: 0xe3c896ff
 ui_frame_nine_slice:
   texture_id: ui_frame

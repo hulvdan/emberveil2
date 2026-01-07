@@ -336,18 +336,18 @@
 					"entityInstances": [
 						{
 							"__identifier": "Zone",
-							"__grid": [0,7],
+							"__grid": [2,7],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 },
 							"__smartColor": "#63C74D",
 							"iid": "8e9749a0-d380-11f0-894e-7bcebbdc706a",
-							"width": 112,
+							"width": 80,
 							"height": 16,
 							"defUid": 21,
-							"px": [0,112],
+							"px": [32,112],
 							"fieldInstances": [{ "__identifier": "RightLeft", "__type": "LocalEnum.RightLeft", "__value": "Right", "__tile": { "tilesetUid": 24, "x": 304, "y": 80, "w": 16, "h": 16 }, "defUid": 25, "realEditorValues": [] }],
-							"__worldX": 0,
+							"__worldX": 32,
 							"__worldY": 112
 						},
 						{
@@ -358,7 +358,7 @@
 							"__tile": { "tilesetUid": 24, "x": 288, "y": 80, "w": 16, "h": 16 },
 							"__smartColor": "#63C74D",
 							"iid": "92780640-d380-11f0-894e-3da091b869a5",
-							"width": 112,
+							"width": 80,
 							"height": 16,
 							"defUid": 21,
 							"px": [208,112],

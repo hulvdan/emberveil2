@@ -20,9 +20,11 @@ x tileset: spritesheetify
 x tileset: get into gamelib
 x actions: pickup, exchange, put down
 x can't exchange with the same color
+x passenger go away from helicopter
 
 Сортировка: Вертолётное Такси
 
+* can drag passenger to helicopter
 * cant put if too many passengers?
 * max of 3 passengers per platform
 *
