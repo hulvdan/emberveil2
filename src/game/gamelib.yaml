@@ -75,9 +75,9 @@ tiles:
       - game_tileset_14
       - game_tileset_15
       - game_tileset_16
-extend_cells_ceiling: 4
-extend_cells_floor: 4
-extend_cells_horizontal: 2
+extend_cells_ceiling: 2
+extend_cells_floor: 2
+extend_cells_horizontal: 1
 gravity: -40
 nohotreload_player_linear_damping: 1
 nohotreload_player_angular_damping: 1
@@ -88,11 +88,28 @@ player_speed_y: 15
 passenger_origin_offset_x: 0.35
 passenger_gap: 0.6
 passenger_max_shown: 3
-passenger_speed: 3
+passenger_speed: 5
 passenger_width: 0.5
 passenger_put_seconds: 0.2
 level_advance_transition_seconds: 0.5
 nohotreload_platform_rect_radius: 0.2
 nohotreload_player_rect_radius: 0.2
+ui_frame_color: 0xe3c896ff
+ui_frame_nine_slice:
+  texture_id: ui_frame
+  left: 48
+  right: 48
+  top: 48
+  bottom: 48
+ui_frame_shadow_small_nine_slice:
+  texture_id: ui_frame_shadow_small
+  left: 90
+  right: 90
+  top: 90
+  bottom: 90
+  outer_left: 30
+  outer_right: 30
+  outer_top: 30
+  outer_bottom: 30
 
 ###

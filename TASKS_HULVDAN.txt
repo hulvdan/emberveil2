@@ -21,9 +21,9 @@ x tileset: get into gamelib
 
 Сортировка: Вертолётное Такси
 
+*
 * ACTIONS:
   * draw human
-
 * tileset: draw solid blocks using tileset
 *
 * 3 hearts

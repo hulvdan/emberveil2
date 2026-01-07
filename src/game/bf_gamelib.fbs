@@ -123,6 +123,10 @@ table GameLibrary {
     sounds: [Sound];
 
     // GAME STUFF
+    ui_frame_color: uint32;
+    ui_frame_nine_slice: NineSlice;
+    ui_frame_shadow_small_nine_slice: NineSlice;
+
     // AUTOMATIC_TEXTURE_BIND_START
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END

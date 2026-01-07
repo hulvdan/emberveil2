@@ -260,6 +260,29 @@ def process_images():
         trim_transparent=False,
         stop_on_finding_empty_sprite=False,
     )
+
+    UI_FRAME_RADIUS = 30
+
+    # `ui_frame`.
+    frame_image = bf_image.rectangle(
+        112,
+        radius=UI_FRAME_RADIUS,
+        width=10,
+        outline=bf.hex_to_rgb_ints("969696"),
+        fill=bf.hex_to_rgb_ints("5a5a5a"),
+    )
+    frame_image.save(bf.ART_TEXTURES_DIR / "ui_frame.png")
+
+    DEBUG_SHADOWS = 0
+
+    # `ui_frame_shadow_small`.
+    bf_image.outline(
+        image=bf_image.red(frame_image),
+        radius=60,
+        color=(0, 0, 0, 255),
+        is_shadow=True,
+        blend_image_on_top=DEBUG_SHADOWS,
+    ).save(bf.ART_TEXTURES_DIR / "ui_frame_shadow_small.png")
     # }
 
 
@@ -268,30 +291,37 @@ def make_swatch():
     # {  ###
     colors = [
         "#ffffff",
-        "#2c4941",
-        "#66a650",
-        "#b9d850",
-        "#82dcd7",
-        "#208cb2",
-        "#253348",
-        "#1d1b24",
-        "#3a3a41",
-        "#7a7576",
-        "#b59a66",
-        "#cec7b1",
-        "#edefe2",
-        "#d78b98",
-        "#a13d77",
-        "#6d2047",
-        "#3c1c43",
-        "#2c2228",
-        "#5e3735",
-        "#885a44",
-        "#b8560f",
-        "#dc9824",
-        "#efcb84",
-        "#e68556",
-        "#c02931",
+        "#fb6b1d",
+        "#e83b3b",
+        "#831c5d",
+        "#c32454",
+        "#f04f78",
+        "#f68181",
+        "#fca790",
+        "#e3c896",
+        "#ab947a",
+        "#966c6c",
+        "#625565",
+        "#3e3546",
+        "#0b5e65",
+        "#0b8a8f",
+        "#1ebc73",
+        "#91db69",
+        "#fbff86",
+        "#fbb954",
+        "#cd683d",
+        "#9e4539",
+        "#7a3045",
+        "#6b3e75",
+        "#905ea9",
+        "#a884f3",
+        "#eaaded",
+        "#8fd3ff",
+        "#4d9be6",
+        "#4d65b4",
+        "#484a77",
+        "#30e1b9",
+        "#8ff8e2",
         "#000000",
     ]
 

@@ -215,13 +215,17 @@ struct MakeBodyData {  ///
 };
 
 struct Passenger {  ///
-  int needsZoneIndex = -1;
+  int color = 0;
+
+  operator bool() const {
+    return color > 0;
+  }
 };
 
 struct ZoneCommonData {  ///
-  Vector2Int pos             = {};
-  int        width           = {};
-  bool       passengersRight = {};
+  Vector2Int pos   = {};
+  int        width = {};
+  // bool       passengersRight = {};
 };
 
 struct Zone {  ///
@@ -273,9 +277,8 @@ struct GameData {
 
     Camera camera{};
 
-    uint        passengersTotal     = 0;
-    uint        passengersDelivered = 0;
-    FrameVisual won                 = {};
+    uint        passengersTotal = 0;
+    FrameVisual won             = {};
 
     FrameVisual advanceScheduled = {};  // TODO: Transition.
     FrameVisual advancedAt       = {};
@@ -285,13 +288,15 @@ struct GameData {
       f32       rotation  = {};
       Body      body      = {};
       Passenger passenger = {};
+      int       zone      = -1;
 
       Vector2 movement         = {};
       int     groundContacts   = 0;
       bool    isGrounded       = false;
       bool    isReallyGrounded = false;
 
-      FrameVisual diedAt = {};
+      FrameVisual reallyGroundedAt = {};
+      FrameVisual diedAt           = {};
 
       struct {
         PlayerState v         = {};
@@ -631,23 +636,48 @@ void RunInit() {
 
   // Placing zones.
   if (fb_level->zones()) {  ///
+    const int PASSENGERS_PER_ZONE = 3;
+
     int zoneIndex = -1;
     for (auto fb_zone : *fb_level->zones()) {
       zoneIndex++;
       auto& z = *g.run.zones.Add();
       z       = {.c{
-              .pos{fb_zone->px(), fb_zone->py()},
-              .width           = fb_zone->w(),
-              .passengersRight = fb_zone->passengers_right(),
+              .pos{fb_zone->px(), fb_zone->py()}, .width = fb_zone->w(),
+        // .passengersRight = fb_zone->passengers_right(),
       }};
-      if (fb_level->zones()->size() > 1) {
-        FOR_RANGE (int, i, 3) {
-          int needsZoneIndex = zoneIndex;
-          while (needsZoneIndex == zoneIndex)
-            needsZoneIndex = GRAND.Rand() % fb_level->zones()->size();
-          *z.passengers.Add() = {.needsZoneIndex = needsZoneIndex};
+    }
+
+    // Filling zones with passengers.
+    {
+    zonesContinue:
+      g.run.passengersTotal = 0;
+      for (auto& z : g.run.zones)
+        z.passengers.Reset();
+
+      const int colors = g.run.zones.count + 1;
+
+      FOR_RANGE (int, color, colors) {
+        FOR_RANGE (int, _passengerIndex, 3) {
+          auto& z = g.run.zones[GRAND.Rand() % g.run.zones.count];
+          if (z.passengers.count >= z.passengers.maxCount)
+            goto zonesContinue;
+
+          *z.passengers.Add() = {.color = color + 1};
           g.run.passengersTotal++;
-        };
+        }
+      }
+
+      for (auto& z : g.run.zones) {
+        FOR_RANGE (int, color, colors) {
+          int passengersOfThisColor = 0;
+          for (auto& x : z.passengers) {
+            if (x.color == color)
+              passengersOfThisColor++;
+          }
+          if (passengersOfThisColor >= 3)
+            goto zonesContinue;
+        }
       }
     }
   }
@@ -999,6 +1029,7 @@ void DoUI() {
 #define BF_UI_PRE
 #include "engine/bf_clay_ui.cpp"
 
+  auto& pl   = g.run.player;
   blockInput = g.run.advanceScheduled.IsSet();
 
 #define GAP_SMALL (8)
@@ -1025,6 +1056,61 @@ void DoUI() {
     CLAY({}) {
       BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
       BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
+    }
+  }
+
+  // Actions.
+  if (pl.isReallyGrounded && (pl.zone >= 0)) {
+    auto& z = g.run.zones[pl.zone];
+
+    LAMBDA (bool, card, (const Passenger& p)) {
+      CLAY({
+        .layout{
+          .sizing{CLAY_SIZING_FIXED(100), CLAY_SIZING_FIXED(100)},
+          .layoutDirection = CLAY_TOP_TO_BOTTOM,
+        },
+        BF_CLAY_CUSTOM_BEGIN{
+          BF_CLAY_CUSTOM_SHADOW(glib->ui_frame_shadow_small_nine_slice(), true),
+          BF_CLAY_CUSTOM_NINE_SLICE(
+            glib->ui_frame_nine_slice(),
+            ColorFromRGBA(glib->ui_frame_color()),
+            TRANSPARENT_BLACK,
+            true
+          ),
+        } BF_CLAY_CUSTOM_END,
+      }) {
+        return clickedOrTouchedThisComponent();
+      }
+    };
+
+    CLAY({}) {
+      if (pl.passenger) {
+        // Putting passenger down to platform.
+        if (card(pl.passenger)) {
+          *z.passengers.Add() = pl.passenger;
+          pl.passenger        = {};
+        }
+      }
+
+      int off   = 0;
+      int total = z.passengers.count;
+      FOR_RANGE (int, i, total) {
+        auto& p = z.passengers[i - off];
+        if (card(p)) {
+          if (pl.passenger) {
+            // Swapping player's passenger with the one on the platform.
+            auto t       = pl.passenger;
+            pl.passenger = p;
+            p            = t;
+          }
+          else {
+            // Picking up passenger.
+            pl.passenger = p;
+            z.passengers.RemoveAt(i - off);
+            off++;
+          }
+        }
+      }
     }
   }
 
@@ -1099,10 +1185,10 @@ f32 GetPassengerPosX(int zoneIndex, int i, bool drawing) {  ///
   const auto& p       = z.passengers[i];
   auto        offsetX = glib->passenger_origin_offset_x() + glib->passenger_gap() * i;
   auto        origin  = z.c.pos.x;
-  if (z.c.passengersRight) {
-    origin += z.c.width;
-    offsetX *= -1;
-  }
+  // if (z.c.passengersRight) {
+  //   origin += z.c.width;
+  //   offsetX *= -1;
+  // }
   auto result = origin + offsetX;
 
   const auto& pl = g.run.player;
@@ -1112,7 +1198,7 @@ f32 GetPassengerPosX(int zoneIndex, int i, bool drawing) {  ///
       && (i == z.passengers.count - 1))
   {
     const auto p = GetPassengerPickupProgress();
-    result       = Lerp(result, pl.pos.x, EaseInOutQuad(p));
+    result       = Lerp(result, pl.pos.x, Lerp(p, EaseInQuad(p), 0.25f));
   }
   return result;
 }
@@ -1304,57 +1390,27 @@ void GameFixedUpdate() {
               < 0.001f;
         }
       }
+
+      if (pl.isReallyGrounded && !pl.reallyGroundedAt.IsSet())
+        pl.reallyGroundedAt.SetNow();
+      else if (!pl.isReallyGrounded && pl.reallyGroundedAt.IsSet())
+        pl.reallyGroundedAt = {};
     }
 
+    g.run.player.zone = -1;
     if (pl.isReallyGrounded) {
-      // Putting passenger down.
-      {  ///
-        if ((!pl.state.v || pl.state.v == PlayerState_PUTTING_DOWN)
-            && (pl.passenger.needsZoneIndex >= 0))
-        {
-          const auto& z = g.run.zones[pl.passenger.needsZoneIndex];
-
-          if (z.Rect().ContainsInside(pl.pos)) {
-            pl.passenger = {};
-            g.run.passengersDelivered++;
-          }
-        }
-      }
-
-      // Picking up passenger.
-      if ((!pl.state.v || (pl.state.v == PlayerState_PICKING_UP))
-          && (pl.passenger.needsZoneIndex < 0))
-      {  ///
-        int zoneIndex = -1;
-        for (auto& z : g.run.zones) {
-          zoneIndex++;
-
-          if (!z.Rect().ContainsInside(pl.pos))
-            continue;
-
-          if (z.passengers.count <= 0) {
-            ASSERT_FALSE(z.passengers.count);
-            continue;
-          }
-
-          if (!pl.state.v) {
-            LOGD("Started picking up");
-            pl.state.v = PlayerState_PICKING_UP;
-            pl.state.startedAt.SetNow();
-            pl.state.zoneIndex = zoneIndex;
-          }
-
-          if (GetPassengerPickupProgress() >= 1) {
-            LOGD("Picked up");
-            pl.state     = {};
-            pl.passenger = z.passengers.Pop();
-          }
+      int zoneIndex = -1;
+      for (auto& z : g.run.zones) {
+        zoneIndex++;
+        if (z.Rect().ContainsInside(g.run.player.pos)) {
+          g.run.player.zone = zoneIndex;
+          break;
         }
       }
     }
 
     // Checking if player's won.
-    if ((g.run.passengersDelivered >= g.run.passengersTotal) && !g.run.won.IsSet()) {  ///
+    if (!g.run.passengersTotal && !g.run.won.IsSet()) {  ///
       g.run.won.SetNow();
       Save();
     }
@@ -1421,7 +1477,7 @@ void GameDraw() {
       .size = Vector2One() * glib->passenger_width(),
       .anchor{0.5f, 0},
       .rotation = rotation,
-      .color    = Fade(ZONE_COLORS[p.needsZoneIndex], 0.5f),
+      .color    = Fade(ZONE_COLORS[p.color - 1], 0.5f),
     });
   };
 
@@ -1507,7 +1563,7 @@ void GameDraw() {
         .pos = z.c.pos,
         .size{(f32)z.c.width, 1},
         .anchor{},
-        .color = Fade(ZONE_COLORS[zoneIndex], 0.5f),
+        .color = Fade(CYAN, 0.5f),
       });
 
       const int pcount = MIN(glib->passenger_max_shown(), z.passengers.count);
@@ -1537,7 +1593,7 @@ void GameDraw() {
       .rotation = pl.rotation,
       .color    = color,
     });
-    if (pl.passenger.needsZoneIndex >= 0) {
+    if (pl.passenger) {
       drawPassenger(
         pl.pos - Vector2Rotate(Vector2(0, PLAYER_COLLIDER_SIZE.y / 2.0f), pl.rotation),
         pl.passenger,
