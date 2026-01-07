@@ -8,5 +8,3 @@ constexpr f32 UI_ASPECT_RATIO_MIN = 1172 / 1026.0f;  // From yandex screenshot.
 constexpr f32 UI_ASPECT_RATIO_MAX = 20 / 9.0f;
 
 constexpr Vector2 PLAYER_COLLIDER_SIZE{1.5f, 1.5f};
-
-constexpr f32 METER_LOGICAL_SIZE = 80;

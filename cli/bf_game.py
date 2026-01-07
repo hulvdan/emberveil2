@@ -72,6 +72,7 @@ def _process_gamelib(
 
         extf = gamelib["extend_cells_floor"]
         extc = gamelib["extend_cells_ceiling"]
+        exth = gamelib["extend_cells_horizontal"]
 
         for level_index, level in enumerate(d.levels):
             walls = level.get_layer("Walls")
@@ -82,7 +83,7 @@ def _process_gamelib(
                 if entity.identifier_ == "Zone":
                     zones.append(
                         {
-                            "px": entity.grid_[0],
+                            "px": entity.grid_[0] + exth,
                             "py": sy - entity.grid_[1] - 1 + extf,
                             "w": entity.width // 16,
                             "passengers_right": entity.field("RightLeft") == "Left",
@@ -90,18 +91,23 @@ def _process_gamelib(
                     )
             player = bf.ldtk_get_single_entity(layer_entities, "Player")
             tile_lines = list(bf.batched(walls.intGridCsv, walls.cWid_))
+            for line in tile_lines:
+                for _ in range(exth):
+                    line.insert(0, line[0])
+                    line.append(line[-1])
             for _ in range(extf):
                 tile_lines.append(tile_lines[-1])
             tile_lines.reverse()
             for _ in range(extc):
                 tile_lines.append(tile_lines[-1])
+
             tiles = [x for line in tile_lines for x in line]
             levels.append(
                 {
-                    "sx": walls.cWid_,
+                    "sx": walls.cWid_ + exth * 2,
                     "sy": sy + extc + extf,
                     "player": (
-                        player.grid_[0] + 1,
+                        player.grid_[0] + 1 + exth,
                         sy - player.grid_[1] - 1 + extf,
                     ),
                     "zones": zones,
@@ -247,7 +253,7 @@ def process_images():
     bf_image.spritesheetify(
         bf.ART_DIR / "src" / "tileset.png",
         gap=0,
-        cell_size=32,
+        cell_size=108,
         size=(4, 4),
         out_filename_prefix="game_tileset_",
         out_dir=bf.ART_TEXTURES_DIR,

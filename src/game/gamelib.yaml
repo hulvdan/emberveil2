@@ -2,6 +2,7 @@ draw_z: # {  ###
   - INVALID
   - SCREEN_BACKGROUND
   - DEBUG_TILED_BACKGROUND
+  - TILES
   - DEFAULT
   - VIGNETTE
   - SCREEN_FADE
@@ -28,6 +29,8 @@ debug_variables: # {  ###
   # Game stuff:
   - name: drawTiledBackground
     type: bool
+  - name: drawTiles
+    type: bool
   - name: drawZones
     type: bool
 # }
@@ -36,7 +39,7 @@ tiles:
   - type: INVALID
   - type: SOLID
     solid: true
-    tileset:
+    texture_ids:
       - game_tileset_1
       - game_tileset_2
       - game_tileset_3
@@ -55,7 +58,7 @@ tiles:
       - game_tileset_16
   - type: BRIDGE
     solid: true
-    tileset:
+    texture_ids:
       - game_tileset_1
       - game_tileset_2
       - game_tileset_3
@@ -74,6 +77,7 @@ tiles:
       - game_tileset_16
 extend_cells_ceiling: 4
 extend_cells_floor: 4
+extend_cells_horizontal: 2
 gravity: -40
 nohotreload_player_linear_damping: 1
 nohotreload_player_angular_damping: 1

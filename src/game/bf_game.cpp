@@ -271,10 +271,7 @@ struct GameData {
     Vector2    worldSizef = {};
     b2WorldId  world      = {};
 
-    Camera camera{
-      .zoom          = METER_LOGICAL_SIZE,
-      .texturesScale = 1.0f / METER_LOGICAL_SIZE,
-    };
+    Camera camera{};
 
     uint        passengersTotal     = 0;
     uint        passengersDelivered = 0;
@@ -581,16 +578,16 @@ void RunInit() {
   const auto fb_level      = GetFBLevel(g.save.level);
   const auto fb_tiles      = glib->tiles();
   const auto fb_levelTiles = fb_level->tiles();
-  const int  sy            = fb_level->sy();
   const int  sx            = fb_level->sx();
+  const int  sy            = fb_level->sy();
 
   g.run.worldSize  = {sx, sy};
   g.run.worldSizef = (Vector2)g.run.worldSize;
 
   // Placing walls.
   {  ///
-    Vector2Int p00{-1, -1};
-    auto       p11 = g.run.worldSize;
+    Vector2Int p00{-1 + glib->extend_cells_horizontal(), -1};
+    auto       p11 = g.run.worldSize - Vector2Int(glib->extend_cells_horizontal(), 0);
 
     Line lines_[]{
       // Walls around.
@@ -1082,11 +1079,16 @@ void DoUI() {
 
 void UpdateCamera() {  ///
   const auto ws = g.run.worldSizef
-                  - Vector2(0, glib->extend_cells_floor() + glib->extend_cells_ceiling());
-  g.run.camera.pos = ws / 2.0f + Vector2(0, glib->extend_cells_floor());
+                  - Vector2(
+                    glib->extend_cells_horizontal() * 2,
+                    glib->extend_cells_floor() + glib->extend_cells_ceiling()
+                  );
+  g.run.camera.pos
+    = ws / 2.0f + Vector2(glib->extend_cells_horizontal(), glib->extend_cells_floor());
 
-  const auto v      = LOGICAL_RESOLUTIONf / ws;
-  g.run.camera.zoom = MIN(v.x, v.y);
+  const auto v               = LOGICAL_RESOLUTIONf / ws;
+  g.run.camera.zoom          = MIN(v.x, v.y);
+  g.run.camera.texturesScale = 4 * ASSETS_TO_LOGICAL_RATIO / 45.0f;
 }
 
 f32 GetPassengerPickupProgress();
@@ -1388,6 +1390,8 @@ void GameFixedUpdate() {
 void GameDraw() {
   ZoneScoped;
 
+  const auto fb_tiles = glib->tiles();
+
   const auto& pl = g.run.player;
 
   BeginMode2D(&g.run.camera);
@@ -1426,28 +1430,68 @@ void GameDraw() {
 
   // Drawing tiles.
   {  ///
-    DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
-    DrawGroup_SetSortY(0);
-
     const auto sx            = fb_level->sx();
+    const auto sy            = fb_level->sy();
     const auto fb_levelTiles = fb_level->tiles();
-    const auto fb_tiles      = glib->tiles();
 
-    FOR_RANGE (int, y, fb_level->sy()) {
-      FOR_RANGE (int, x, sx) {
-        const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(y * sx + x));
-        if (!fb_tile->solid())
-          continue;
-        DrawGroup_CommandRect({
-          .pos{(f32)x, (f32)y},
-          .size{1, 1},
-          .anchor{},
-          .color = Fade(WHITE, 0.5f),
-        });
+    if (gdebug.drawTiles) {
+      DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
+      DrawGroup_SetSortY(0);
+
+      FOR_RANGE (int, y, sy) {
+        FOR_RANGE (int, x, sx) {
+          const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(y * sx + x));
+          if (!fb_tile->solid())
+            continue;
+          DrawGroup_CommandRect({
+            .pos{(f32)x, (f32)y},
+            .size{1, 1},
+            .anchor{},
+            .color = Fade(WHITE, 0.5f),
+          });
+        }
       }
+
+      DrawGroup_End();
     }
 
-    DrawGroup_End();
+    if (0) {
+      DrawGroup_Begin(DrawZ_TILES);
+      DrawGroup_SetSortY(0);
+
+      const int checksToTilesetTextureIndex_[16]{
+        12, 0, 15, 11, 8, 14, 9, 7, 13, 3, 4, 2, 1, 5, 10, 6
+      };
+      VIEW_FROM_ARRAY_DANGER(checksToTilesetTextureIndex);
+
+      FOR_RANGE (int, tileType, fb_tiles->size()) {
+        const auto fb_tile = fb_tiles->Get(tileType);
+        const auto texs    = fb_tile->texture_ids();
+        if (!texs)
+          continue;
+
+        FOR_RANGE (int, y, sy - 1) {
+          FOR_RANGE (int, x, sx - 1) {
+            int        checks = 0;
+            Vector2Int dd[]{{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+            FOR_RANGE (int, i, 4) {
+              auto d = dd[i];
+              if (fb_levelTiles->Get((y + d.y) * sx + x + d.x) == tileType)
+                checks += 1 << i;
+            }
+            if (!checks)
+              continue;
+            DrawGroup_CommandTexture({
+              .texID = texs->Get(checksToTilesetTextureIndex[checks]),
+              .pos{(f32)x, (f32)y},
+              .anchor{-0.5f, -0.5f},
+            });
+          }
+        }
+      }
+
+      DrawGroup_End();
+    }
   }
 
   // Drawing zones.
@@ -1642,6 +1686,7 @@ void GameDraw() {
         debugTextArena("ge.meta._transientDataArena", ge.meta._transientDataArena);
 
         IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
+        IM::Checkbox("Draw Tiles", &gdebug.drawTiles);
         IM::Checkbox("Draw Zones", &gdebug.drawZones);
 
         if (IM::Button("Win") && !g.run.won.IsSet())

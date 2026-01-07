@@ -17,9 +17,13 @@ x extended ceiling and floor
 x find tileset video screen it
 x tileset texture
 x tileset: spritesheetify
+x tileset: get into gamelib
 
-* tileset: get into gamelib
-* tileset: write checks
+Сортировка: Вертолётное Такси
+
+* ACTIONS:
+  * draw human
+
 * tileset: draw solid blocks using tileset
 *
 * 3 hearts
