@@ -36,8 +36,42 @@ tiles:
   - type: INVALID
   - type: SOLID
     solid: true
+    tileset:
+      - game_tileset_1
+      - game_tileset_2
+      - game_tileset_3
+      - game_tileset_4
+      - game_tileset_5
+      - game_tileset_6
+      - game_tileset_7
+      - game_tileset_8
+      - game_tileset_9
+      - game_tileset_10
+      - game_tileset_11
+      - game_tileset_12
+      - game_tileset_13
+      - game_tileset_14
+      - game_tileset_15
+      - game_tileset_16
   - type: BRIDGE
     solid: true
+    tileset:
+      - game_tileset_1
+      - game_tileset_2
+      - game_tileset_3
+      - game_tileset_4
+      - game_tileset_5
+      - game_tileset_6
+      - game_tileset_7
+      - game_tileset_8
+      - game_tileset_9
+      - game_tileset_10
+      - game_tileset_11
+      - game_tileset_12
+      - game_tileset_13
+      - game_tileset_14
+      - game_tileset_15
+      - game_tileset_16
 extend_cells_ceiling: 4
 extend_cells_floor: 4
 gravity: -40

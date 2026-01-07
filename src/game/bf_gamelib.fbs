@@ -90,6 +90,7 @@ table Flattened {
 table Tile {
     type: string (required);
     solid: bool;
+    texture_ids: [int];
 }
 
 table Zone {
