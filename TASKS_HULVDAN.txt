@@ -8,12 +8,18 @@ sort by colors
 x levels flag that it can be mirrored and cycled
 x fixed passengeres size (pushable array)
 x level number to top left
+x levels cycling alg
 
-* show progress on top (sortirovka po polochkam-like)
+* win: can advance
+* win:
+* win:
+* win:
+* win:
 *
-* advance levels after winning
 * can die because of falling to void
 * can die because of fast falling
+*
+* show progress on top (sortirovka po polochkam-like)
 *
 * death resets player to center (GATHER REFS? SUPER MEAT BOY!)
 *
@@ -36,5 +42,7 @@ PROGRESSION
 * progression: platform sprites
 * progression:
 RELEASED
+* star on level -> player would gather stars for meta
+  (receives 2 stars by default + 1 pickupable)
 ENGINE
 * fix ui gizmos positioning

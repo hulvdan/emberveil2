@@ -258,13 +258,15 @@ struct GameData {
       Vector2 targetPos     = {};
       Vector2 calculatedDir = {};
     } stickControl;
+
+    bool reload = {};
   } meta;
 
-  struct Run {
-    struct State {
-      int level = 0;
-    } state;
+  struct Save {
+    int level = 0;
+  } save;
 
+  struct Run {
     Vector2Int worldSize  = {20, 16};
     Vector2    worldSizef = {20, 16};
     b2WorldId  world      = {};
@@ -274,8 +276,9 @@ struct GameData {
       .texturesScale = 1.0f / METER_LOGICAL_SIZE,
     };
 
-    int passengersTotal     = 0;
-    int passengersDelivered = 0;
+    uint      passengersTotal     = 0;
+    uint      passengersDelivered = 0;
+    FrameGame won                 = {};
 
     struct Player {
       Vector2   pos       = {};
@@ -295,7 +298,7 @@ struct GameData {
       } state;
 
       bool CanMove() {  ///
-        return !state.v;
+        return !state.v && !g.run.won.IsSet();
       }
 
       bool CanMoveHorizontally() {  ///
@@ -483,12 +486,14 @@ void MakePlatform(MakePlatformData data) {               ///
 }
 
 void GameLoad(const BFSave::Save* save) {  ///
-  auto& s = g.run.state;
+  auto& s = g.save;
   s.level = save->level();
 }
 
 void GameDumpStateForSaving(BFSave::SaveT& save) {  ///
-  save.level = g.run.state.level;
+  save.level = g.save.level;
+  if (g.run.won.IsSet())
+    save.level += 1;
 }
 
 struct Line {  ///
@@ -544,6 +549,23 @@ void MakeWalls(MakeWallsData data) {  ///
   }
 }
 
+auto GetFBLevel(int index, bool* mirror, int* actualIndex = nullptr) {  ///
+  if (mirror)
+    *mirror = false;
+  const auto fb_levels = glib->levels();
+  if (index >= fb_levels->size()) {
+    index -= fb_levels->size();
+    if (mirror)
+      *mirror = (index / glib->cycleable_levels_indices()->size()) % 2 == 0;
+    index = glib->cycleable_levels_indices()->Get(
+      index % glib->cycleable_levels_indices()->size()
+    );
+  }
+  if (actualIndex)
+    *actualIndex = index;
+  return fb_levels->Get(index);
+}
+
 void RunInit() {
   // Creating box2d world.
   {  ///
@@ -569,7 +591,8 @@ void RunInit() {
     MakeWalls({.lines = lines});
   }
 
-  const auto fb_level      = glib->levels()->Get(g.run.state.level);
+  bool       mirror        = false;
+  const auto fb_level      = GetFBLevel(g.save.level, &mirror, nullptr);
   const auto fb_tiles      = glib->tiles();
   const auto fb_levelTiles = fb_level->tiles();
   const int  sy            = fb_level->sy();
@@ -618,7 +641,7 @@ void RunInit() {
               .passengersRight = fb_zone->passengers_right(),
       }};
       if (fb_level->zones()->size() > 1) {
-        FOR_RANGE (int, i, 3) {
+        FOR_RANGE (int, i, 0) {
           int needsZoneIndex = zoneIndex;
           while (needsZoneIndex == zoneIndex)
             needsZoneIndex = GRAND.Rand() % fb_level->zones()->size();
@@ -651,6 +674,7 @@ void RunInit() {
 void RunReset() {  ///
   ZoneScoped;
 
+  const auto world = g.run.world;
   b2DestroyWorld(g.run.world);
 
   // Resetting `g.run` to a default value,
@@ -666,6 +690,7 @@ void RunReset() {  ///
 #undef X
 
   g.run = {
+    .world = world,
 #define X(type_, name_) .name_ = temp.name_,
     VECTORS_TABLE
 #undef X
@@ -811,12 +836,150 @@ void ReloadFontsIfNeeded() {  ///
     = LoadFonts({.count = loadFontData.count, .base = &g.meta.fontUI}, loadFontData);
 }
 
+void CheckGamelib() {
+#if !BF_ENABLE_ASSERTS
+  return;
+#endif
+
+  if (!glib) {
+    glibFile = LoadFile(GAMELIB_PATH, nullptr);
+    glib     = BFGame::GetGameLibrary(glibFile);
+  }
+
+  // Checking levels cycling and mirroring.
+  {  ///
+    struct {
+      int  actualIndex;
+      bool mirror;
+    } v[]{
+      {0, false},   //
+      {1, false},   //
+      {2, false},   //
+      {3, false},   //
+      {4, false},   //
+      {5, false},   //
+      {6, false},   //
+      {7, false},   //
+      {8, false},   //
+      {9, false},   //
+      {10, false},  //
+      {11, false},  //
+      {12, false},  //
+      {13, false},  //
+      {14, false},  //
+      {15, false},  //
+      {16, false},  //
+      {17, false},  //
+      {18, false},  //
+      {19, false},  //
+      {2, true},    //
+      {3, true},    //
+      {4, true},    //
+      {6, true},    //
+      {7, true},    //
+      {8, true},    //
+      {9, true},    //
+      {10, true},   //
+      {11, true},   //
+      {12, true},   //
+      {13, true},   //
+      {14, true},   //
+      {15, true},   //
+      {16, true},   //
+      {17, true},   //
+      {18, true},   //
+      {19, true},   //
+      {2, false},   //
+      {3, false},   //
+      {4, false},   //
+      {6, false},   //
+      {7, false},   //
+      {8, false},   //
+      {9, false},   //
+      {10, false},  //
+      {11, false},  //
+      {12, false},  //
+      {13, false},  //
+      {14, false},  //
+      {15, false},  //
+      {16, false},  //
+      {17, false},  //
+      {18, false},  //
+      {19, false},  //
+      {2, true},    //
+      {3, true},    //
+      {4, true},    //
+      {6, true},    //
+      {7, true},    //
+      {8, true},    //
+      {9, true},    //
+      {10, true},   //
+      {11, true},   //
+      {12, true},   //
+      {13, true},   //
+      {14, true},   //
+      {15, true},   //
+      {16, true},   //
+      {17, true},   //
+      {18, true},   //
+      {19, true},   //
+      {2, false},   //
+      {3, false},   //
+      {4, false},   //
+      {6, false},   //
+      {7, false},   //
+      {8, false},   //
+      {9, false},   //
+      {10, false},  //
+      {11, false},  //
+      {12, false},  //
+      {13, false},  //
+      {14, false},  //
+      {15, false},  //
+      {16, false},  //
+      {17, false},  //
+      {18, false},  //
+      {19, false},  //
+      {2, true},    //
+      {3, true},    //
+      {4, true},    //
+      {6, true},    //
+      {7, true},    //
+      {8, true},    //
+      {9, true},    //
+      {10, true},   //
+      {11, true},   //
+      {12, true},   //
+      {13, true},   //
+      {14, true},   //
+      {15, true},   //
+      {16, true},   //
+      {17, true},   //
+      {18, true},   //
+      {19, true},   //
+    };
+    int i = -1;
+    for (auto vv : v) {
+      i++;
+      bool m           = false;
+      int  actualIndex = 0;
+      GetFBLevel(i, &m, &actualIndex);
+      ASSERT(vv.mirror == m);
+      ASSERT(vv.actualIndex == actualIndex);
+    }
+  }
+}
+
+TEST_CASE ("CheckGamelib") {  ///
+  CheckGamelib();
+}
+
 void GameInit() {  ///
   ZoneScoped;
 
   ReloadFontsIfNeeded();
-
   RunInit();
+  CheckGamelib();
 }
 
 void GameInitAfterLoadingSavedata() {  ///
@@ -835,6 +998,10 @@ void DoUI() {
 #define BF_UI_PRE
 #include "engine/bf_clay_ui.cpp"
 
+#define GAP_SMALL (8)
+#define GAP_BIG (20)
+
+  // HUD.
   CLAY(  ///
     {
       .layout{
@@ -851,9 +1018,57 @@ void DoUI() {
     }
   )
   CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
-    BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
-    BF_CLAY_TEXT(TextFormat(" %d", g.run.state.level + 1));
+    // Current level.
+    CLAY({}) {
+      BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
+      BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
+    }
   }
+
+  // Level won screen.
+  if (g.run.won.IsSet()) {
+    CLAY(  ///
+      {
+        .layout{
+          BF_CLAY_SIZING_GROW_XY,
+          BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
+            UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
+          ),
+        },
+        .floating{
+          .zIndex             = zIndex,
+          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+          .attachTo           = CLAY_ATTACH_TO_PARENT,
+        },
+      }
+    ) {
+      // Next level button.
+      CLAY({
+        .layout{
+          BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL),
+        },
+        .floating{
+          .zIndex = zIndex,
+          .attachPoints{
+            .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+            .parent  = CLAY_ATTACH_POINT_CENTER_CENTER,
+          },
+          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+          .attachTo           = CLAY_ATTACH_TO_PARENT,
+        },
+      }) {
+        BF_CLAY_TEXT_LOCALIZED(Loc_UI_NEXT_LEVEL__CAPS);
+
+        if (clickedOrTouchedThisComponent()) {
+          g.save.level++;
+          g.meta.reload = true;
+        }
+      }
+    }
+  }
+
+#undef GAP_SMALL
+#undef GAP_BIG
 
 #define BF_UI_POST
 #include "engine/bf_clay_ui.cpp"
@@ -927,201 +1142,220 @@ void GameFixedUpdate() {
   ReloadFontsIfNeeded();
   // }
 
-  // Player movement input.
-  {  ///
-    Vector2 move{};
-
-    if (g.meta.stickControl.controlling)
-      move = g.meta.stickControl.calculatedDir;
-    else {
-      if (IsKeyDown(SDL_SCANCODE_D) || IsKeyDown(SDL_SCANCODE_RIGHT))
-        move.x += 1;
-      if (IsKeyDown(SDL_SCANCODE_A) || IsKeyDown(SDL_SCANCODE_LEFT))
-        move.x -= 1;
-      if (IsKeyDown(SDL_SCANCODE_W) || IsKeyDown(SDL_SCANCODE_UP))
-        move.y += 1;
-    }
-
-    g.run.player.movement = move;
+  if (g.meta.reload) {
+    g.meta.reload = false;
+    RunReset();
+    RunInit();
+    Save();
   }
 
-  // TODO: DON'T FORGET THAT IT CAN'T BE DOWN!!!!
-  // // Stick controls.
-  // {  ///
-  //   auto& c = g.meta.stickControl;
-  //
-  //   if (IsMousePressed(L)) {
-  //     c.controlling = true;
-  //     c.startPos    = ScreenPosToLogical(GetMouseScreenPos());
-  //     c.targetPos   = c.startPos;
-  //   }
-  //   else if (ge.meta._latestActiveTouchID != InvalidTouchID) {
-  //     const auto td = GetTouchData(ge.meta._latestActiveTouchID);
-  //
-  //     if (IsTouchPressed(ge.meta._latestActiveTouchID)) {
-  //       c.controlling = true;
-  //       c.startPos    = ScreenPosToLogical(td.screenPos);
-  //       c.targetPos   = c.startPos;
-  //     }
-  //
-  //     c.targetPos = ScreenPosToLogical(td.screenPos);
-  //   }
-  //   else if (IsMouseDown(L))
-  //     c.targetPos = ScreenPosToLogical(GetMouseScreenPos());
-  //   else
-  //     c.controlling = false;
-  //
-  //   if (c.controlling && (c.startPos != c.targetPos)) {
-  //     c.calculatedDir
-  //             = Vector2Normalize(c.targetPos - c.startPos)
-  //               * (MIN(
-  //                 g.ui.touchControlMaxLogicalOffset, Vector2Distance(c.startPos,
-  //                 c.targetPos)
-  //               )
-  //               / g.ui.touchControlMaxLogicalOffset);
-  //   }
-  //   else
-  //     c.calculatedDir = {};
-  //
-  //   if (c.controlling)
-  //     g.run.playerMovement = c.calculatedDir;
-  // }
+  if (!ShouldGameplayStop()) {
+    MarkGameplay();
 
-  // Player moving.
-  {  ///
-    ZoneScopedN("Player moving.");
-
-    b2Body_ApplyForceToCenter(pl.body.id, {0, glib->gravity()}, true);
-
-    auto mov = g.run.player.movement;
-    if (!pl.CanMoveHorizontally())
-      mov.x = 0;
-    if (!pl.CanMove())
-      mov = {};
-    b2Body_ApplyForceToCenter(
-      pl.body.id,
-      ToB2Vec2({
-        mov.x * glib->player_speed_x(),
-        mov.y * (glib->player_speed_y() - glib->gravity()),
-      }),
-      true
-    );
-  }
-
-  // Turning helicopter vertical.
-  {  ///
-    ZoneScopedN("Turning helicopter vertical.");
-
-    const auto rot = b2Body_GetRotation(pl.body.id);
-
-    b2Body_ApplyTorque(
-      pl.body.id,
-      -glib->player_vertical_restoration_stiffness() * pl.rotation
-        - glib->player_vertical_restoration_damping()
-            * b2Body_GetAngularVelocity(pl.body.id),
-      true
-    );
-  }
-
-  // Updating box2d world.
-  {  ///
-    ZoneScopedN("Updating box2d world.");
-    b2World_Step(g.run.world, FIXED_DT, 4);
-  }
-
-  // Retrieving body positions and rotations.
-  {  ///
-    ZoneScopedN("Retrieving body positions and rotations.");
-
-    pl.pos         = ToVector2(b2Body_GetPosition(pl.body.id));
-    const auto rot = b2Body_GetRotation(pl.body.id);
-    pl.rotation    = atan2f(rot.s, rot.c);
-  }
-
-  // Checking if player is grounded.
-  {  ///
-    pl.isGrounded       = false;
-    pl.isReallyGrounded = false;
-    pl.groundContacts   = 0;
-
-    if (abs(pl.rotation) < 0.001f) {
-      for (int i = -1; i <= 1; i += 1) {
-        b2World_CastRay(
-          g.run.world,
-          ToB2Vec2({
-            pl.pos.x + PLAYER_COLLIDER_SIZE.x * 0.48f * (int)i,
-            pl.pos.y,
-          }),
-          {0, -PLAYER_COLLIDER_SIZE.y / 1.95f},
-          {
-            .categoryBits = ShapeCategory_PLAYER,
-            .maskBits     = ShapeCategory_STATIC,
-          },
-          PlayerGroundedRaycastCallback,
-          nullptr
-        );
-      }
-
-      if (pl.groundContacts >= 2) {
-        pl.isGrounded = true;
-        pl.isReallyGrounded
-          = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(pl.body.id)))) < 0.001f;
-      }
-    }
-  }
-
-  if (pl.isReallyGrounded) {
-    // Putting passenger down.
+    // Player movement input.
     {  ///
-      if ((!pl.state.v || pl.state.v == PlayerState_PUTTING_DOWN)
-          && (pl.passenger.needsZoneIndex >= 0))
-      {
-        const auto& z = g.run.zones[pl.passenger.needsZoneIndex];
+      Vector2 move{};
 
-        if (z.Rect().ContainsInside(pl.pos)) {
-          pl.passenger = {};
-          g.run.passengersDelivered++;
-        }
+      if (g.meta.stickControl.controlling)
+        move = g.meta.stickControl.calculatedDir;
+      else {
+        if (IsKeyDown(SDL_SCANCODE_D) || IsKeyDown(SDL_SCANCODE_RIGHT))
+          move.x += 1;
+        if (IsKeyDown(SDL_SCANCODE_A) || IsKeyDown(SDL_SCANCODE_LEFT))
+          move.x -= 1;
+        if (IsKeyDown(SDL_SCANCODE_W) || IsKeyDown(SDL_SCANCODE_UP))
+          move.y += 1;
       }
+
+      g.run.player.movement = move;
     }
 
-    // Picking up passenger.
-    if ((!pl.state.v || (pl.state.v == PlayerState_PICKING_UP))
-        && (pl.passenger.needsZoneIndex < 0))
+    // TODO: DON'T FORGET THAT IT CAN'T BE DOWN!!!!
+    // // Stick controls.
+    // {  ///
+    //   auto& c = g.meta.stickControl;
+    //
+    //   if (IsMousePressed(L)) {
+    //     c.controlling = true;
+    //     c.startPos    = ScreenPosToLogical(GetMouseScreenPos());
+    //     c.targetPos   = c.startPos;
+    //   }
+    //   else if (ge.meta._latestActiveTouchID != InvalidTouchID) {
+    //     const auto td = GetTouchData(ge.meta._latestActiveTouchID);
+    //
+    //     if (IsTouchPressed(ge.meta._latestActiveTouchID)) {
+    //       c.controlling = true;
+    //       c.startPos    = ScreenPosToLogical(td.screenPos);
+    //       c.targetPos   = c.startPos;
+    //     }
+    //
+    //     c.targetPos = ScreenPosToLogical(td.screenPos);
+    //   }
+    //   else if (IsMouseDown(L))
+    //     c.targetPos = ScreenPosToLogical(GetMouseScreenPos());
+    //   else
+    //     c.controlling = false;
+    //
+    //   if (c.controlling && (c.startPos != c.targetPos)) {
+    //     c.calculatedDir
+    //             = Vector2Normalize(c.targetPos - c.startPos)
+    //               * (MIN(
+    //                 g.ui.touchControlMaxLogicalOffset, Vector2Distance(c.startPos,
+    //                 c.targetPos)
+    //               )
+    //               / g.ui.touchControlMaxLogicalOffset);
+    //   }
+    //   else
+    //     c.calculatedDir = {};
+    //
+    //   if (c.controlling)
+    //     g.run.playerMovement = c.calculatedDir;
+    // }
+
+    // Player moving.
     {  ///
-      int zoneIndex = -1;
-      for (auto& z : g.run.zones) {
-        zoneIndex++;
+      ZoneScopedN("Player moving.");
 
-        if (!z.Rect().ContainsInside(pl.pos))
-          continue;
+      b2Body_ApplyForceToCenter(pl.body.id, {0, glib->gravity()}, true);
 
-        if (z.passengers.count <= 0) {
-          ASSERT_FALSE(z.passengers.count);
-          continue;
+      auto mov = g.run.player.movement;
+      if (!pl.CanMoveHorizontally())
+        mov.x = 0;
+      if (!pl.CanMove())
+        mov = {};
+      b2Body_ApplyForceToCenter(
+        pl.body.id,
+        ToB2Vec2({
+          mov.x * glib->player_speed_x(),
+          mov.y * (glib->player_speed_y() - glib->gravity()),
+        }),
+        true
+      );
+    }
+
+    // Turning helicopter vertical.
+    {  ///
+      ZoneScopedN("Turning helicopter vertical.");
+
+      const auto rot = b2Body_GetRotation(pl.body.id);
+
+      b2Body_ApplyTorque(
+        pl.body.id,
+        -glib->player_vertical_restoration_stiffness() * pl.rotation
+          - glib->player_vertical_restoration_damping()
+              * b2Body_GetAngularVelocity(pl.body.id),
+        true
+      );
+    }
+
+    // Updating box2d world.
+    {  ///
+      ZoneScopedN("Updating box2d world.");
+      b2World_Step(g.run.world, FIXED_DT, 4);
+    }
+
+    // Retrieving body positions and rotations.
+    {  ///
+      ZoneScopedN("Retrieving body positions and rotations.");
+
+      pl.pos         = ToVector2(b2Body_GetPosition(pl.body.id));
+      const auto rot = b2Body_GetRotation(pl.body.id);
+      pl.rotation    = atan2f(rot.s, rot.c);
+    }
+
+    // Checking if player is grounded.
+    {  ///
+      pl.isGrounded       = false;
+      pl.isReallyGrounded = false;
+      pl.groundContacts   = 0;
+
+      if (abs(pl.rotation) < 0.001f) {
+        for (int i = -1; i <= 1; i += 1) {
+          b2World_CastRay(
+            g.run.world,
+            ToB2Vec2({
+              pl.pos.x + PLAYER_COLLIDER_SIZE.x * 0.48f * (int)i,
+              pl.pos.y,
+            }),
+            {0, -PLAYER_COLLIDER_SIZE.y / 1.95f},
+            {
+              .categoryBits = ShapeCategory_PLAYER,
+              .maskBits     = ShapeCategory_STATIC,
+            },
+            PlayerGroundedRaycastCallback,
+            nullptr
+          );
         }
 
-        if (!pl.state.v) {
-          LOGD("Started picking up");
-          pl.state.v = PlayerState_PICKING_UP;
-          pl.state.startedAt.SetNow();
-          pl.state.zoneIndex = zoneIndex;
-        }
-
-        if (GetPassengerPickupProgress() >= 1) {
-          LOGD("Picked up");
-          pl.state     = {};
-          pl.passenger = z.passengers.Pop();
+        if (pl.groundContacts >= 2) {
+          pl.isGrounded = true;
+          pl.isReallyGrounded
+            = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(pl.body.id))))
+              < 0.001f;
         }
       }
     }
+
+    if (pl.isReallyGrounded) {
+      // Putting passenger down.
+      {  ///
+        if ((!pl.state.v || pl.state.v == PlayerState_PUTTING_DOWN)
+            && (pl.passenger.needsZoneIndex >= 0))
+        {
+          const auto& z = g.run.zones[pl.passenger.needsZoneIndex];
+
+          if (z.Rect().ContainsInside(pl.pos)) {
+            pl.passenger = {};
+            g.run.passengersDelivered++;
+          }
+        }
+      }
+
+      // Picking up passenger.
+      if ((!pl.state.v || (pl.state.v == PlayerState_PICKING_UP))
+          && (pl.passenger.needsZoneIndex < 0))
+      {  ///
+        int zoneIndex = -1;
+        for (auto& z : g.run.zones) {
+          zoneIndex++;
+
+          if (!z.Rect().ContainsInside(pl.pos))
+            continue;
+
+          if (z.passengers.count <= 0) {
+            ASSERT_FALSE(z.passengers.count);
+            continue;
+          }
+
+          if (!pl.state.v) {
+            LOGD("Started picking up");
+            pl.state.v = PlayerState_PICKING_UP;
+            pl.state.startedAt.SetNow();
+            pl.state.zoneIndex = zoneIndex;
+          }
+
+          if (GetPassengerPickupProgress() >= 1) {
+            LOGD("Picked up");
+            pl.state     = {};
+            pl.passenger = z.passengers.Pop();
+          }
+        }
+      }
+    }
+
+    // Checking if player's won.
+    if ((g.run.passengersDelivered >= g.run.passengersTotal) && !g.run.won.IsSet()) {  ///
+      g.run.won.SetNow();
+      Save();
+    }
+
+    ge.meta.frameGame++;
   }
 
   UpdateCamera();
 
   DoUI();
 
-  ge.meta.frameGame++;
   ge.meta.frameVisual++;
 }
 
@@ -1161,7 +1395,7 @@ void GameDraw() {
     });
   };
 
-  const auto fb_level = glib->levels()->Get(g.run.state.level);
+  const auto fb_level = glib->levels()->Get(g.save.level);
 
   // Drawing tiles.
   {  ///
