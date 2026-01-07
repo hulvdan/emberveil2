@@ -835,6 +835,26 @@ void DoUI() {
 #define BF_UI_PRE
 #include "engine/bf_clay_ui.cpp"
 
+  CLAY(  ///
+    {
+      .layout{
+        BF_CLAY_SIZING_GROW_XY,
+        BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
+          UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
+        ),
+      },
+      .floating{
+        .zIndex             = zIndex,
+        .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+        .attachTo           = CLAY_ATTACH_TO_PARENT,
+      },
+    }
+  )
+  CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
+    BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
+    BF_CLAY_TEXT(TextFormat(" %d", g.run.state.level + 1));
+  }
+
 #define BF_UI_POST
 #include "engine/bf_clay_ui.cpp"
 }
