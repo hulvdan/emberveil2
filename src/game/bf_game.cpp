@@ -276,9 +276,12 @@ struct GameData {
       .texturesScale = 1.0f / METER_LOGICAL_SIZE,
     };
 
-    uint      passengersTotal     = 0;
-    uint      passengersDelivered = 0;
-    FrameGame won                 = {};
+    uint        passengersTotal     = 0;
+    uint        passengersDelivered = 0;
+    FrameVisual won                 = {};
+
+    FrameVisual advanceScheduled = {};  // TODO: Transition.
+    FrameVisual advancedAt       = {};
 
     struct Player {
       Vector2   pos       = {};
@@ -304,7 +307,6 @@ struct GameData {
       bool CanMoveHorizontally() {  ///
         return CanMove() && !isGrounded;
       }
-
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -398,6 +400,7 @@ struct MakeRectBodyData {  ///
   Vector2      pos      = {};
   Vector2      size     = {};
   Vector2      anchor   = Vector2Half();
+  f32          radius   = {};
   MakeBodyData bodyData = {};
 };
 
@@ -408,7 +411,9 @@ Body MakeRectBody(MakeRectBodyData data) {  ///
   auto makeBodyResult
     = MakeBody(data.pos - (data.anchor - Vector2Half()) * data.size, data.bodyData);
 
-  auto box = b2MakeBox(data.size.x / 2, data.size.y / 2);
+  auto box = b2MakeRoundedBox(
+    data.size.x / 2 - data.radius, data.size.y / 2 - data.radius, data.radius
+  );
   b2CreatePolygonShape(makeBodyResult.body.id, &makeBodyResult.shapeDef, &box);
 
   AddBodyShape({
@@ -478,6 +483,7 @@ void MakePlatform(MakePlatformData data) {               ///
     .pos  = Vector2(data.pos),
     .size = Vector2(data.size),
     .anchor{0, 0},
+    .radius = glib->nohotreload_platform_rect_radius(),
     .bodyData{
       .type     = BodyType_STATIC,
       .userData = ShapeUserData::Static(),
@@ -549,14 +555,10 @@ void MakeWalls(MakeWallsData data) {  ///
   }
 }
 
-auto GetFBLevel(int index, bool* mirror, int* actualIndex = nullptr) {  ///
-  if (mirror)
-    *mirror = false;
+const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
   const auto fb_levels = glib->levels();
   if (index >= fb_levels->size()) {
     index -= fb_levels->size();
-    if (mirror)
-      *mirror = (index / glib->cycleable_levels_indices()->size()) % 2 == 0;
     index = glib->cycleable_levels_indices()->Get(
       index % glib->cycleable_levels_indices()->size()
     );
@@ -591,8 +593,7 @@ void RunInit() {
     MakeWalls({.lines = lines});
   }
 
-  bool       mirror        = false;
-  const auto fb_level      = GetFBLevel(g.save.level, &mirror, nullptr);
+  const auto fb_level      = GetFBLevel(g.save.level);
   const auto fb_tiles      = glib->tiles();
   const auto fb_levelTiles = fb_level->tiles();
   const int  sy            = fb_level->sy();
@@ -641,7 +642,7 @@ void RunInit() {
               .passengersRight = fb_zone->passengers_right(),
       }};
       if (fb_level->zones()->size() > 1) {
-        FOR_RANGE (int, i, 0) {
+        FOR_RANGE (int, i, 3) {
           int needsZoneIndex = zoneIndex;
           while (needsZoneIndex == zoneIndex)
             needsZoneIndex = GRAND.Rand() % fb_level->zones()->size();
@@ -661,6 +662,7 @@ void RunInit() {
       .body = MakeRectBody({
         .pos = pos,
         .size{1.5f, 1.5f},
+        .radius = glib->nohotreload_player_rect_radius(),
         .bodyData{
           .type     = BodyType_CREATURE,
           .userData = ShapeUserData::Creature(0),
@@ -674,7 +676,8 @@ void RunInit() {
 void RunReset() {  ///
   ZoneScoped;
 
-  const auto world = g.run.world;
+  const bool advanced = g.run.advanceScheduled.IsSet();
+  const auto world    = g.run.world;
   b2DestroyWorld(g.run.world);
 
   // Resetting `g.run` to a default value,
@@ -695,6 +698,9 @@ void RunReset() {  ///
     VECTORS_TABLE
 #undef X
   };
+
+  if (advanced)
+    g.run.advancedAt.SetNow();
 }
 
 void GamePreInit(GamePreInitOpts opts) {  ///
@@ -848,124 +854,119 @@ void CheckGamelib() {
 
   // Checking levels cycling and mirroring.
   {  ///
-    struct {
-      int  actualIndex;
-      bool mirror;
-    } v[]{
-      {0, false},   //
-      {1, false},   //
-      {2, false},   //
-      {3, false},   //
-      {4, false},   //
-      {5, false},   //
-      {6, false},   //
-      {7, false},   //
-      {8, false},   //
-      {9, false},   //
-      {10, false},  //
-      {11, false},  //
-      {12, false},  //
-      {13, false},  //
-      {14, false},  //
-      {15, false},  //
-      {16, false},  //
-      {17, false},  //
-      {18, false},  //
-      {19, false},  //
-      {2, true},    //
-      {3, true},    //
-      {4, true},    //
-      {6, true},    //
-      {7, true},    //
-      {8, true},    //
-      {9, true},    //
-      {10, true},   //
-      {11, true},   //
-      {12, true},   //
-      {13, true},   //
-      {14, true},   //
-      {15, true},   //
-      {16, true},   //
-      {17, true},   //
-      {18, true},   //
-      {19, true},   //
-      {2, false},   //
-      {3, false},   //
-      {4, false},   //
-      {6, false},   //
-      {7, false},   //
-      {8, false},   //
-      {9, false},   //
-      {10, false},  //
-      {11, false},  //
-      {12, false},  //
-      {13, false},  //
-      {14, false},  //
-      {15, false},  //
-      {16, false},  //
-      {17, false},  //
-      {18, false},  //
-      {19, false},  //
-      {2, true},    //
-      {3, true},    //
-      {4, true},    //
-      {6, true},    //
-      {7, true},    //
-      {8, true},    //
-      {9, true},    //
-      {10, true},   //
-      {11, true},   //
-      {12, true},   //
-      {13, true},   //
-      {14, true},   //
-      {15, true},   //
-      {16, true},   //
-      {17, true},   //
-      {18, true},   //
-      {19, true},   //
-      {2, false},   //
-      {3, false},   //
-      {4, false},   //
-      {6, false},   //
-      {7, false},   //
-      {8, false},   //
-      {9, false},   //
-      {10, false},  //
-      {11, false},  //
-      {12, false},  //
-      {13, false},  //
-      {14, false},  //
-      {15, false},  //
-      {16, false},  //
-      {17, false},  //
-      {18, false},  //
-      {19, false},  //
-      {2, true},    //
-      {3, true},    //
-      {4, true},    //
-      {6, true},    //
-      {7, true},    //
-      {8, true},    //
-      {9, true},    //
-      {10, true},   //
-      {11, true},   //
-      {12, true},   //
-      {13, true},   //
-      {14, true},   //
-      {15, true},   //
-      {16, true},   //
-      {17, true},   //
-      {18, true},   //
-      {19, true},   //
+    const int expectedLevelIndices[]{
+      0,   //
+      1,   //
+      2,   //
+      3,   //
+      4,   //
+      5,   //
+      6,   //
+      7,   //
+      8,   //
+      9,   //
+      10,  //
+      11,  //
+      12,  //
+      13,  //
+      14,  //
+      15,  //
+      16,  //
+      17,  //
+      18,  //
+      19,  //
+      2,   //
+      3,   //
+      4,   //
+      6,   //
+      7,   //
+      8,   //
+      9,   //
+      10,  //
+      11,  //
+      12,  //
+      13,  //
+      14,  //
+      15,  //
+      16,  //
+      17,  //
+      18,  //
+      19,  //
+      2,   //
+      3,   //
+      4,   //
+      6,   //
+      7,   //
+      8,   //
+      9,   //
+      10,  //
+      11,  //
+      12,  //
+      13,  //
+      14,  //
+      15,  //
+      16,  //
+      17,  //
+      18,  //
+      19,  //
+      2,   //
+      3,   //
+      4,   //
+      6,   //
+      7,   //
+      8,   //
+      9,   //
+      10,  //
+      11,  //
+      12,  //
+      13,  //
+      14,  //
+      15,  //
+      16,  //
+      17,  //
+      18,  //
+      19,  //
+      2,   //
+      3,   //
+      4,   //
+      6,   //
+      7,   //
+      8,   //
+      9,   //
+      10,  //
+      11,  //
+      12,  //
+      13,  //
+      14,  //
+      15,  //
+      16,  //
+      17,  //
+      18,  //
+      19,  //
+      2,   //
+      3,   //
+      4,   //
+      6,   //
+      7,   //
+      8,   //
+      9,   //
+      10,  //
+      11,  //
+      12,  //
+      13,  //
+      14,  //
+      15,  //
+      16,  //
+      17,  //
+      18,  //
+      19,  //
     };
     int i = -1;
-    for (auto vv : v) {
+    for (auto expected : expectedLevelIndices) {
       i++;
-      bool m           = false;
-      int  actualIndex = 0;
-      GetFBLevel(i, &m, &actualIndex);
-      ASSERT(vv.mirror == m);
-      ASSERT(vv.actualIndex == actualIndex);
+      int actualIndex = 0;
+      GetFBLevel(i, &actualIndex);
+      ASSERT(expected == actualIndex);
     }
   }
 }
@@ -978,12 +979,13 @@ void GameInit() {  ///
   ZoneScoped;
 
   ReloadFontsIfNeeded();
-  RunInit();
   CheckGamelib();
 }
 
 void GameInitAfterLoadingSavedata() {  ///
   ZoneScoped;
+
+  RunInit();
 
   LOGI("GameInitAfterLoadingSavedata...");
   DEFER {
@@ -997,6 +999,8 @@ void GameInitAfterLoadingSavedata() {  ///
 void DoUI() {
 #define BF_UI_PRE
 #include "engine/bf_clay_ui.cpp"
+
+  blockInput = g.run.advanceScheduled.IsSet();
 
 #define GAP_SMALL (8)
 #define GAP_BIG (20)
@@ -1043,26 +1047,26 @@ void DoUI() {
       }
     ) {
       // Next level button.
-      CLAY({
-        .layout{
-          BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL),
-        },
-        .floating{
-          .zIndex = zIndex,
-          .attachPoints{
-            .element = CLAY_ATTACH_POINT_CENTER_CENTER,
-            .parent  = CLAY_ATTACH_POINT_CENTER_CENTER,
+      CLAY(  ///
+        {
+          .layout{
+            BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL),
           },
-          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-          .attachTo           = CLAY_ATTACH_TO_PARENT,
-        },
-      }) {
+          .floating{
+            .zIndex = zIndex,
+            .attachPoints{
+              .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+              .parent  = CLAY_ATTACH_POINT_CENTER_CENTER,
+            },
+            .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+            .attachTo           = CLAY_ATTACH_TO_PARENT,
+          },
+        }
+      ) {
         BF_CLAY_TEXT_LOCALIZED(Loc_UI_NEXT_LEVEL__CAPS);
 
-        if (clickedOrTouchedThisComponent()) {
-          g.save.level++;
-          g.meta.reload = true;
-        }
+        if (!g.run.advanceScheduled.IsSet() && clickedOrTouchedThisComponent())
+          g.run.advanceScheduled.SetNow();
       }
     }
   }
@@ -1117,8 +1121,8 @@ f32 GetPassengerPickupProgress() {  ///
   auto dist
     = abs(GetPassengerPosX(pl.state.zoneIndex, z.passengers.count - 1, false) - pl.pos.x);
   auto e      = pl.state.startedAt.Elapsed();
-  auto result = e.Progress(lframe::FromSeconds(dist / glib->passenger_speed()));
-  return result;
+  f32  result = e.Progress(lframe::FromSeconds(dist / glib->passenger_speed()));
+  return MIN(1, result);
 }
 
 f32 PlayerGroundedRaycastCallback(
@@ -1352,6 +1356,17 @@ void GameFixedUpdate() {
     ge.meta.frameGame++;
   }
 
+  // Advancing level.
+  if (g.run.advanceScheduled.IsSet()) {  ///
+    if ((g.run.advanceScheduled.Elapsed()
+         >= lframe::FromSeconds(glib->level_advance_transition_seconds()))
+        && !g.meta.reload)
+    {
+      g.save.level++;
+      g.meta.reload = true;
+    }
+  }
+
   UpdateCamera();
 
   DoUI();
@@ -1395,7 +1410,7 @@ void GameDraw() {
     });
   };
 
-  const auto fb_level = glib->levels()->Get(g.save.level);
+  const auto fb_level = GetFBLevel(g.save.level);
 
   // Drawing tiles.
   {  ///
@@ -1553,6 +1568,24 @@ void GameDraw() {
 
   DoUI();
 
+  // Level advancing transition.
+  {  ///
+    const auto transitionDur
+      = lframe::FromSeconds(glib->level_advance_transition_seconds());
+
+    // f32 transitionP = 0;
+    if (g.run.advancedAt.IsSet()) {
+      ge.settings.screenFade
+        = MAX(0, 1 - g.run.advancedAt.Elapsed().Progress(transitionDur));
+      // transitionP = ge.settings.screenFade;
+    }
+    if (g.run.advanceScheduled.IsSet()) {
+      ge.settings.screenFade
+        = MIN(1, g.run.advanceScheduled.Elapsed().Progress(transitionDur));
+      // transitionP = ge.settings.screenFade;
+    }
+  }
+
   FlushDrawCommands();
 
   // Debug info.
@@ -1600,6 +1633,9 @@ void GameDraw() {
 
         IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
         IM::Checkbox("Draw Zones", &gdebug.drawZones);
+
+        if (IM::Button("Win") && !g.run.won.IsSet())
+          g.run.won.SetNow();
 
         IM::EndTabItem();
       }

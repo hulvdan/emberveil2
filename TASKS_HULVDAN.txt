@@ -10,11 +10,15 @@ x fixed passengeres size (pushable array)
 x level number to top left
 x levels cycling alg
 x win: can advance
+x remove mirroring from c++
+x win: advance transition timing
+x round colliders
 
-* win: advance timing
 * win:
 * win:
 * win:
+*
+* add mirrored levels python
 *
 * imgui button reset level to 0
 * levels mirroring
@@ -24,18 +28,19 @@ x win: can advance
 *
 * show progress on top (sortirovka po polochkam-like)
 *
-* death resets player to center (GATHER REFS? SUPER MEAT BOY!)
+* death resets player (GATHER REFS? SUPER MEAT BOY!)
 *
+*
+ART
 * find casual game palette
   * check yandex casual games -> steal their palettes
-*
-BEFORE RELEASE
-* 2nd level shows табличку death
-* change yandex metrika
 FEELING
 * упругость
 * rotate helicopter when moving horizontally
 * reward player for good control (PERFECT! GOOD! etc.)
+BEFORE RELEASE
+* 2nd level shows табличку death
+* change yandex metrika
 PROGRESSION
 * progression: different helicopters
 * progression: helicopter colors?

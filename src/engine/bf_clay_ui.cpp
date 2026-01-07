@@ -17,6 +17,8 @@ if ((ge.meta.screenSize.x <= 0) || (ge.meta.screenSize.y <= 0))
 
 ZoneScoped;
 
+bool blockInput = false;
+
 #  define SCOPED_CONTEXT(context_)                   \
     const auto _prevContext = currentContext;        \
     currentContext          = (context_);            \
@@ -216,7 +218,7 @@ LAMBDA (void, componentOverlay, (auto innerLambda, f32 fade = 1)) {  ///
   }
 };
 
-bool _alreadyHandledClickOrTouch = false;
+bool _alreadyHandledClickOrTouch = blockInput;
 
 LAMBDA (bool, touchedThisComponent, (bool preventFutureDispatch = true)) {  ///
   if (draw)

@@ -51,5 +51,8 @@ passenger_max_shown: 3
 passenger_speed: 3
 passenger_width: 0.5
 passenger_put_seconds: 0.2
+level_advance_transition_seconds: 0.5
+nohotreload_platform_rect_radius: 0.2
+nohotreload_player_rect_radius: 0.2
 
 ###
