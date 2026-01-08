@@ -241,21 +241,6 @@ struct Zone {  ///
   }
 };
 
-const Color ZONE_COLORS_[]{
-  ColorFromRGBA(0xfb6b1dff), ColorFromRGBA(0xe83b3bff), ColorFromRGBA(0x831c5dff),
-  ColorFromRGBA(0xc32454ff), ColorFromRGBA(0xf04f78ff), ColorFromRGBA(0xf68181ff),
-  ColorFromRGBA(0xfca790ff), ColorFromRGBA(0xe3c896ff), ColorFromRGBA(0xab947aff),
-  ColorFromRGBA(0x966c6cff), ColorFromRGBA(0x625565ff), ColorFromRGBA(0x3e3546ff),
-  ColorFromRGBA(0x0b5e65ff), ColorFromRGBA(0x0b8a8fff), ColorFromRGBA(0x1ebc73ff),
-  ColorFromRGBA(0x91db69ff), ColorFromRGBA(0xfbff86ff), ColorFromRGBA(0xfbb954ff),
-  ColorFromRGBA(0xcd683dff), ColorFromRGBA(0x9e4539ff), ColorFromRGBA(0x7a3045ff),
-  ColorFromRGBA(0x6b3e75ff), ColorFromRGBA(0x905ea9ff), ColorFromRGBA(0xa884f3ff),
-  ColorFromRGBA(0xeaadedff), ColorFromRGBA(0x8fd3ffff), ColorFromRGBA(0x4d9be6ff),
-  ColorFromRGBA(0x4d65b4ff), ColorFromRGBA(0x484a77ff), ColorFromRGBA(0x30e1b9ff),
-  ColorFromRGBA(0x8ff8e2ff),
-};
-VIEW_FROM_ARRAY_DANGER(ZONE_COLORS);
-
 enum PlayerAction {  ///
   PlayerAction_NONE,
   PlayerAction_PICKUP,
