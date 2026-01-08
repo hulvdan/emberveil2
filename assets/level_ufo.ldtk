@@ -11,7 +11,7 @@
 	"iid": "6a178760-d380-11f0-a13a-3d653bfb682a",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 15,
+	"nextUid": 16,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -33,7 +33,7 @@
 	"imageExportMode": "None",
 	"exportLevelBg": true,
 	"pngFilePattern": null,
-	"backupOnSave": false,
+	"backupOnSave": true,
 	"backupLimit": 10,
 	"backupRelPath": null,
 	"levelNamePattern": "Level_%idx",
@@ -162,8 +162,8 @@
 			"editorDisplayScale": 1,
 			"editorDisplayPos": "Above",
 			"editorLinkStyle": "StraightArrow",
-			"editorDisplayColor": null,
-			"editorAlwaysShow": true,
+			"editorDisplayColor": "#00C5FF",
+			"editorAlwaysShow": false,
 			"editorShowInWorld": true,
 			"editorCutLongValues": true,
 			"editorTextSuffix": null,
@@ -198,6 +198,43 @@
 			"canBeNull": false,
 			"arrayMinLength": null,
 			"arrayMaxLength": null,
+			"editorDisplayMode": "NameAndValue",
+			"editorDisplayScale": 1,
+			"editorDisplayPos": "Above",
+			"editorLinkStyle": "StraightArrow",
+			"editorDisplayColor": "#FF8D00",
+			"editorAlwaysShow": false,
+			"editorShowInWorld": true,
+			"editorCutLongValues": true,
+			"editorTextSuffix": null,
+			"editorTextPrefix": null,
+			"useForSmartColor": false,
+			"exportToToc": false,
+			"searchable": false,
+			"min": 0,
+			"max": 100,
+			"regex": null,
+			"acceptFileTypes": null,
+			"defaultOverride": null,
+			"textLanguageMode": null,
+			"symmetricalRef": false,
+			"autoChainRef": true,
+			"allowOutOfLevelRef": true,
+			"allowedRefs": "OnlySame",
+			"allowedRefsEntityUid": null,
+			"allowedRefTags": [],
+			"tilesetUid": null
+		},
+		{
+			"identifier": "RandomSeed",
+			"doc": null,
+			"__type": "Int",
+			"uid": 15,
+			"type": "F_Int",
+			"isArray": false,
+			"canBeNull": false,
+			"arrayMinLength": null,
+			"arrayMaxLength": null,
 			"editorDisplayMode": "Hidden",
 			"editorDisplayScale": 1,
 			"editorDisplayPos": "Above",
@@ -212,7 +249,7 @@
 			"exportToToc": false,
 			"searchable": false,
 			"min": 0,
-			"max": 100,
+			"max": null,
 			"regex": null,
 			"acceptFileTypes": null,
 			"defaultOverride": null,
@@ -248,7 +285,8 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [null] }
 			],
 			"layerInstances": [
 				{
@@ -364,11 +402,9 @@
 			"__bgPos": null,
 			"externalRelPath": null,
 			"fieldInstances": [
-				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [{
-					"id": "V_Bool",
-					"params": [ false ]
-				}] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [6] }] }
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [null] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -533,7 +569,8 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 9, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [9] }] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 9, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [9] }] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -698,7 +735,8 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -895,7 +933,8 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1092,7 +1131,8 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1321,7 +1361,8 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1585,7 +1626,8 @@
 					"id": "V_Bool",
 					"params": [ true ]
 				}] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1817,7 +1859,8 @@
 					"id": "V_Bool",
 					"params": [ true ]
 				}] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -2081,7 +2124,8 @@
 					"id": "V_Bool",
 					"params": [ true ]
 				}] },
-				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{

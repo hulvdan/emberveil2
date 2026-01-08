@@ -5,26 +5,11 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 casual
 sort by colors
 
-x levels flag that it can be mirrored and cycled
-x fixed passengeres size (pushable array)
-x level number to top left
-x levels cycling alg
-x win: can advance
-x remove mirroring from c++
-x win: advance transition timing
-x round colliders
-x extended ceiling and floor
-x find tileset video screen it
-x tileset texture
-x tileset: spritesheetify
-x tileset: get into gamelib
-x actions: pickup, exchange, put down
-x can't exchange with the same color
-x passenger go away from helicopter
-x can drag passenger to helicopter
-
 Сортировка: Вертолётное Такси
 
+* draw zones
+* player has to just click on zone
+  -> ufo moves to it
 * can exchange passenger with one found in helicopter
 * can drag passenger from helicopter to zone
 *

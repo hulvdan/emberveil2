@@ -95,6 +95,7 @@ table Level {
     player: Posf;
     zones: [Zone];
     override_passenger_rows: int;
+    rand_seed: uint32;
 }
 // GAME STUFF END
 
@@ -120,8 +121,10 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    permutations: int;
     nohotreload_player_linear_damping: float;
-    nohotreload_player_angular_damping: float;
+    player_max_rotation: float;
+    player_rotation_lerp_factor: float;
     player_vertical_restoration_stiffness: float;
     player_vertical_restoration_damping: float;
     player_speed_x: float;
