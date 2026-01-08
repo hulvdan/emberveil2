@@ -9,12 +9,11 @@ sort by colors
 
 x draw zones
 x click on passenger -> ufo moves to this zone
+x sprite: ufo
+x sprite: 20 passengers
 
-* sprite: ufo
-* sprite: 20 passengers
-*
+* matching 3-combined passengers WITH animation
 * ufo actually moves to another zone
-* matching 3-combined passengers
 *
 * show progress on top (sortirovka po polochkam-like)
 *
