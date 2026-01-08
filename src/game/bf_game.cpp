@@ -232,7 +232,7 @@ struct Zone {  ///
   Rect Rect() const {
     return {
       .pos  = Vector2(pos),
-      .size = Vector2(glib->zone_collider_width(), 2),
+      .size = Vector2(glib->zone_collider_width(), glib->zone_collider_width()),
     };
   }
 };
@@ -296,11 +296,9 @@ struct GameData {
     FrameVisual advancedAt       = {};
 
     struct Player {
-      Vector2 pos = {};
-      // Body    body = {};
-
-      int       zone      = -1;
-      Passenger passenger = {};
+      int       zone            = -1;
+      FrameGame actionStartedAt = {};
+      Passenger passenger       = {};
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -578,6 +576,7 @@ void RunInit() {
       for (auto& z : g.run.zones) {
         z.rows.Reset();
         *z.rows.Add() = {};
+        ASSERT(z.rows.count == 1);
       }
 
       g.run.remainingRows = (int)fb_level->zones()->size();
@@ -587,29 +586,17 @@ void RunInit() {
       // TEMPORARY!
       ASSERT(g.run.remainingRows <= (int)fb_level->zones()->size());
 
-      auto filledZones
-        = ALLOCATE_ZEROS_ARRAY(&ge.meta.trashArena, bool, g.run.remainingRows);
-
       FOR_RANGE (int, row, g.run.remainingRows) {
-        FOR_RANGE (int, passengerIndexInRow, 3) {
-          auto zone = GRAND.Rand() % g.run.zones.count;
-
-          auto& filled = filledZones[zone];
-          if (filled)
-            goto zonesContinue;
-
-          auto& z = g.run.zones[zone];
-
-          filled                         = true;
+        auto& z = g.run.zones[row];
+        FOR_RANGE (int, passengerIndexInRow, 3)
           z.rows[0][passengerIndexInRow] = {.color = row + 1};
-        }
       }
 
       // Permutations.
       FOR_RANGE (int, _, g.run.remainingRows * glib->permutations()) {
-        auto& r1 = g.run.zones[GRAND.RandInt(g.run.zones.count - 1)].rows[0];
-        auto& r2 = g.run.zones[GRAND.RandInt(g.run.zones.count - 1)].rows[0];
-        zpl_swap(Passenger, r1[GRAND.RandInt(2)], r2[GRAND.RandInt(2)]);
+        auto& r1 = g.run.zones[GRAND.Rand() % g.run.zones.count].rows[0];
+        auto& r2 = g.run.zones[GRAND.Rand() % g.run.zones.count].rows[0];
+        std::swap(r1[GRAND.Rand() % 3], r2[GRAND.Rand() % 3]);
       }
 
       // Checking that no rows contain 3 passengers of the same color.
@@ -625,22 +612,6 @@ void RunInit() {
 
       LOGD("Filling zones with passengers: timesContinued %d", timesContinued);
     }
-  }
-
-  // Making player.
-  {  ///
-    const auto pos = ToVector2(fb_level->player()) - Vector2(0, 2 - PLAYER_SIZE.y) / 2.0f;
-    g.run.player   = {
-        .pos = pos,
-      // .body = MakeCircleBody({
-      //   .radius = 1,
-      //   .bodyData{
-      //     .type     = BodyType_CREATURE,
-      //     .userData = ShapeUserData::Creature(0),
-      //     .isPlayer = true,
-      // },
-      // },
-    };
   }
 }
 
@@ -1174,19 +1145,6 @@ void GameFixedUpdate() {
     //   pl.parked = false;
     // }
 
-    // Updating player's zone.
-    {  ///
-      pl.zone  = -1;
-      int zone = -1;
-      for (auto& z : g.run.zones) {
-        zone++;
-        if (z.Rect().ContainsInside(pl.pos)) {
-          pl.zone = zone;
-          break;
-        }
-      }
-    }
-
     // Checking if player's won.
     if (!g.run.remainingRows && !g.run.won.IsSet()) {  ///
       g.run.won.SetNow();
@@ -1271,9 +1229,8 @@ void GameDraw() {
       const bool zonePassengersAreHoverable = true;
 
       DrawGroup_CommandRect({
-        .pos  = r.pos,
-        .size = r.size,
-        .anchor{},
+        .pos   = r.pos + Vector2Half(),
+        .size  = r.size,
         .color = Fade(CYAN, 0.5f),
       });
 
@@ -1307,15 +1264,19 @@ void GameDraw() {
 
     f32 rotation = 0;
 
+    auto pos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
+    if (pl.zone) {
+    }
+
     DrawGroup_CommandRect({
-      .pos      = pl.pos,
+      .pos      = pos,
       .size     = PLAYER_SIZE,
       .rotation = rotation,
       .color    = color,
     });
     if (pl.passenger) {
       drawPassenger(
-        pl.pos - Vector2Rotate(Vector2(0, PLAYER_SIZE.y / 2.0f), rotation),
+        pos - Vector2Rotate(Vector2(0, PLAYER_SIZE.y / 2.0f), rotation),
         pl.passenger,
         rotation,
         true
