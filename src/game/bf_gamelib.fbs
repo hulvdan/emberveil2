@@ -132,7 +132,6 @@ table GameLibrary {
     passenger_size: Posf;
     passenger_put_seconds: float;
     level_advance_transition_seconds: float;
-    nohotreload_player_rect_radius: float;
     passenger_pos_lerp_factor: float;
     zone_collider_width: float;
 
