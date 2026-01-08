@@ -65,7 +65,7 @@ def _process_gamelib(
     # ============================================================
     # {  ///
     if 1:
-        d = bf.ldtk_load(bf.ASSETS_DIR / "level.ldtk")
+        d = bf.ldtk_load(bf.ASSETS_DIR / "level_ufo.ldtk")
         levels = []
 
         cycleable_levels_indices = []
@@ -74,9 +74,21 @@ def _process_gamelib(
         extc = gamelib["extend_cells_ceiling"]
         exth = gamelib["extend_cells_horizontal"]
 
+        s = None
+        sx = None
+        sy = None
+
         for level_index, level in enumerate(d.levels):
             walls = level.get_layer("Walls")
-            sy = walls.cHei_
+            if s is None:
+                sx = walls.cWid_
+                sy = walls.cHei_
+                s = (sx, sy)
+            else:
+                assert s == (walls.cWid_, walls.cHei_), (
+                    "All levels must have the same size!"
+                )
+
             zones = []
             layer_entities = level.get_layer("Entities")
             for entity in layer_entities.entityInstances:

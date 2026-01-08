@@ -225,13 +225,17 @@ struct Passenger {  ///
   }
 };
 
+using PassengerRow = PushableArray<Passenger, 5>;
+
 struct Zone {  ///
-  Vector2Int                  pos        = {};
-  int                         width      = {};
-  PushableArray<Passenger, 8> passengers = {};
+  Vector2Int                     pos = {};
+  PushableArray<PassengerRow, 3> pas = {};
 
   Rect Rect() const {
-    return {.pos = Vector2(pos), .size = Vector2(width, 2)};
+    return {
+      .pos  = Vector2(pos),
+      .size = Vector2(glib->zone_collider_width(), 2),
+    };
   }
 };
 
@@ -476,33 +480,6 @@ Body MakeCircleBody(MakeCircleBodyData data) {  ///
   return makeBodyResult.body;
 }
 
-struct MakePlatformData {  ///
-  Vector2Int pos  = {};
-  Vector2Int size = {};
-};
-
-void MakePlatform(MakePlatformData data) {               ///
-  if ((data.pos.x < 0) || (data.pos.y < 0)               //
-      || (data.size.x <= 0) || (data.size.y <= 0)        //
-      || (data.pos.x + data.size.x > g.run.worldSize.x)  //
-      || (data.pos.y + data.size.y > g.run.worldSize.y))
-  {
-    INVALID_PATH;
-    return;
-  }
-
-  MakeRectBody({
-    .pos  = Vector2(data.pos),
-    .size = Vector2(data.size),
-    .anchor{0, 0},
-    .radius = glib->nohotreload_platform_rect_radius(),
-    .bodyData{
-      .type     = BodyType_STATIC,
-      .userData = ShapeUserData::Static(),
-    },
-  });
-}
-
 void GameLoad(const BFSave::Save* save) {  ///
   auto& s = g.save;
   s.level = save->level();
@@ -600,7 +577,7 @@ void RunInit() {
   g.run.worldSizef = (Vector2)g.run.worldSize;
 
   // Placing walls.
-  {  ///
+  if (0) {  ///
     Vector2Int p00{-1 + glib->extend_cells_horizontal(), -1};
     auto       p11 = g.run.worldSize - Vector2Int(glib->extend_cells_horizontal(), 0);
 
@@ -614,34 +591,6 @@ void RunInit() {
     VIEW_FROM_ARRAY_DANGER(lines);
 
     MakeWalls({.lines = lines});
-  }
-
-  // Placing solid blocks.
-  FOR_RANGE (int, y, sy) {  ///
-    int platformX = -1;
-    int platformW = 0;
-
-    FOR_RANGE (int, x, sx + 1) {
-      if (x == sx) {
-        if (platformW)
-          MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
-        break;
-      }
-
-      const int  t       = y * sx + x;
-      const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(t));
-
-      if (fb_tile->solid()) {
-        if (platformX == -1)
-          platformX = x;
-        platformW++;
-      }
-      else if (platformW) {
-        MakePlatform({.pos{platformX, y}, .size{platformW, 1}});
-        platformW = 0;
-        platformX = -1;
-      }
-    }
   }
 
   // Placing zones.

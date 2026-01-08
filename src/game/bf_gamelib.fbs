@@ -87,24 +87,13 @@ table Flattened {
 }
 
 // GAME STUFF
-table Tile {
-    type: string (required);
-    solid: bool;
-    texture_ids: [int];
-}
-
 table Zone {
     px: int;
     py: int;
-    w: int;
-    passengers_right: bool;
 }
 
 table Level {
-    sx: int;
-    sy: int;
     player: Posf;
-    tiles: [int] (required);
     zones: [Zone];
 }
 // GAME STUFF END
@@ -148,10 +137,9 @@ table GameLibrary {
     passenger_size: Posf;
     passenger_put_seconds: float;
     level_advance_transition_seconds: float;
-    nohotreload_platform_rect_radius: float;
     nohotreload_player_rect_radius: float;
     passenger_pos_lerp_factor: float;
-    passenger_hover_distance: float;
+    zone_collider_width: float;
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.
