@@ -226,12 +226,16 @@ struct Passenger {  ///
 using PassengerRow = Array<Passenger, 3>;
 
 struct Zone {  ///
-  Vector2Int                     pos  = {};
+  Vector2Int                     posi = {};
   PushableArray<PassengerRow, 5> rows = {};
+
+  Vector2 pos() const {
+    return Vector2(posi) + Vector2Half();
+  }
 
   Rect Rect() const {
     return {
-      .pos  = Vector2(pos),
+      .pos  = pos(),
       .size = Vector2(glib->zone_collider_width(), glib->zone_collider_width()),
     };
   }
@@ -283,6 +287,8 @@ struct GameData {
   } save;
 
   struct Run {
+    u32 randomSeedForLevelHotReload = 0;
+
     Vector2Int worldSize  = {};
     Vector2    worldSizef = {};
     b2WorldId  world      = {};
@@ -536,11 +542,12 @@ const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
 void RunInit() {
   ZoneScoped;
 
-  const auto fb_level = GetFBLevel(g.save.level);
+  const auto fb_level               = GetFBLevel(g.save.level);
+  g.run.randomSeedForLevelHotReload = fb_level->random_seed();
 
   // Consistent GRAND state.
   {  ///
-    u32 val = Hash32((u8*)&g.save.level, sizeof(g.save.level)) + fb_level->rand_seed();
+    u32 val = Hash32((u8*)&g.save.level, sizeof(g.save.level)) + fb_level->random_seed();
     ge.meta.logicRand._state = Hash32((u8*)&val, sizeof(val));
   }
 
@@ -559,7 +566,7 @@ void RunInit() {
     for (auto fb_zone : *fb_level->zones()) {
       zone++;
       auto& z = *g.run.zones.Add();
-      z       = {.pos = ToVector2(fb_zone->pos())};
+      z       = {.posi = ToVector2(fb_zone->pos())};
     }
 
     // Filling zones with passengers.
@@ -1060,10 +1067,21 @@ void UpdateCamera() {  ///
   g.run.camera.texturesScale = 4 * ASSETS_TO_LOGICAL_RATIO / 45.0f;
 }
 
+Vector2 GetPassengerBottomPos(int zone, int passengerIndex) {  ///
+  f32 off = glib->zone_collider_width() / 2 - glib->passenger_margin()
+            - glib->passenger_size()->x() / 2;
+  if (passengerIndex == 0)
+    off *= -1;
+  else if (passengerIndex == 1)
+    off = 0;
+  return g.run.zones[zone].pos()
+         + Vector2(off, glib->passenger_off_y() - glib->zone_collider_width() / 2);
+}
+
 Rect GetPassengerRect(int zone, int passengerIndex) {  ///
-  auto& z = g.run.zones[zone];
   return {
-    .pos  = z.pos,
+    .pos = GetPassengerBottomPos(zone, passengerIndex)
+           - Vector2(glib->passenger_size()->x() / 2, 0),
     .size = ToVector2(glib->passenger_size()),
   };
 }
@@ -1079,12 +1097,14 @@ void GameFixedUpdate() {
   ReloadFontsIfNeeded();
   // }
 
+  if (g.run.randomSeedForLevelHotReload != GetFBLevel(g.save.level)->random_seed())
+    g.meta.reload = true;
+
   // Reloading.
   if (g.meta.reload) {  ///
     g.meta.reload = false;
     RunReset();
     RunInit();
-    Save();
   }
 
   if (!ShouldGameplayStop()) {
@@ -1229,7 +1249,7 @@ void GameDraw() {
       const bool zonePassengersAreHoverable = true;
 
       DrawGroup_CommandRect({
-        .pos   = r.pos + Vector2Half(),
+        .pos   = r.pos,
         .size  = r.size,
         .color = Fade(CYAN, 0.5f),
       });
@@ -1238,7 +1258,8 @@ void GameDraw() {
         auto& p = z.rows[0][passengerIndex];
         if (!p)
           continue;
-        drawPassenger(z.pos, p, 0, zonePassengersAreHoverable);
+        auto pos = GetPassengerBottomPos(zone, passengerIndex);
+        drawPassenger(pos, p, 0, zonePassengersAreHoverable);
 
         if (zonePassengersAreHoverable) {
           const auto r = GetPassengerRect(zone, passengerIndex);
@@ -1447,6 +1468,11 @@ void GameDraw() {
         }
 
         IM::Text("Actual level index %d", actualLevelIndex);
+
+        // if (IM::Button(
+        //       TextFormat("Level Seed (%d) ++", (int)g.run.randomSeedForLevelHotReload)
+        //     ))
+        //   g.run.randomSeedForLevelHotReload++;
 
         IM::EndTabItem();
       }

@@ -95,7 +95,7 @@ table Level {
     player: Posf;
     zones: [Zone];
     override_passenger_rows: int;
-    rand_seed: uint32;
+    random_seed: uint32;
 }
 // GAME STUFF END
 
@@ -132,6 +132,7 @@ table GameLibrary {
     passenger_margin: float;
     passenger_max_shown: int;
     passenger_size: Posf;
+    passenger_off_y: float;
     passenger_put_seconds: float;
     level_advance_transition_seconds: float;
     passenger_pos_lerp_factor: float;

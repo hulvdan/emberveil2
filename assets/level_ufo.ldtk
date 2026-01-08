@@ -286,7 +286,7 @@
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
 				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
-				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [null] }
+				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 37, "__tile": null, "defUid": 15, "realEditorValues": [{ "id": "V_Int", "params": [37] }] }
 			],
 			"layerInstances": [
 				{

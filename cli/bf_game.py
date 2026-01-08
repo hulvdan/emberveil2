@@ -105,6 +105,7 @@ def _process_gamelib(
                     ),
                     "zones": zones,
                     "override_passenger_rows": level.field("OverridePassengerRows"),
+                    "random_seed": level.field("RandomSeed"),
                 }
             )
             if level.field("Cycle"):
