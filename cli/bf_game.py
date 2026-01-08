@@ -242,20 +242,6 @@ def _process_gamelib(
 @timing
 def process_images():
     # {  ###
-    # Spritesheetifying tileset.
-    for f in (bf.ART_TEXTURES_DIR / "src").glob("game_tileset_*.png"):
-        f.unlink()
-    bf_image.spritesheetify(
-        bf.ART_DIR / "src" / "tileset.png",
-        gap=0,
-        cell_size=108,
-        size=(4, 4),
-        out_filename_prefix="game_tileset_",
-        out_dir=bf.ART_TEXTURES_DIR,
-        trim_transparent=False,
-        stop_on_finding_empty_sprite=False,
-    )
-
     UI_FRAME_RADIUS = 30
 
     # `ui_frame`.
