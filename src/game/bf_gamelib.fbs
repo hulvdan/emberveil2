@@ -91,6 +91,11 @@ table Zone {
     pos: Pos;
 }
 
+table Passenger {
+    texture_id: int;
+    color: uint;
+}
+
 table Level {
     player: Posf;
     zones: [Zone];
@@ -135,6 +140,10 @@ table GameLibrary {
     level_advance_transition_seconds: float;
     passenger_pos_lerp_factor: float;
     zone_size: Posf;
+
+    passenger_inside_player_offset_y: float;
+    player_texture_id: int;
+    passengers: [Passenger] (required);
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.

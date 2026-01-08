@@ -1045,7 +1045,7 @@ void UpdateCamera() {  ///
 
   const auto v               = LOGICAL_RESOLUTIONf / g.run.worldSizef;
   g.run.camera.zoom          = MIN(v.x, v.y);
-  g.run.camera.texturesScale = 4 * ASSETS_TO_LOGICAL_RATIO / 45.0f;
+  g.run.camera.texturesScale = 1 / g.run.camera.zoom;
 }
 
 Vector2 GetPassengerBottomPos(int zone, int passengerIndex) {  ///
@@ -1207,12 +1207,15 @@ void GameDraw() {
     void, drawPassenger, (Vector2 pos, const Passenger& p, f32 rotation, bool hoverable)
   )
   {  ///
-    DrawGroup_CommandRect({
-      .pos  = pos + p.offVisual,
-      .size = ToVector2(glib->passenger_size()),
-      .anchor{0.5f, 0},
+    const auto fb = glib->passengers()->Get(p.color);
+    DrawGroup_CommandTexture({
+      .texID    = fb->texture_id(),
       .rotation = rotation,
-      .color    = Fade(ZONE_COLORS[p.color - 1], 0.5f),
+      .pos      = pos + p.offVisual,
+      .anchor{0.5f, 0},
+      .color = ColorFromRGBA(fb->color()),
+      // REMOVEME
+      .flash = ColorFromRGBA(fb->color()),
     });
   };
 
@@ -1272,15 +1275,15 @@ void GameDraw() {
     if (pl.zone) {
     }
 
-    DrawGroup_CommandRect({
-      .pos      = pos,
-      .size     = PLAYER_SIZE,
+    DrawGroup_CommandTexture({
+      .texID    = glib->player_texture_id(),
       .rotation = rotation,
+      .pos      = pos,
       .color    = color,
     });
     if (pl.passenger) {
       drawPassenger(
-        pos - Vector2Rotate(Vector2(0, PLAYER_SIZE.y / 2.0f), rotation),
+        pos + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, rotation),
         pl.passenger,
         rotation,
         true

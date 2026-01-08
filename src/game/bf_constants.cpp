@@ -6,5 +6,3 @@ constexpr f32   MODAL_OVERLAY_COLOR_FADE = 0.75f;
 
 constexpr f32 UI_ASPECT_RATIO_MIN = 1172 / 1026.0f;  // From yandex screenshot.
 constexpr f32 UI_ASPECT_RATIO_MAX = 20 / 9.0f;
-
-constexpr Vector2 PLAYER_SIZE{1.0f, 1.0f};

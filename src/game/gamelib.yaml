@@ -70,5 +70,70 @@ ui_frame_shadow_small_nine_slice:
   outer_right: 30
   outer_top: 30
   outer_bottom: 30
+passenger_inside_player_offset_y: -0.3
+player_texture_id: game_player_removeme
+passengers:
+  - color: 0xfb6b1dff
+    texture_id: game_passenger_removeme
+  - color: 0xe83b3bff
+    texture_id: game_passenger_removeme
+  - color: 0x831c5dff
+    texture_id: game_passenger_removeme
+  - color: 0xc32454ff
+    texture_id: game_passenger_removeme
+  - color: 0xf04f78ff
+    texture_id: game_passenger_removeme
+  - color: 0xf68181ff
+    texture_id: game_passenger_removeme
+  - color: 0xfca790ff
+    texture_id: game_passenger_removeme
+  - color: 0xe3c896ff
+    texture_id: game_passenger_removeme
+  - color: 0xab947aff
+    texture_id: game_passenger_removeme
+  - color: 0x966c6cff
+    texture_id: game_passenger_removeme
+  - color: 0x625565ff
+    texture_id: game_passenger_removeme
+  - color: 0x3e3546ff
+    texture_id: game_passenger_removeme
+  - color: 0x0b5e65ff
+    texture_id: game_passenger_removeme
+  - color: 0x0b8a8fff
+    texture_id: game_passenger_removeme
+  - color: 0x1ebc73ff
+    texture_id: game_passenger_removeme
+  - color: 0x91db69ff
+    texture_id: game_passenger_removeme
+  - color: 0xfbff86ff
+    texture_id: game_passenger_removeme
+  - color: 0xfbb954ff
+    texture_id: game_passenger_removeme
+  - color: 0xcd683dff
+    texture_id: game_passenger_removeme
+  - color: 0x9e4539ff
+    texture_id: game_passenger_removeme
+  - color: 0x7a3045ff
+    texture_id: game_passenger_removeme
+  - color: 0x6b3e75ff
+    texture_id: game_passenger_removeme
+  - color: 0x905ea9ff
+    texture_id: game_passenger_removeme
+  - color: 0xa884f3ff
+    texture_id: game_passenger_removeme
+  - color: 0xeaadedff
+    texture_id: game_passenger_removeme
+  - color: 0x8fd3ffff
+    texture_id: game_passenger_removeme
+  - color: 0x4d9be6ff
+    texture_id: game_passenger_removeme
+  - color: 0x4d65b4ff
+    texture_id: game_passenger_removeme
+  - color: 0x484a77ff
+    texture_id: game_passenger_removeme
+  - color: 0x30e1b9ff
+    texture_id: game_passenger_removeme
+  - color: 0x8ff8e2ff
+    texture_id: game_passenger_removeme
 
 ###
