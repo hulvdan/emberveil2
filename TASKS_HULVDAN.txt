@@ -8,33 +8,15 @@ sort by colors
 Сортировка: Вертолётное Такси
 
 x draw zones
+x click on passenger -> ufo moves to this zone
 
-* player has to just click on zone
-  -> ufo moves to it
-* can exchange passenger with one found in helicopter
-* can drag passenger from helicopter to zone
+* ufo actually moves to another zone
+* matching 3-combined passengers
 *
-* lock random for level
 *
-* cant put if too many passengers?
-* max of 3 passengers per platform
 *
-* tileset: draw solid blocks using tileset
-*
-* 3 hearts
-* death: falling to void
-* death: heavy crush
-*
-* player can choose specific passenger?
-*
-* add mirrored levels python
-*
-* imgui button reset level to 0
 *
 * show progress on top (sortirovka po polochkam-like)
-*
-* death resets player (GATHER REFS? SUPER MEAT BOY!)
-*
 *
 ART
 * find casual game palette

@@ -256,10 +256,11 @@ const Color ZONE_COLORS_[]{
 };
 VIEW_FROM_ARRAY_DANGER(ZONE_COLORS);
 
-enum PlayerState {  ///
-  PlayerState_DEFAULT,
-  PlayerState_PICKING_UP,
-  PlayerState_PUTTING_DOWN,
+enum PlayerAction {  ///
+  PlayerAction_NONE,
+  PlayerAction_PICKUP,
+  PlayerAction_EXCHANGE,
+  PlayerAction_PUT,
 };
 
 struct GameData {
@@ -302,9 +303,11 @@ struct GameData {
     FrameVisual advancedAt       = {};
 
     struct Player {
-      int       zone            = -1;
-      FrameGame actionStartedAt = {};
-      Passenger passenger       = {};
+      int          zone                 = -1;
+      int          actionPassengerIndex = -1;
+      PlayerAction action               = {};
+      FrameGame    actionStartedAt      = {};
+      Passenger    passenger            = {};
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -988,28 +991,6 @@ void DoUI() {
     }
   }
 
-  // // Actions.
-  // if (0 && pl.parked && (pl.zone >= 0)) {
-  //   // Screen.
-  //   CLAY(  ///
-  //     {
-  //       .layout{
-  //         BF_CLAY_SIZING_GROW_XY,
-  //         BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
-  //           UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
-  //         ),
-  //       },
-  //       .floating{
-  //         .zIndex             = zIndex,
-  //         .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-  //         .attachTo           = CLAY_ATTACH_TO_PARENT,
-  //       },
-  //     }
-  //   ) {
-  //     FLOATING_BEAUTIFY;
-  //   }
-  // }
-
   // Level won screen.
   if (g.run.won.IsSet()) {
     CLAY(  ///
@@ -1110,60 +1091,63 @@ void GameFixedUpdate() {
   if (!ShouldGameplayStop()) {
     MarkGameplay();
 
-    // // Stick controls.
-    // {  ///
-    //   auto& c = g.meta.stickControl;
-    //
-    //   if (IsMousePressed(L)) {
-    //     c.controlling = true;
-    //     c.startPos    = ScreenPosToLogical(GetMouseScreenPos());
-    //     c.targetPos   = c.startPos;
-    //   }
-    //   else if (ge.meta._latestActiveTouchID) {
-    //     const auto td = GetTouchData(ge.meta._latestActiveTouchID);
-    //
-    //     if (IsTouchPressed(ge.meta._latestActiveTouchID)) {
-    //       c.controlling = true;
-    //       c.startPos    = ScreenPosToLogical(td.screenPos);
-    //       c.targetPos   = c.startPos;
-    //     }
-    //
-    //     c.targetPos = ScreenPosToLogical(td.screenPos);
-    //   }
-    //   else if (IsMouseDown(L))
-    //     c.targetPos = ScreenPosToLogical(GetMouseScreenPos());
-    //   else
-    //     c.controlling = false;
-    //
-    //   if (c.controlling && (c.startPos != c.targetPos)) {
-    //     c.calculatedDir
-    //             = Vector2Normalize(c.targetPos - c.startPos)
-    //               * (MIN(
-    //                 g.ui.touchControlMaxLogicalOffset, Vector2Distance(c.startPos,
-    //                 c.targetPos)
-    //               )
-    //               / g.ui.touchControlMaxLogicalOffset);
-    //   }
-    //   else
-    //     c.calculatedDir = {};
-    //
-    //   if (c.controlling)
-    //     g.run.playerMovement = c.calculatedDir;
-    // }
+    if (!pl.action && IsTouchPressed(ge.meta._latestActiveTouchID)) {
+      const auto td = GetTouchData(ge.meta._latestActiveTouchID);
+      const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
 
-    // Updating box2d world.
-    {  ///
-      ZoneScopedN("Updating box2d world.");
-      b2World_Step(g.run.world, FIXED_DT, 4);
+      int zone = -1;
+      for (auto& z : g.run.zones) {
+        zone++;
+
+        FOR_RANGE (int, passengerIndex, 3) {
+          auto& p = z.rows[0][passengerIndex];
+
+          auto r = GetPassengerRect(zone, passengerIndex);
+          if (r.ContainsInside(wp)) {
+            if (p && pl.passenger)
+              pl.action = PlayerAction_EXCHANGE;
+            else if (p)
+              pl.action = PlayerAction_PICKUP;
+            else if (pl.passenger)
+              pl.action = PlayerAction_PUT;
+
+            if (pl.action) {
+              pl.actionStartedAt.SetNow();
+              pl.actionPassengerIndex = passengerIndex;
+              pl.zone                 = zone;
+              goto actionWasSet;
+            }
+          }
+        }
+      }
     }
 
-    // Retrieving player body position.
-    // pl.pos = ToVector2(b2Body_GetPosition(pl.body.id));
+  actionWasSet:
 
-    // Checking if player is parked.
-    // {  ///
-    //   pl.parked = false;
-    // }
+    const auto actionDur = lframe::FromSeconds(glib->player_action_duration_seconds());
+
+    if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {
+      auto& zonePassenger = g.run.zones[pl.zone].rows[0][pl.actionPassengerIndex];
+
+      switch (pl.action) {
+      case PlayerAction_PICKUP: {
+        pl.passenger  = zonePassenger;
+        zonePassenger = {};
+      } break;
+
+      case PlayerAction_EXCHANGE: {
+        std::swap(pl.passenger, zonePassenger);
+      } break;
+
+      case PlayerAction_PUT: {
+        zonePassenger = pl.passenger;
+        pl.passenger  = {};
+      } break;
+      }
+
+      pl.action          = {};
+      pl.actionStartedAt = {};
+    }
 
     // Checking if player's won.
     if (!g.run.remainingRows && !g.run.won.IsSet()) {  ///
@@ -1255,11 +1239,10 @@ void GameDraw() {
       });
 
       FOR_RANGE (int, passengerIndex, 3) {
-        auto& p = z.rows[0][passengerIndex];
-        if (!p)
-          continue;
-        auto pos = GetPassengerBottomPos(zone, passengerIndex);
-        drawPassenger(pos, p, 0, zonePassengersAreHoverable);
+        auto& p   = z.rows[0][passengerIndex];
+        auto  pos = GetPassengerBottomPos(zone, passengerIndex);
+        if (p)
+          drawPassenger(pos, p, 0, zonePassengersAreHoverable);
 
         if (zonePassengersAreHoverable) {
           const auto r = GetPassengerRect(zone, passengerIndex);

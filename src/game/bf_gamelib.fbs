@@ -127,8 +127,7 @@ table GameLibrary {
     player_rotation_lerp_factor: float;
     player_vertical_restoration_stiffness: float;
     player_vertical_restoration_damping: float;
-    player_speed_x: float;
-    player_speed_y: float;
+    player_action_duration_seconds: float;
     passenger_margin: Posf;
     passenger_max_shown: int;
     passenger_size: Posf;

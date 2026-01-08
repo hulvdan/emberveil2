@@ -39,8 +39,7 @@ player_max_rotation: 0.2
 player_rotation_lerp_factor: 0.01
 player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
-player_speed_x: 30
-player_speed_y: 15
+player_action_duration_seconds: 0.5
 passenger_margin:
   x: 0.1
   y: 0.1
