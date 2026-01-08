@@ -29,17 +29,7 @@
 
 #pragma once
 
-#include "box2d/box2d.h"
-
 #include "bf_constants.cpp"
-
-b2Vec2 ToB2Vec2(Vector2 value) {  ///
-  return {value.x, value.y};
-}
-
-Vector2 ToVector2(b2Vec2 value) {  ///
-  return {value.x, value.y};
-}
 
 const char* GetWindowTitle() {  ///
   return "The Game"
@@ -72,146 +62,6 @@ static const char* const g_gameVersion = BF_VERSION
 enum ControlsContext {  ///
   ControlsContext_INVALID,
   ControlsContext_COUNT,
-};
-
-enum ShapeCategory : u32 {  ///
-  ShapeCategory_STATIC   = 1 << 0,
-  ShapeCategory_PLAYER   = 1 << 1,
-  ShapeCategory_CREATURE = 1 << 2,
-  // ShapeCategory_FOOT     = 1 << 3,
-  // ShapeCategory_PROJECTILE = 1 << 3,
-};
-
-enum BodyType : u32 {  ///
-  BodyType_INVALID,
-  BodyType_STATIC,
-  BodyType_CREATURE,
-};
-
-enum ShapeUserDataType : u32 {  ///
-  ShapeUserDataType_INVALID,
-  ShapeUserDataType_STATIC,
-  ShapeUserDataType_CREATURE,
-};
-
-struct ShapeUserData {  ///
-  ShapeUserDataType type   = {};
-  int               _value = {};
-
-  static ShapeUserData Static() {
-    return {.type = ShapeUserDataType_STATIC};
-  }
-
-  static ShapeUserData Creature(int value) {
-    ASSERT(value >= 0);
-    return {
-      .type   = ShapeUserDataType_CREATURE,
-      ._value = value,
-    };
-  }
-
-  int GetCreatureID() const {
-    ASSERT(type == ShapeUserDataType_CREATURE);
-    return _value;
-  }
-
-  static ShapeUserData FromPointer(void* ptr) {
-    static_assert((sizeof(ShapeUserData) == 4) || (sizeof(ShapeUserData) == 8));
-
-    if (sizeof(void*) == 8) {
-      // 64-bit.
-      return *(ShapeUserData*)&ptr;
-    }
-    else {
-      // 32-bit. Little endian.
-      auto p = (u8*)&ptr;
-      u8   type[4]{};
-      u8   value[4]{};
-
-      type[0]  = p[0];
-      value[0] = p[1];
-      value[1] = p[2];
-      value[2] = p[3];
-
-      return {
-        .type   = *(ShapeUserDataType*)type,
-        ._value = *(int*)value,
-      };
-    }
-  }
-
-  void* ToPointer() {
-    if (sizeof(void*) == 8) {
-      // 64-bit.
-      return *(void**)this;
-    }
-    else {
-      // 32-bit. Little endian.
-      u8 value[4]{};
-      value[0] = ((u8*)&type)[0];
-      value[1] = ((u8*)&_value)[0];
-      value[2] = ((u8*)&_value)[1];
-      value[3] = ((u8*)&_value)[2];
-
-      return *(void**)value;
-    }
-  }
-};
-
-struct Body {  ///
-  int      createdID = {};
-  b2BodyId id        = {};
-};
-
-enum BodyShapeType {  ///
-  BodyShapeType_INVALID,
-  BodyShapeType_CIRCLE,
-  BodyShapeType_RECT,
-};
-
-struct BodyShape {  ///
-  bool          active = true;
-  Body          body   = {};
-  BodyShapeType type   = {};
-  Color         color  = WHITE;
-
-  union {
-    struct {
-      f32 radius = {};
-    } _circle;
-
-    struct {
-      Vector2 size = {};
-    } _rect;
-  } _u;
-
-  auto& DataCircle() {
-    ASSERT(type == BodyShapeType_CIRCLE);
-    return _u._circle;
-  }
-
-  const auto& DataCircle() const {
-    ASSERT(type == BodyShapeType_CIRCLE);
-    return _u._circle;
-  }
-
-  auto& DataRect() {
-    ASSERT(type == BodyShapeType_RECT);
-    return _u._rect;
-  }
-
-  const auto& DataRect() const {
-    ASSERT(type == BodyShapeType_RECT);
-    return _u._rect;
-  }
-};
-
-struct MakeBodyData {  ///
-  BodyType      type     = {};
-  bool          isSensor = false;
-  f32           density  = 1.0f;
-  ShapeUserData userData = {};
-  bool          isPlayer = {};
 };
 
 struct Passenger {  ///
@@ -288,17 +138,11 @@ struct GameData {
     struct Player {
       Vector2   pos       = {};
       f32       rotation  = {};
-      Body      body      = {};
       Passenger passenger = {};
       int       zone      = -1;
 
-      Vector2 movement         = {};
-      int     groundContacts   = 0;
-      bool    isGrounded       = false;
-      bool    isReallyGrounded = false;
-
-      FrameVisual reallyGroundedAt = {};
-      FrameVisual diedAt           = {};
+      Vector2 movement = {};
+      bool    parked   = {};
 
       struct {
         PlayerState v         = {};
@@ -337,149 +181,6 @@ struct GameData {
   } run;
 } g = {};
 
-void DestroyBody(Body* body) {  ///
-  b2DestroyBody(body->id);
-  for (auto& shape : g.run.bodyShapes) {
-    if (shape.body.createdID == body->createdID)
-      shape.active = false;
-  }
-}
-
-void AddBodyShape(BodyShape v) {  ///
-  ASSERT(v.active);
-  ASSERT(v.type);
-
-  for (auto& shape : g.run.bodyShapes) {
-    if (!shape.active) {
-      shape = v;
-      return;
-    }
-  }
-
-  *g.run.bodyShapes.Add() = v;
-}
-
-struct MakeBodyResult {  ///
-  Body       body     = {};
-  b2ShapeDef shapeDef = {};
-};
-
-MakeBodyResult MakeBody(Vector2 pos, MakeBodyData data) {  ///
-  ASSERT(data.type != BodyType_INVALID);
-  ASSERT(data.userData.type != ShapeUserDataType_INVALID);
-
-  b2BodyDef bodyDef = b2DefaultBodyDef();
-  if (data.type == BodyType_CREATURE)
-    bodyDef.type = b2_dynamicBody;
-  bodyDef.position       = ToB2Vec2(pos);
-  bodyDef.linearDamping  = glib->nohotreload_player_linear_damping();
-  bodyDef.angularDamping = glib->nohotreload_player_angular_damping();
-
-  b2BodyId body = b2CreateBody(g.run.world, &bodyDef);
-
-  b2ShapeDef shapeDef = b2DefaultShapeDef();
-  shapeDef.userData   = data.userData.ToPointer();
-  shapeDef.isSensor   = data.isSensor;
-
-  auto& categoryBits = shapeDef.filter.categoryBits;
-  auto& maskBits     = shapeDef.filter.maskBits;
-  maskBits           = ShapeCategory_STATIC | ShapeCategory_PLAYER;
-
-  switch (data.type) {
-  case BodyType_STATIC: {
-    categoryBits = ShapeCategory_STATIC;
-    maskBits |= ShapeCategory_CREATURE;
-  } break;
-
-  case BodyType_CREATURE: {
-    categoryBits = ShapeCategory_CREATURE;
-    if (data.isPlayer)
-      categoryBits |= ShapeCategory_PLAYER;
-  } break;
-
-  default:
-    INVALID_PATH;
-  }
-
-  shapeDef.density = data.density;
-
-  static int     lastCreatedID = 0;
-  MakeBodyResult result{
-    .body{.createdID = ++lastCreatedID, .id = body},
-    .shapeDef = shapeDef,
-  };
-
-  return result;
-}
-
-struct MakeRectBodyData {  ///
-  Vector2      pos      = {};
-  Vector2      size     = {};
-  Vector2      anchor   = Vector2Half();
-  f32          radius   = {};
-  MakeBodyData bodyData = {};
-};
-
-Body MakeRectBody(MakeRectBodyData data) {  ///
-  ASSERT(data.size.x > 0);
-  ASSERT(data.size.y > 0);
-
-  auto makeBodyResult
-    = MakeBody(data.pos - (data.anchor - Vector2Half()) * data.size, data.bodyData);
-
-  auto box = b2MakeRoundedBox(
-    data.size.x / 2 - data.radius, data.size.y / 2 - data.radius, data.radius
-  );
-  b2CreatePolygonShape(makeBodyResult.body.id, &makeBodyResult.shapeDef, &box);
-
-  AddBodyShape({
-    .body  = makeBodyResult.body,
-    .type  = BodyShapeType_RECT,
-    .color = YELLOW,
-    ._u{._rect{.size = data.size}},
-  });
-
-  return makeBodyResult.body;
-}
-
-struct MakeCircleBodyData {  ///
-  Vector2      pos           = {};
-  f32          radius        = {};
-  f32          hurtboxRadius = {};
-  MakeBodyData bodyData      = {};
-};
-
-Body MakeCircleBody(MakeCircleBodyData data) {  ///
-  ASSERT(data.radius > 0);
-
-  auto makeBodyResult = MakeBody(data.pos, data.bodyData);
-
-  b2Circle circle{.radius = data.radius};
-  b2CreateCircleShape(makeBodyResult.body.id, &makeBodyResult.shapeDef, &circle);
-
-  if (data.bodyData.type == BodyType_CREATURE) {
-    makeBodyResult.shapeDef.isSensor = true;
-    circle.radius                    = data.hurtboxRadius;
-    b2CreateCircleShape(makeBodyResult.body.id, &makeBodyResult.shapeDef, &circle);
-
-    AddBodyShape({
-      .body  = makeBodyResult.body,
-      .type  = BodyShapeType_CIRCLE,
-      .color = RED,
-      ._u{._circle{.radius = data.hurtboxRadius}},
-    });
-  }
-
-  AddBodyShape({
-    .body  = makeBodyResult.body,
-    .type  = BodyShapeType_CIRCLE,
-    .color = YELLOW,
-    ._u{._circle{.radius = data.radius}},
-  });
-
-  return makeBodyResult.body;
-}
-
 void GameLoad(const BFSave::Save* save) {  ///
   auto& s = g.save;
   s.level = save->level();
@@ -489,59 +190,6 @@ void GameDumpStateForSaving(BFSave::SaveT& save) {  ///
   save.level = g.save.level;
   if (g.run.won.IsSet())
     save.level += 1;
-}
-
-struct Line {  ///
-  Vector2 v1 = {};
-  Vector2 v2 = {};
-};
-
-struct MakeWallsData {  ///
-  const View<Line> lines     = {};
-  View<Body>       outBodies = {};
-};
-
-void MakeWalls(MakeWallsData data) {  ///
-  ASSERT(data.lines.count > 0);
-  if (data.outBodies.count)
-    ASSERT(data.lines.count == data.outBodies.count);
-  ASSERT(data.lines.base);
-
-  FOR_RANGE (int, i, data.lines.count) {
-    const auto& line = data.lines[i];
-
-    auto v1 = line.v1;
-    auto v2 = line.v2;
-
-    if ((v1.x != v2.x) && (v1.y != v2.y))
-      INVALID_PATH;
-    if (v1 == v2)
-      INVALID_PATH;
-
-    if (v1.x > v2.x) {
-      auto t = v1;
-      v1     = v2;
-      v2     = t;
-    }
-    if (v1.y > v2.y) {
-      auto t = v1;
-      v1     = v2;
-      v2     = t;
-    }
-
-    auto body = MakeRectBody({
-      .pos    = v1,
-      .size   = (v2 - v1) + Vector2One(),
-      .anchor = Vector2Zero(),
-      .bodyData{
-        .type     = BodyType_STATIC,
-        .userData = ShapeUserData::Static(),
-      },
-    });
-
-    if (data.outBodies.count)
-      data.outBodies[i] = body;
-  }
 }
 
 const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
@@ -575,23 +223,6 @@ void RunInit() {
 
   g.run.worldSize  = {sx, sy};
   g.run.worldSizef = (Vector2)g.run.worldSize;
-
-  // Placing walls.
-  if (0) {  ///
-    Vector2Int p00{-1 + glib->extend_cells_horizontal(), -1};
-    auto       p11 = g.run.worldSize - Vector2Int(glib->extend_cells_horizontal(), 0);
-
-    Line lines_[]{
-      // Walls around.
-      {{p11.x, p00.y}, {p11.x, p11.y}},  // right
-      {{p00.x, p11.y}, {p11.x, p11.y}},  // up
-      {{p00.x, p00.y}, {p00.x, p11.y}},  // left
-      // {{p00.x, p00.y}, {p11.x, p00.y}},  // down
-    };
-    VIEW_FROM_ARRAY_DANGER(lines);
-
-    MakeWalls({.lines = lines});
-  }
 
   // Placing zones.
   if (fb_level->zones()) {  ///
@@ -652,20 +283,9 @@ void RunInit() {
 
   // Creating player.
   {  ///
-    const auto pos
-      = ToVector2(fb_level->player()) - Vector2(0, 2 - PLAYER_COLLIDER_SIZE.y) / 2.0f;
-    g.run.player = {
-      .pos  = pos,
-      .body = MakeRectBody({
+    const auto pos = ToVector2(fb_level->player()) - Vector2(0, 2 - PLAYER_SIZE.y) / 2.0f;
+    g.run.player   = {
         .pos = pos,
-        .size{1.5f, 1.5f},
-        .radius = glib->nohotreload_player_rect_radius(),
-        .bodyData{
-          .type     = BodyType_CREATURE,
-          .userData = ShapeUserData::Creature(0),
-          .isPlayer = true,
-        },
-      }),
     };
   }
 }
@@ -1038,7 +658,7 @@ void DoUI() {
   }
 
   // Actions.
-  if (0 && pl.isReallyGrounded && (pl.zone >= 0)) {
+  if (0 && pl.parked && (pl.zone >= 0)) {
     // Screen.
     CLAY(  ///
       {
@@ -1231,7 +851,7 @@ bool IsDraggingOverPlayer() {  ///
   if (!g.run.drag.active)
     return false;
   return Vector2DistanceSqr(g.run.player.pos, g.run.drag.worldPos)
-         <= SQR(PLAYER_COLLIDER_SIZE.x / 2.0f);
+         <= SQR(PLAYER_SIZE.x / 2.0f);
 }
 
 void GameFixedUpdate() {
@@ -1368,19 +988,19 @@ void GameFixedUpdate() {
 
     // Checking if player is grounded.
     {  ///
-      pl.isGrounded       = false;
-      pl.isReallyGrounded = false;
-      pl.groundContacts   = 0;
+      pl.isGrounded     = false;
+      pl.parked         = false;
+      pl.groundContacts = 0;
 
       if (abs(pl.rotation) < 0.001f) {
         for (int i = -1; i <= 1; i += 1) {
           b2World_CastRay(
             g.run.world,
             ToB2Vec2({
-              pl.pos.x + PLAYER_COLLIDER_SIZE.x * 0.48f * (int)i,
+              pl.pos.x + PLAYER_SIZE.x * 0.48f * (int)i,
               pl.pos.y,
             }),
-            {0, -PLAYER_COLLIDER_SIZE.y / 1.95f},
+            {0, -PLAYER_SIZE.y / 1.95f},
             {
               .categoryBits = ShapeCategory_PLAYER,
               .maskBits     = ShapeCategory_STATIC,
@@ -1392,15 +1012,14 @@ void GameFixedUpdate() {
 
         if (pl.groundContacts >= 2) {
           pl.isGrounded = true;
-          pl.isReallyGrounded
-            = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(pl.body.id))))
-              < 0.001f;
+          pl.parked = abs(Vector2Length(ToVector2(b2Body_GetLinearVelocity(pl.body.id))))
+                      < 0.001f;
         }
       }
 
-      if (pl.isReallyGrounded && !pl.reallyGroundedAt.IsSet())
+      if (pl.parked && !pl.reallyGroundedAt.IsSet())
         pl.reallyGroundedAt.SetNow();
-      else if (!pl.isReallyGrounded && pl.reallyGroundedAt.IsSet())
+      else if (!pl.parked && pl.reallyGroundedAt.IsSet())
         pl.reallyGroundedAt = {};
     }
 
@@ -1445,12 +1064,6 @@ void GameFixedUpdate() {
       g.run.won.SetNow();
       Save();
     }
-
-    // if (!g.run.won.IsSet() && !pl.diedAt.IsSet()) {
-    //   // Player dies below the map.
-    //   if (pl.pos.y < -PLAYER_COLLIDER_SIZE.y / 2.0f)
-    //     pl.diedAt.SetNow();
-    // }
 
     // Balancing passenger positions.
     int zoneIndex = -1;
@@ -1533,7 +1146,7 @@ void GameFixedUpdate() {
 
     // Starting dragging passenger from zone.
     if (!dr.active && IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
-      if ((pl.zone >= 0) && pl.isReallyGrounded) {
+      if ((pl.zone >= 0) && pl.parked) {
         auto& z = g.run.zones[pl.zone];
         FOR_RANGE (int, i, z.passengers.count) {
           auto& p = z.passengers[i];
@@ -1633,7 +1246,7 @@ void GameDraw() {
       .color    = Fade(ZONE_COLORS[p.color - 1], 0.5f),
     });
 
-    if ((zone >= 0) && (zone == pl.zone) && pl.isReallyGrounded) {
+    if ((zone >= 0) && (zone == pl.zone) && pl.parked) {
       const auto r = GetPassengerRect(pos.y, p);
       DrawGroup_CommandRectLines({
         .pos    = r.pos,
@@ -1762,14 +1375,14 @@ void GameDraw() {
 
     DrawGroup_CommandRect({
       .pos      = pl.pos,
-      .size     = PLAYER_COLLIDER_SIZE,
+      .size     = PLAYER_SIZE,
       .rotation = pl.rotation,
       .color    = color,
     });
     if (pl.passenger) {
       drawPassenger(
         -1,
-        pl.pos - Vector2Rotate(Vector2(0, PLAYER_COLLIDER_SIZE.y / 2.0f), pl.rotation),
+        pl.pos - Vector2Rotate(Vector2(0, PLAYER_SIZE.y / 2.0f), pl.rotation),
         pl.passenger,
         pl.rotation
       );

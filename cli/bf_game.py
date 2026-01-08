@@ -70,65 +70,46 @@ def _process_gamelib(
 
         cycleable_levels_indices = []
 
-        extf = gamelib["extend_cells_floor"]
-        extc = gamelib["extend_cells_ceiling"]
-        exth = gamelib["extend_cells_horizontal"]
-
         s = None
         sx = None
         sy = None
 
         for level_index, level in enumerate(d.levels):
-            walls = level.get_layer("Walls")
+            entities = level.get_layer("Entities")
             if s is None:
-                sx = walls.cWid_
-                sy = walls.cHei_
+                sx = entities.cWid_
+                sy = entities.cHei_
                 s = (sx, sy)
             else:
-                assert s == (walls.cWid_, walls.cHei_), (
+                assert s == (entities.cWid_, entities.cHei_), (
                     "All levels must have the same size!"
                 )
 
             zones = []
-            layer_entities = level.get_layer("Entities")
-            for entity in layer_entities.entityInstances:
+            for entity in entities.entityInstances:
                 if entity.identifier_ == "Zone":
                     zones.append(
                         {
-                            "px": entity.grid_[0] + exth,
-                            "py": sy - entity.grid_[1] - 1 + extf,
-                            "w": entity.width // 16,
-                            "passengers_right": entity.field("RightLeft") == "Left",
+                            "pos": (
+                                entity.grid_[0],
+                                sy - entity.grid_[1] - 1,
+                            ),
                         }
                     )
-            player = bf.ldtk_get_single_entity(layer_entities, "Player")
-            tile_lines = list(bf.batched(walls.intGridCsv, walls.cWid_))
-            for line in tile_lines:
-                for _ in range(exth):
-                    line.insert(0, line[0])
-                    line.append(line[-1])
-            for _ in range(extf):
-                tile_lines.append(tile_lines[-1])
-            tile_lines.reverse()
-            for _ in range(extc):
-                tile_lines.append(tile_lines[-1])
-
-            tiles = [x for line in tile_lines for x in line]
+            player = bf.ldtk_get_single_entity(entities, "Player")
             levels.append(
                 {
-                    "sx": walls.cWid_ + exth * 2,
-                    "sy": sy + extc + extf,
                     "player": (
-                        player.grid_[0] + 1 + exth,
-                        sy - player.grid_[1] - 1 + extf,
+                        player.grid_[0] + 1,
+                        sy - player.grid_[1] - 1,
                     ),
                     "zones": zones,
-                    "tiles": tiles,
                 }
             )
             if level.field("Cycle"):
                 cycleable_levels_indices.append(level_index)
 
+        gamelib["level_size"] = s
         gamelib["levels"] = levels
         gamelib["cycleable_levels_indices"] = cycleable_levels_indices
     # }

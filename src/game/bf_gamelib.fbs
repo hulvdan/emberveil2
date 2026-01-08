@@ -88,8 +88,7 @@ table Flattened {
 
 // GAME STUFF
 table Zone {
-    px: int;
-    py: int;
+    pos: Pos;
 }
 
 table Level {
@@ -120,10 +119,6 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
-    extend_cells_horizontal: int;
-    extend_cells_ceiling: int;
-    extend_cells_floor: int;
-    gravity: float;
     nohotreload_player_linear_damping: float;
     nohotreload_player_angular_damping: float;
     player_vertical_restoration_stiffness: float;
@@ -146,8 +141,8 @@ table GameLibrary {
     // Then makes code generation magic (enums in `bf_codegen.cpp`, recursive replaces)
     // TABLE_GEN_START
     placeholders: [Placeholder] (required);
-    tiles: [Tile] (required);
     // TABLE_GEN_END
+    level_size: Pos;
     levels: [Level] (required);
     cycleable_levels_indices: [int] (required);
     // GAME STUFF END

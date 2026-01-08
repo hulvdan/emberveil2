@@ -36,50 +36,6 @@ debug_variables: # {  ###
     type: bool
 # }
 
-tiles:
-  - type: INVALID
-  - type: SOLID
-    solid: true
-    texture_ids:
-      - game_tileset_1
-      - game_tileset_2
-      - game_tileset_3
-      - game_tileset_4
-      - game_tileset_5
-      - game_tileset_6
-      - game_tileset_7
-      - game_tileset_8
-      - game_tileset_9
-      - game_tileset_10
-      - game_tileset_11
-      - game_tileset_12
-      - game_tileset_13
-      - game_tileset_14
-      - game_tileset_15
-      - game_tileset_16
-  - type: BRIDGE
-    solid: true
-    texture_ids:
-      - game_tileset_1
-      - game_tileset_2
-      - game_tileset_3
-      - game_tileset_4
-      - game_tileset_5
-      - game_tileset_6
-      - game_tileset_7
-      - game_tileset_8
-      - game_tileset_9
-      - game_tileset_10
-      - game_tileset_11
-      - game_tileset_12
-      - game_tileset_13
-      - game_tileset_14
-      - game_tileset_15
-      - game_tileset_16
-extend_cells_ceiling: 2
-extend_cells_floor: 2
-extend_cells_horizontal: 1
-gravity: -40
 nohotreload_player_linear_damping: 1
 nohotreload_player_angular_damping: 1
 player_vertical_restoration_stiffness: 20
@@ -95,7 +51,6 @@ passenger_size:
   y: 1.5
 passenger_put_seconds: 0.2
 level_advance_transition_seconds: 0.5
-nohotreload_platform_rect_radius: 0.2
 nohotreload_player_rect_radius: 0.2
 passenger_pos_lerp_factor: 0.05
 ui_frame_color: 0xe3c896ff
