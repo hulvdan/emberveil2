@@ -93,7 +93,7 @@ table Zone {
 
 table Passenger {
     texture_id: int;
-    color: uint;
+    flash: uint;
 }
 
 table Level {

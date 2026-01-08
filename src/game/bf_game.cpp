@@ -1104,7 +1104,7 @@ void GameFixedUpdate() {
 
           auto r = GetPassengerRect(zone, passengerIndex);
           if (r.ContainsInside(wp)) {
-            if (p && pl.passenger)
+            if (p && pl.passenger && (p.color != pl.passenger.color))
               pl.action = PlayerAction_EXCHANGE;
             else if (p)
               pl.action = PlayerAction_PICKUP;
@@ -1213,9 +1213,7 @@ void GameDraw() {
       .rotation = rotation,
       .pos      = pos + p.offVisual,
       .anchor{0.5f, 0},
-      .color = ColorFromRGBA(fb->color()),
-      // REMOVEME
-      .flash = ColorFromRGBA(fb->color()),
+      .flash = ColorFromRGBA(fb->flash()),
     });
   };
 
