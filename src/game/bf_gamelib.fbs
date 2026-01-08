@@ -129,14 +129,13 @@ table GameLibrary {
     player_vertical_restoration_damping: float;
     player_speed_x: float;
     player_speed_y: float;
-    passenger_margin: float;
+    passenger_margin: Posf;
     passenger_max_shown: int;
     passenger_size: Posf;
-    passenger_off_y: float;
     passenger_put_seconds: float;
     level_advance_transition_seconds: float;
     passenger_pos_lerp_factor: float;
-    zone_collider_width: float;
+    zone_size: Posf;
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.

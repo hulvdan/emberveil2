@@ -41,16 +41,19 @@ player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
 player_speed_x: 30
 player_speed_y: 15
-passenger_margin: 0.1
+passenger_margin:
+  x: 0.1
+  y: 0.1
 passenger_max_shown: 999
 passenger_size:
   x: 0.6
   y: 1.0
 passenger_put_seconds: 0.2
-passenger_off_y: 0.1
 level_advance_transition_seconds: 0.5
 passenger_pos_lerp_factor: 0.05
-zone_collider_width: 2
+zone_size:
+  x: 2
+  y: 1.6
 ui_frame_color: 0xe3c896ff
 ui_frame_nine_slice:
   texture_id: ui_frame

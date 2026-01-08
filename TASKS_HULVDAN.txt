@@ -7,7 +7,8 @@ sort by colors
 
 Сортировка: Вертолётное Такси
 
-* draw zones
+x draw zones
+
 * player has to just click on zone
   -> ufo moves to it
 * can exchange passenger with one found in helicopter

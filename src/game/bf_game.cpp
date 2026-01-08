@@ -236,7 +236,7 @@ struct Zone {  ///
   Rect Rect() const {
     return {
       .pos  = pos(),
-      .size = Vector2(glib->zone_collider_width(), glib->zone_collider_width()),
+      .size = ToVector2(glib->zone_size()),
     };
   }
 };
@@ -1068,14 +1068,14 @@ void UpdateCamera() {  ///
 }
 
 Vector2 GetPassengerBottomPos(int zone, int passengerIndex) {  ///
-  f32 off = glib->zone_collider_width() / 2 - glib->passenger_margin()
+  f32 off = glib->zone_size()->x() / 2 - glib->passenger_margin()->x()
             - glib->passenger_size()->x() / 2;
   if (passengerIndex == 0)
     off *= -1;
   else if (passengerIndex == 1)
     off = 0;
   return g.run.zones[zone].pos()
-         + Vector2(off, glib->passenger_off_y() - glib->zone_collider_width() / 2);
+         + Vector2(off, glib->passenger_margin()->y() - glib->zone_size()->y() / 2);
 }
 
 Rect GetPassengerRect(int zone, int passengerIndex) {  ///
