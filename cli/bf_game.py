@@ -88,21 +88,11 @@ def _process_gamelib(
             zones = []
             for entity in entities.entityInstances:
                 if entity.identifier_ == "Zone":
-                    zones.append(
-                        {
-                            "pos": (
-                                entity.grid_[0],
-                                sy - entity.grid_[1] - 1,
-                            ),
-                        }
-                    )
+                    zones.append({"pos": (entity.grid_[0], sy - entity.grid_[1] - 1)})
             player = bf.ldtk_get_single_entity(entities, "Player")
             levels.append(
                 {
-                    "player": (
-                        player.grid_[0] + 1,
-                        sy - player.grid_[1] - 1,
-                    ),
+                    "player": (player.grid_[0] + 1, sy - player.grid_[1] - 1),
                     "zones": zones,
                     "override_passenger_rows": level.field("OverridePassengerRows"),
                     "random_seed": level.field("RandomSeed"),
