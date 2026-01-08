@@ -25,7 +25,10 @@ x can drag passenger to helicopter
 
 Сортировка: Вертолётное Такси
 
+* can exchange passenger with one found in helicopter
 * can drag passenger from helicopter to zone
+*
+* lock random for level
 *
 * cant put if too many passengers?
 * max of 3 passengers per platform

@@ -581,6 +581,8 @@ const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
 }
 
 void RunInit() {
+  ge.meta.logicRand._state = g.save.level + 1;
+
   // Creating box2d world.
   {  ///
     b2WorldDef worldDef = b2DefaultWorldDef();
@@ -1682,7 +1684,7 @@ void GameDraw() {
       .color    = Fade(ZONE_COLORS[p.color - 1], 0.5f),
     });
 
-    if ((zone == pl.zone) && pl.isReallyGrounded) {
+    if ((zone >= 0) && (zone == pl.zone) && pl.isReallyGrounded) {
       const auto r = GetPassengerRect(pos.y, p);
       DrawGroup_CommandRectLines({
         .pos    = r.pos,
