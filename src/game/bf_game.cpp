@@ -779,6 +779,8 @@ void ReloadFontsIfNeeded() {  ///
 }
 
 void CheckGamelib() {
+  // Setup.
+  // {  ///
 #if !BF_ENABLE_ASSERTS
   return;
 #endif
@@ -787,6 +789,7 @@ void CheckGamelib() {
   glibFile = LoadFile(GAMELIB_PATH, nullptr);
   glib     = BFGame::GetGameLibrary(glibFile);
 #endif
+  // }
 
   // Checking levels cycling and mirroring.
   if (0) {  ///
@@ -906,11 +909,14 @@ void CheckGamelib() {
     }
   }
 
+  // Teardown.
+  // {  ///
 #ifdef TESTS
   glib = nullptr;
   UnloadFile(glibFile);
   glibFile = nullptr;
 #endif
+  // }
 }
 
 TEST_CASE ("CheckGamelib") {  ///
@@ -968,7 +974,7 @@ void DoUI() {
   )
   CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
     // Current level.
-    if (g.save.level) {
+    if (g.save.level) {  ///
       CLAY({}) {
         BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
         BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
@@ -1076,7 +1082,8 @@ void GameFixedUpdate() {
   if (!ShouldGameplayStop()) {
     MarkGameplay();
 
-    if (!pl.action && IsTouchPressed(ge.meta._latestActiveTouchID)) {
+    // Setting player action.
+    if (!pl.action && IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
       const auto td = GetTouchData(ge.meta._latestActiveTouchID);
       const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
 
@@ -1105,13 +1112,14 @@ void GameFixedUpdate() {
           }
         }
       }
-    }
 
-  actionWasSet:
+    actionWasSet: {}
+    }
 
     const auto actionDur = lframe::FromSeconds(glib->player_action_duration_seconds());
 
-    if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {
+    // Comitting player action.
+    if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {  ///
       auto& zonePassenger = g.run.zones[pl.zone].rows[0][pl.actionPassengerIndex];
 
       switch (pl.action) {
