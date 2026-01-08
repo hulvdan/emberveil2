@@ -215,21 +215,19 @@ struct MakeBodyData {  ///
 };
 
 struct Passenger {  ///
-  int color      = 0;
-  f32 posX       = {};
-  f32 posXVisual = f32_inf;
-  f32 offYVisual = {};
+  int     color     = 0;
+  Vector2 offVisual = {};
 
   operator bool() const {
     return color > 0;
   }
 };
 
-using PassengerRow = PushableArray<Passenger, 5>;
+using PassengerRow = Array<Passenger, 3>;
 
 struct Zone {  ///
-  Vector2Int                     pos = {};
-  PushableArray<PassengerRow, 3> pas = {};
+  Vector2Int                     pos  = {};
+  PushableArray<PassengerRow, 5> rows = {};
 
   Rect Rect() const {
     return {
@@ -239,7 +237,19 @@ struct Zone {  ///
   }
 };
 
-const Color ZONE_COLORS_[]{RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA};
+const Color ZONE_COLORS_[]{
+  ColorFromRGBA(0xfb6b1dff), ColorFromRGBA(0xe83b3bff), ColorFromRGBA(0x831c5dff),
+  ColorFromRGBA(0xc32454ff), ColorFromRGBA(0xf04f78ff), ColorFromRGBA(0xf68181ff),
+  ColorFromRGBA(0xfca790ff), ColorFromRGBA(0xe3c896ff), ColorFromRGBA(0xab947aff),
+  ColorFromRGBA(0x966c6cff), ColorFromRGBA(0x625565ff), ColorFromRGBA(0x3e3546ff),
+  ColorFromRGBA(0x0b5e65ff), ColorFromRGBA(0x0b8a8fff), ColorFromRGBA(0x1ebc73ff),
+  ColorFromRGBA(0x91db69ff), ColorFromRGBA(0xfbff86ff), ColorFromRGBA(0xfbb954ff),
+  ColorFromRGBA(0xcd683dff), ColorFromRGBA(0x9e4539ff), ColorFromRGBA(0x7a3045ff),
+  ColorFromRGBA(0x6b3e75ff), ColorFromRGBA(0x905ea9ff), ColorFromRGBA(0xa884f3ff),
+  ColorFromRGBA(0xeaadedff), ColorFromRGBA(0x8fd3ffff), ColorFromRGBA(0x4d9be6ff),
+  ColorFromRGBA(0x4d65b4ff), ColorFromRGBA(0x484a77ff), ColorFromRGBA(0x30e1b9ff),
+  ColorFromRGBA(0x8ff8e2ff),
+};
 VIEW_FROM_ARRAY_DANGER(ZONE_COLORS);
 
 enum PlayerState {  ///
@@ -273,9 +283,8 @@ struct GameData {
   } save;
 
   struct Run {
-    Vector2Int worldSize  = {};
-    Vector2    worldSizef = {};
-    b2WorldId  world      = {};
+    Vector2Int worldSize = {};
+    b2WorldId  world     = {};
 
     Camera camera{};
 
@@ -553,35 +562,16 @@ const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
 void RunInit() {
   ge.meta.logicRand._state = g.save.level + 1;
 
-  // Creating box2d world.
+  // Making box2d world.
   {  ///
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity    = {0, 0};
     g.run.world         = b2CreateWorld(&worldDef);
   }
 
-  const auto fb_level      = GetFBLevel(g.save.level);
-  const auto fb_tiles      = glib->tiles();
-  const auto fb_levelTiles = fb_level->tiles();
+  const auto fb_level = GetFBLevel(g.save.level);
 
-  // Placing walls.
-  if (0) {  ///
-    Vector2Int p00{-1 + glib->extend_cells_horizontal(), -1};
-    auto       p11 = g.run.worldSize - Vector2Int(glib->extend_cells_horizontal(), 0);
-
-    Line lines_[]{
-      // Walls around.
-      {{p11.x, p00.y}, {p11.x, p11.y}},  // right
-      {{p00.x, p11.y}, {p11.x, p11.y}},  // up
-      {{p00.x, p00.y}, {p00.x, p11.y}},  // left
-      // {{p00.x, p00.y}, {p11.x, p00.y}},  // down
-    };
-    VIEW_FROM_ARRAY_DANGER(lines);
-
-    MakeWalls({.lines = lines});
-  }
-
-  // Placing zones.
+  // Making zones.
   if (fb_level->zones()) {  ///
     const int PASSENGERS_PER_ZONE = 3;
 
@@ -590,10 +580,7 @@ void RunInit() {
     for (auto fb_zone : *fb_level->zones()) {
       zoneIndex++;
       auto& z = *g.run.zones.Add();
-      z       = {
-              .pos{fb_zone->px(), fb_zone->py()},
-              .width = fb_zone->w(),
-      };
+      z       = {.pos = ToVector2(fb_zone->pos())};
     }
     g.run.colors = g.run.zones.count + 0;
 
@@ -602,43 +589,47 @@ void RunInit() {
     zonesContinue:
       g.run.passengersTotal = 0;
       for (auto& z : g.run.zones)
-        z.passengers.Reset();
+        z.rows[0].Reset();
 
-      FOR_RANGE (int, color, g.run.colors) {
+      int rows = (int)fb_level->zones()->size();
+      if (fb_level->override_passenger_rows())
+        rows = fb_level->override_passenger_rows();
+
+      FOR_RANGE (int, color, rows) {
         FOR_RANGE (int, _passengerIndex, 3) {
           auto& z = g.run.zones[GRAND.Rand() % g.run.zones.count];
-          if (z.passengers.count >= z.passengers.maxCount)
+          if (z.rows[0].count >= z.rows[0].maxCount)
             goto zonesContinue;
 
-          *z.passengers.Add() = {.color = color + 1};
-          g.run.passengersTotal++;
+          *z.rows[0].Add() = {.color = color + 1};
+          g.run.rows[0] Total++;
         }
       }
 
-      int minPassengersOnPlatform = int_max;
-      int maxPassengersOnPlatform = 0;
+      int mi.rows[0] OnPlatform = int_max;
+      int ma.rows[0] OnPlatform = 0;
 
       for (auto& z : g.run.zones) {
-        minPassengersOnPlatform = MIN(minPassengersOnPlatform, z.passengers.count);
-        maxPassengersOnPlatform = MAX(maxPassengersOnPlatform, z.passengers.count);
+        mi.rows[0] OnPlatform = MIN(mi.rows[0] OnPlatform, z.rows[0].count);
+        ma.rows[0] OnPlatform = MAX(ma.rows[0] OnPlatform, z.rows[0].count);
 
         FOR_RANGE (int, color, g.run.colors) {
-          int passengersOfThisColor = 0;
-          for (auto& x : z.passengers) {
+          int.rows[0] OfThisColor = 0;
+          for (auto& x : z.rows[0]) {
             if (x.color == color)
-              passengersOfThisColor++;
+              .rows[0] OfThisColor++;
           }
-          if (passengersOfThisColor >= 3)
+          if .rows[0]OfThisColor >= 3)
             goto zonesContinue;
         }
       }
 
-      if (maxPassengersOnPlatform - minPassengersOnPlatform > 3)
+      if (ma.rows[0] OnPlatform - mi.rows[0] OnPlatform > 3)
         goto zonesContinue;
     }
   }
 
-  // Creating player.
+  // Making player.
   {  ///
     const auto pos = ToVector2(fb_level->player()) - Vector2(0, 2 - PLAYER_SIZE.y) / 2.0f;
     g.run.player   = {
@@ -1094,16 +1085,16 @@ void DoUI() {
         // Putting passenger down to platform.
         if (pl.passenger) {  ///
           if (card({.loc = Loc_UI_PASSENGER_PUT_DOWN})) {
-            *z.passengers.Add() = pl.passenger;
-            pl.passenger        = {};
+            *z.rows[0].Add() = pl.passenger;
+            pl.passenger     = {};
           }
         }
 
         int off   = 0;
-        int total = z.passengers.count;
+        int total = z.rows[0].count;
         // Swapping or picking up.
         FOR_RANGE (int, i, total) {  ///
-          auto& p = z.passengers[i - off];
+          auto& p = z.rows[0][i - off];
           Loc   loc{};
           if (pl.passenger) {
             loc = Loc_UI_PASSENGER_EXCHANGE;
@@ -1122,7 +1113,7 @@ void DoUI() {
             else {
               // Picking up passenger.
               pl.passenger = p;
-              z.passengers.RemoveAt(i - off);
+              z.rows[0].RemoveAt(i - off);
               off++;
             }
           }
@@ -1181,13 +1172,9 @@ void DoUI() {
 }
 
 void UpdateCamera() {  ///
-  const auto ws = g.run.worldSizef
-                  - Vector2(
-                    glib->extend_cells_horizontal() * 2,
-                    glib->extend_cells_floor() + glib->extend_cells_ceiling()
-                  );
   g.run.camera.pos
-    = ws / 2.0f + Vector2(glib->extend_cells_horizontal(), glib->extend_cells_floor());
+    = g.run.worldSizef / 2.0f
+      + Vector2(glib->extend_cells_horizontal(), glib->extend_cells_floor());
 
   const auto v               = LOGICAL_RESOLUTIONf / ws;
   g.run.camera.zoom          = MIN(v.x, v.y);
@@ -1208,6 +1195,9 @@ bool IsDraggingOverPlayer() {  ///
 
 void GameFixedUpdate() {
   ZoneScoped;
+
+  g.run.worldSize  = ToVector2Int(glib->world_size());
+  g.run.worldSizef = (Vector2)g.run.worldSize;
 
   // Setup. {  ///
   auto& pl = g.run.player;
@@ -1368,108 +1358,34 @@ void GameFixedUpdate() {
       }
     }
 
-    // Removing 3-matched passengers.
+    // Removing 3-matched.rows[0].
     for (auto& z : g.run.zones) {  ///
       for (int color = 1; color <= g.run.colors; color++) {
-        int passengersOfThisColor = 0;
-        for (auto& p : z.passengers) {
+        int.rows[0] OfThisColor = 0;
+        for (auto& p : z.rows[0]) {
           if (p.color == color)
-            passengersOfThisColor++;
+            .rows[0] OfThisColor++;
         }
 
-        if (passengersOfThisColor >= 3) {
-          for (int i = z.passengers.count - 1; i >= 0; i--) {
-            if (z.passengers[i].color == color) {
-              z.passengers.RemoveAt(i);
-              passengersOfThisColor--;
-              g.run.passengersTotal--;
-              if (!passengersOfThisColor)
-                break;
+        if .rows[0]OfThisColor >= 3) {
+            for (int i = z.rows[0].count - 1; i >= 0; i--) {
+              if (z.rows[0][i].color == color) {
+                z.rows[0].RemoveAt(i);
+                .rows[0] OfThisColor--;
+                g.run.rows[0] Total--;
+                if (.rows[0] OfThisColor)
+                  break;
+              }
             }
           }
-        }
       }
     }
 
     // Checking if player's won.
-    if (!g.run.passengersTotal && !g.run.won.IsSet()) {  ///
+    if (!g.run.rows[0] Total && !g.run.won.IsSet()) {  ///
       g.run.won.SetNow();
       Save();
     }
-
-    // // Balancing passenger positions.
-    // int zoneIndex = -1;
-    // for (auto& z : g.run.zones) {  ///
-    //   zoneIndex++;
-    //
-    //   const auto r     = z.Rect();
-    //   f32        width = r.size.x;
-    //   f32        gap   = width / (z.passengers.count + 1);
-    //
-    //   FOR_RANGE (int, i, z.passengers.count) {
-    //     auto& p = z.passengers[i];
-    //     p.posX  = z.pos.x + gap * (i + 1);
-    //     if (p.posXVisual == f32_inf)
-    //       p.posXVisual = p.posX;
-    //   }
-    //
-    //   if (pl.zone == zoneIndex) {
-    //     int lastPassengerToTheLeftOfPlayer   = -1;
-    //     int firstPassengerToTheRightOfPlayer = -1;
-    //
-    //     FOR_RANGE (int, i, z.passengers.count) {
-    //       if (z.passengers[i].posX <= pl.pos.x)
-    //         lastPassengerToTheLeftOfPlayer = i;
-    //       else
-    //         break;
-    //     }
-    //     FOR_RANGE (int, i_, z.passengers.count) {
-    //       int i = z.passengers.count - i_ - 1;
-    //       if (z.passengers[i].posX > pl.pos.x)
-    //         firstPassengerToTheRightOfPlayer = i;
-    //       else
-    //         break;
-    //     }
-    //
-    //     // kRatio = K / k = Player's spring density is 1.5x bigger.
-    //     const f32 kRatio = 1.8f;
-    //
-    //     if (lastPassengerToTheLeftOfPlayer >= 0) {
-    //       f32 width = pl.pos.x - r.pos.x;
-    //       ASSERT(width >= 0);
-    //       ASSERT(width <= r.size.x);
-    //
-    //       int n        = lastPassengerToTheLeftOfPlayer + 1;
-    //       f32 x        = width / (n + kRatio);
-    //       f32 lastPosX = z.pos.x;
-    //       FOR_RANGE (int, i, lastPassengerToTheLeftOfPlayer + 1) {
-    //         auto& p = z.passengers[i];
-    //         lastPosX += x;
-    //         p.posX = lastPosX;
-    //       }
-    //     }
-    //
-    //     if (firstPassengerToTheRightOfPlayer >= 0) {
-    //       const f32 width = r.pos.x + r.size.x - pl.pos.x;
-    //       ASSERT(width >= 0);
-    //       ASSERT(width <= r.size.x);
-    //
-    //       const int n        = z.passengers.count - firstPassengerToTheRightOfPlayer;
-    //       f32       x        = width / (n + kRatio);
-    //       f32       lastPosX = z.pos.x + r.size.x - width + x * kRatio;
-    //       for (int i = firstPassengerToTheRightOfPlayer; i < z.passengers.count; i++) {
-    //         auto& p = z.passengers[i];
-    //         p.posX  = lastPosX;
-    //         lastPosX += x;
-    //       }
-    //     }
-    //   }
-    //
-    //   for (auto& p : z.passengers) {
-    //     p.posXVisual = Lerp(p.posXVisual, p.posX, glib->passenger_pos_lerp_factor());
-    //     p.offYVisual = Lerp(p.offYVisual, 0, glib->passenger_pos_lerp_factor());
-    //   }
-    // }
 
     if (IsTouchDown(ge.meta._latestActiveTouchID)) {
       const auto td = GetTouchData(ge.meta._latestActiveTouchID);
@@ -1480,14 +1396,14 @@ void GameFixedUpdate() {
     if (!dr.active && IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
       if ((pl.zone >= 0) && pl.parked) {
         auto& z = g.run.zones[pl.zone];
-        FOR_RANGE (int, i, z.passengers.count) {
-          auto& p = z.passengers[i];
+        FOR_RANGE (int, i, z.rows[0].count) {
+          auto& p = z.rows[0][i];
           if (GetPassengerRect(z.pos.y, p).ContainsInside(dr.worldPos)) {
             dr.active = true;
             ASSERT_FALSE(dr.passenger);
             dr.zone      = pl.zone;
             dr.passenger = p;
-            z.passengers.RemoveAt(i);
+            z.rows[0].RemoveAt(i);
             break;
           }
         }
@@ -1502,16 +1418,14 @@ void GameFixedUpdate() {
     // Handling drag release.
     if (dr.active && !IsTouchDown(ge.meta._latestActiveTouchID)) {  ///
       if (IsDraggingOverPlayer()) {
-        pl.passenger            = dr.passenger;
-        pl.passenger.posXVisual = f32_inf;
-        pl.passenger.offYVisual = {};
+        pl.passenger           = dr.passenger;
+        pl.passenger.offVisual = {};
       }
       else {
-        auto& z      = g.run.zones[dr.zone];
-        auto& p      = *z.passengers.Add();
-        p            = dr.passenger;
-        p.posXVisual = dr.worldPos.x;
-        p.offYVisual = dr.worldPos.y - z.pos.y;
+        auto& z = g.run.zones[dr.zone];
+        auto& p = *z.rows[0].Add();
+        p       = dr.passenger;
+        p.off   = {0, dr.worldPos.y - z.pos.y};
       }
 
       dr = {};
@@ -1542,8 +1456,6 @@ void GameFixedUpdate() {
 void GameDraw() {
   ZoneScoped;
 
-  const auto fb_tiles = glib->tiles();
-
   const auto& pl = g.run.player;
   const auto& dr = g.run.drag;
 
@@ -1571,7 +1483,7 @@ void GameDraw() {
   LAMBDA (void, drawPassenger, (int zone, Vector2 pos, const Passenger& p, f32 rotation))
   {  ///
     DrawGroup_CommandRect({
-      .pos  = pos + Vector2(0, p.offYVisual),
+      .pos  = pos + p.offVisual,
       .size = ToVector2(glib->passenger_size()),
       .anchor{0.5f, 0},
       .rotation = rotation,
@@ -1592,72 +1504,6 @@ void GameDraw() {
   int        actualLevelIndex = -1;
   const auto fb_level         = GetFBLevel(g.save.level, &actualLevelIndex);
 
-  // Drawing tiles.
-  {  ///
-    const auto sx            = fb_level->sx();
-    const auto sy            = fb_level->sy();
-    const auto fb_levelTiles = fb_level->tiles();
-
-    if (gdebug.drawTiles) {
-      DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
-      DrawGroup_SetSortY(0);
-
-      FOR_RANGE (int, y, sy) {
-        FOR_RANGE (int, x, sx) {
-          const auto fb_tile = fb_tiles->Get(fb_levelTiles->Get(y * sx + x));
-          if (!fb_tile->solid())
-            continue;
-          DrawGroup_CommandRect({
-            .pos{(f32)x, (f32)y},
-            .size{1, 1},
-            .anchor{},
-            .color = Fade(WHITE, 0.5f),
-          });
-        }
-      }
-
-      DrawGroup_End();
-    }
-
-    if (0) {
-      DrawGroup_Begin(DrawZ_TILES);
-      DrawGroup_SetSortY(0);
-
-      const int checksToTilesetTextureIndex_[16]{
-        12, 0, 15, 11, 8, 14, 9, 7, 13, 3, 4, 2, 1, 5, 10, 6
-      };
-      VIEW_FROM_ARRAY_DANGER(checksToTilesetTextureIndex);
-
-      FOR_RANGE (int, tileType, fb_tiles->size()) {
-        const auto fb_tile = fb_tiles->Get(tileType);
-        const auto texs    = fb_tile->texture_ids();
-        if (!texs)
-          continue;
-
-        FOR_RANGE (int, y, sy - 1) {
-          FOR_RANGE (int, x, sx - 1) {
-            int        checks = 0;
-            Vector2Int dd[]{{0, 0}, {0, 1}, {1, 1}, {1, 0}};
-            FOR_RANGE (int, i, 4) {
-              auto d = dd[i];
-              if (fb_levelTiles->Get((y + d.y) * sx + x + d.x) == tileType)
-                checks += 1 << i;
-            }
-            if (!checks)
-              continue;
-            DrawGroup_CommandTexture({
-              .texID = texs->Get(checksToTilesetTextureIndex[checks]),
-              .pos{(f32)x, (f32)y},
-              .anchor{-0.5f, -0.5f},
-            });
-          }
-        }
-      }
-
-      DrawGroup_End();
-    }
-  }
-
   // Drawing zones.
   if (gdebug.drawZones) {  ///
     DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
@@ -1676,10 +1522,8 @@ void GameDraw() {
         .color = Fade(CYAN, 0.5f),
       });
 
-      FOR_RANGE (int, i, z.passengers.count) {
-        drawPassenger(
-          zoneIndex, {z.passengers[i].posXVisual, z.pos.y}, z.passengers[i], 0
-        );
+      FOR_RANGE (int, i, z.rows[0].count) {
+        drawPassenger(zoneIndex, {z.rows[0][i].posXVisual, z.pos.y}, z.rows[0][i], 0);
       }
     }
 
@@ -1861,7 +1705,6 @@ void GameDraw() {
         debugTextArena("ge.meta._transientDataArena", ge.meta._transientDataArena);
 
         IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
-        IM::Checkbox("Draw Tiles", &gdebug.drawTiles);
         IM::Checkbox("Draw Zones", &gdebug.drawZones);
 
         if (IM::Button("Win") && !g.run.won.IsSet())

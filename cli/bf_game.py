@@ -104,12 +104,13 @@ def _process_gamelib(
                         sy - player.grid_[1] - 1,
                     ),
                     "zones": zones,
+                    "override_passenger_rows": level.field("OverridePassengerRows"),
                 }
             )
             if level.field("Cycle"):
                 cycleable_levels_indices.append(level_index)
 
-        gamelib["level_size"] = s
+        gamelib["world_size"] = s
         gamelib["levels"] = levels
         gamelib["cycleable_levels_indices"] = cycleable_levels_indices
     # }

@@ -94,6 +94,7 @@ table Zone {
 table Level {
     player: Posf;
     zones: [Zone];
+    override_passenger_rows: int;
 }
 // GAME STUFF END
 
@@ -141,7 +142,7 @@ table GameLibrary {
     // TABLE_GEN_START
     placeholders: [Placeholder] (required);
     // TABLE_GEN_END
-    level_size: Pos;
+    world_size: Pos;
     levels: [Level] (required);
     cycleable_levels_indices: [int] (required);
     // GAME STUFF END

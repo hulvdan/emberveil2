@@ -2,7 +2,6 @@ draw_z: # {  ###
   - INVALID
   - SCREEN_BACKGROUND
   - DEBUG_TILED_BACKGROUND
-  - TILES
   - DEFAULT
   - DRAG
   - UI
@@ -29,8 +28,6 @@ debug_variables: # {  ###
     type: bool
   # Game stuff:
   - name: drawTiledBackground
-    type: bool
-  - name: drawTiles
     type: bool
   - name: drawZones
     type: bool

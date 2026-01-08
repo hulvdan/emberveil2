@@ -11,7 +11,7 @@
 	"iid": "6a178760-d380-11f0-a13a-3d653bfb682a",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 14,
+	"nextUid": 15,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -175,6 +175,46 @@
 			"max": null,
 			"regex": null,
 			"acceptFileTypes": null,
+			"defaultOverride": {
+				"id": "V_Bool",
+				"params": [ false ]
+			},
+			"textLanguageMode": null,
+			"symmetricalRef": false,
+			"autoChainRef": true,
+			"allowOutOfLevelRef": true,
+			"allowedRefs": "OnlySame",
+			"allowedRefsEntityUid": null,
+			"allowedRefTags": [],
+			"tilesetUid": null
+		},
+		{
+			"identifier": "OverridePassengerRows",
+			"doc": null,
+			"__type": "Int",
+			"uid": 14,
+			"type": "F_Int",
+			"isArray": false,
+			"canBeNull": false,
+			"arrayMinLength": null,
+			"arrayMaxLength": null,
+			"editorDisplayMode": "Hidden",
+			"editorDisplayScale": 1,
+			"editorDisplayPos": "Above",
+			"editorLinkStyle": "StraightArrow",
+			"editorDisplayColor": null,
+			"editorAlwaysShow": false,
+			"editorShowInWorld": true,
+			"editorCutLongValues": true,
+			"editorTextSuffix": null,
+			"editorTextPrefix": null,
+			"useForSmartColor": false,
+			"exportToToc": false,
+			"searchable": false,
+			"min": 0,
+			"max": 100,
+			"regex": null,
+			"acceptFileTypes": null,
 			"defaultOverride": null,
 			"textLanguageMode": null,
 			"symmetricalRef": false,
@@ -206,7 +246,10 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -320,10 +363,13 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [{
-				"id": "V_Bool",
-				"params": [ false ]
-			}] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [{
+					"id": "V_Bool",
+					"params": [ false ]
+				}] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [6] }] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -485,7 +531,10 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 9, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [9] }] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -647,7 +696,10 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -841,7 +893,10 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -1035,7 +1090,10 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -1261,7 +1319,10 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -1519,10 +1580,13 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": true, "__tile": null, "defUid": 13, "realEditorValues": [{
-				"id": "V_Bool",
-				"params": [ true ]
-			}] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": true, "__tile": null, "defUid": 13, "realEditorValues": [{
+					"id": "V_Bool",
+					"params": [ true ]
+				}] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -1748,10 +1812,13 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": true, "__tile": null, "defUid": 13, "realEditorValues": [{
-				"id": "V_Bool",
-				"params": [ true ]
-			}] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": true, "__tile": null, "defUid": 13, "realEditorValues": [{
+					"id": "V_Bool",
+					"params": [ true ]
+				}] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -2009,10 +2076,13 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [{ "__identifier": "Cycle", "__type": "Bool", "__value": true, "__tile": null, "defUid": 13, "realEditorValues": [{
-				"id": "V_Bool",
-				"params": [ true ]
-			}] }],
+			"fieldInstances": [
+				{ "__identifier": "Cycle", "__type": "Bool", "__value": true, "__tile": null, "defUid": 13, "realEditorValues": [{
+					"id": "V_Bool",
+					"params": [ true ]
+				}] },
+				{ "__identifier": "OverridePassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] }
+			],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
