@@ -1085,7 +1085,7 @@ void GameFixedUpdate() {
     MarkGameplay();
 
     // Buffering player actions.
-    if (IsTouchPressed(ge.meta._latestActiveTouchID)) {
+    if (IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
       const auto td = GetTouchData(ge.meta._latestActiveTouchID);
       const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
       if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount)
@@ -1109,23 +1109,23 @@ void GameFixedUpdate() {
             if (r.ContainsInside(wp)) {
               if (p && pl.passenger && (p.color != pl.passenger.color))
                 pl.action = PlayerAction_EXCHANGE;
-              else if (p)
+              else if (p && !pl.passenger)
                 pl.action = PlayerAction_PICKUP;
-              else if (pl.passenger)
+              else if (pl.passenger && !p)
                 pl.action = PlayerAction_PUT;
 
               if (pl.action) {
                 pl.actionStartedAt.SetNow();
                 pl.actionPassengerIndex = passengerIndex;
                 pl.zone                 = zone;
-                goto actionWasSet;
+                goto playerActionWasSet;
               }
             }
           }
         }
       }
 
-    actionWasSet: {}
+    playerActionWasSet: {}
     }
 
     const auto actionDur = lframe::FromSeconds(glib->player_action_duration_seconds());
