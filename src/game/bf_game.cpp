@@ -287,6 +287,8 @@ struct GameData {
     FrameVisual advanceScheduled = {};  // TODO: Transition.
     FrameVisual advancedAt       = {};
 
+    PushableArray<Vector2, 5> bufferedActions = {};
+
     struct Player {
       int          zone                 = -1;
       int          actionPassengerIndex = -1;
@@ -1082,32 +1084,42 @@ void GameFixedUpdate() {
   if (!ShouldGameplayStop()) {
     MarkGameplay();
 
-    // Setting player action.
-    if (!pl.action && IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
+    // Buffering player actions.
+    if (IsTouchPressed(ge.meta._latestActiveTouchID)) {
       const auto td = GetTouchData(ge.meta._latestActiveTouchID);
       const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
+      if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount)
+        *g.run.bufferedActions.Add() = wp;
+    }
 
-      int zone = -1;
-      for (auto& z : g.run.zones) {
-        zone++;
+    // Setting player action.
+    if (!pl.action) {  ///
+      while (g.run.bufferedActions.count) {
+        const auto wp = g.run.bufferedActions[0];
+        g.run.bufferedActions.RemoveAt(0);
 
-        FOR_RANGE (int, passengerIndex, 3) {
-          auto& p = z.rows[0][passengerIndex];
+        int zone = -1;
+        for (auto& z : g.run.zones) {
+          zone++;
 
-          auto r = GetPassengerRect(zone, passengerIndex);
-          if (r.ContainsInside(wp)) {
-            if (p && pl.passenger && (p.color != pl.passenger.color))
-              pl.action = PlayerAction_EXCHANGE;
-            else if (p)
-              pl.action = PlayerAction_PICKUP;
-            else if (pl.passenger)
-              pl.action = PlayerAction_PUT;
+          FOR_RANGE (int, passengerIndex, 3) {
+            auto& p = z.rows[0][passengerIndex];
 
-            if (pl.action) {
-              pl.actionStartedAt.SetNow();
-              pl.actionPassengerIndex = passengerIndex;
-              pl.zone                 = zone;
-              goto actionWasSet;
+            auto r = GetPassengerRect(zone, passengerIndex);
+            if (r.ContainsInside(wp)) {
+              if (p && pl.passenger && (p.color != pl.passenger.color))
+                pl.action = PlayerAction_EXCHANGE;
+              else if (p)
+                pl.action = PlayerAction_PICKUP;
+              else if (pl.passenger)
+                pl.action = PlayerAction_PUT;
+
+              if (pl.action) {
+                pl.actionStartedAt.SetNow();
+                pl.actionPassengerIndex = passengerIndex;
+                pl.zone                 = zone;
+                goto actionWasSet;
+              }
             }
           }
         }
