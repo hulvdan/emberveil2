@@ -299,6 +299,7 @@ struct GameData {
     PushableArray<Vector2, 5> bufferedActions = {};
 
     struct Player {
+      int          zoneFrom             = -1;
       int          zone                 = -1;
       int          actionPassengerIndex = -1;
       PlayerAction action               = {};
@@ -318,6 +319,14 @@ struct GameData {
 #undef X
   } run;
 } g = {};
+
+lframe GetPlayerActionDuration() {  ///
+  const auto& pl      = g.run.player;
+  f32         seconds = glib->player_action_duration_seconds();
+  if (pl.zoneFrom != pl.zone)
+    seconds += glib->player_fly_duration_seconds();
+  return lframe::FromSeconds(seconds);
+}
 
 void DestroyBody(Body* body) {  ///
   b2DestroyBody(body->id);
@@ -1141,12 +1150,12 @@ void GameFixedUpdate() {
                 pl.action         = actionToSet;
                 pl.actionStartedAt.SetNow();
                 pl.actionPassengerIndex = passengerIndex;
+                pl.zoneFrom             = pl.zone;
                 pl.zone                 = zone;
                 goto playerActionWasSet;
               }
             }
             else {
-              g.run.bufferedActions.RemoveAt(0);
               skip = true;
               goto playerActionContinue;
             }
@@ -1166,7 +1175,7 @@ void GameFixedUpdate() {
         g.run.bufferedActions.RemoveAt(0);
     }
 
-    const auto actionDur = lframe::FromSeconds(glib->player_action_duration_seconds());
+    const auto actionDur = GetPlayerActionDuration();
 
     // Comitting player action.
     if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {  ///
@@ -1345,8 +1354,25 @@ void GameDraw() {
 
     f32 rotation = 0;
 
-    auto pos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
-    if (pl.zone) {
+    Vector2 pos{};
+    if (pl.zoneFrom >= 0) {
+      pos = g.run.zones[pl.zoneFrom].pos()
+            + Vector2(0, glib->player_inside_zone_offset_y());
+    }
+    else
+      pos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
+
+    if (pl.zone >= 0) {
+      const auto pos2
+        = g.run.zones[pl.zone].pos() + Vector2(0, glib->player_inside_zone_offset_y());
+      if (pl.actionStartedAt.IsSet()) {
+        const auto actionDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
+        f32        posP      = pl.actionStartedAt.Elapsed().Progress(actionDur);
+        posP                 = MIN(1, posP);
+        pos                  = Vector2Lerp(pos, pos2, EaseInOutQuad(posP));
+      }
+      else
+        pos = pos2;
     }
 
     DrawGroup_CommandTexture({
