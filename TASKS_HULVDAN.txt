@@ -17,10 +17,14 @@ x ufo waits for locked zone until matching finishes
 x matching 3-combined passengers WITH animation
 x copied particles from cookier
 x ufo animation: fly
+x ufo animation: put
 
+* ufo animation: ufo flies over specific passenger
 * ufo animation: pick up
-* ufo animation: exchange
-* ufo animation: put
+* ufo animation: exchange up
+* ufo animation: exchange rounded?
+* ufo animation:
+* ufo animation:
 * ufo animation:
 * ufo animation:
 *

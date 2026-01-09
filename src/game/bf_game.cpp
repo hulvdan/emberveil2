@@ -256,6 +256,15 @@ enum PlayerAction {  ///
   PlayerAction_PUT,
 };
 
+// struct PlayerPos {  ///
+//   int zone           = -1;
+//   int passengerIndex = -1;
+//
+//   operator bool() const {
+//     return zone >= 0;
+//   }
+// };
+
 struct GameData {
   struct Meta {
     Font            fontUI      = {};
@@ -299,8 +308,12 @@ struct GameData {
     PushableArray<Vector2, 5> bufferedActions = {};
 
     struct Player {
-      int          zoneFrom             = -1;
-      int          zone                 = -1;
+      int zoneFrom = -1;
+      int zone     = -1;
+
+      // PlayerPos posFrom = {};
+      // PlayerPos pos     = {};
+
       int          actionPassengerIndex = -1;
       PlayerAction action               = {};
       FrameGame    actionStartedAt      = {};
@@ -1400,6 +1413,7 @@ void GameDraw() {
       .pos      = pos,
       .color    = color,
     });
+
     if (pl.passenger) {
       const auto originPos
         = pos + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, rotation);
