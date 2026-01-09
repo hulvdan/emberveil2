@@ -15,8 +15,14 @@ x clicks buffer that ufo consumes
   skips those that can't be acted
 x ufo waits for locked zone until matching finishes
 x matching 3-combined passengers WITH animation
+x copied particles from cookier
+x ufo animation: fly
 
-* ufo actually moves to another zone
+* ufo animation: pick up
+* ufo animation: exchange
+* ufo animation: put
+* ufo animation:
+* ufo animation:
 *
 * ref ufo geometry dash
 * warm pastel palette

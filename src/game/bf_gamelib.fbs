@@ -153,12 +153,14 @@ table GameLibrary {
     permutations: int;
     zone_matching_duration_seconds: float;
     zone_matching_passenger_scale: float;
+    player_inside_zone_offset_y: float;
     nohotreload_player_linear_damping: float;
     player_max_rotation: float;
     player_rotation_lerp_factor: float;
     player_vertical_restoration_stiffness: float;
     player_vertical_restoration_damping: float;
     player_action_duration_seconds: float;
+    player_fly_duration_seconds: float;
     passenger_margin: Posf;
     passenger_max_shown: int;
     passenger_size: Posf;
