@@ -23,10 +23,9 @@ x ufo animation: pick up
 x ufo animation: exchange up
 - ufo animation: exchange rounded?
 
-* ufo animation:
-* ufo animation:
-* ufo animation:
-* ufo animation:
+* support multiple rows
+* shelf test sprite
+* ufo animation: slight rotation when moving
 *
 * ref ufo geometry dash
 * warm pastel palette
