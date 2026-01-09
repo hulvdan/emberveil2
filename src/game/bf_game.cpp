@@ -215,8 +215,7 @@ struct MakeBodyData {  ///
 };
 
 struct Passenger {  ///
-  int     color     = 0;
-  Vector2 offVisual = {};
+  int color = 0;
 
   operator bool() const {
     return color > 0;
@@ -312,7 +311,7 @@ struct GameData {
     FrameVisual advanceScheduled = {};  // TODO: Transition.
     FrameVisual advancedAt       = {};
 
-    PushableArray<Vector2, 5> bufferedActions = {};
+    PushableArray<Vector2, 8> bufferedActions = {};
 
     struct Player {
       PlayerPos posFrom = {};
@@ -362,6 +361,15 @@ lframe GetPlayerActionWithoutFlyingElapsed() {  ///
   }
 
   return e;
+}
+
+f32 GetPlayerActionWithoutFlyingProgress() {  ///
+  return MIN(
+    1,
+    GetPlayerActionWithoutFlyingElapsed().Progress(
+      lframe::FromSeconds(glib->player_action_duration_seconds())
+    )
+  );
 }
 
 void DestroyBody(Body* body) {  ///
@@ -1330,16 +1338,14 @@ void GameDraw() {
   }
 
   LAMBDA (
-    void,
-    drawPassenger,
-    (Vector2 pos, const Passenger& p, f32 rotation, Vector2 scale, bool hoverable)
+    void, drawPassenger, (Vector2 pos, const Passenger& p, f32 rotation, Vector2 scale)
   )
   {  ///
     const auto fb = glib->passengers()->Get(p.color);
     DrawGroup_CommandTexture({
       .texID    = fb->texture_id(),
       .rotation = rotation,
-      .pos      = pos + p.offVisual,
+      .pos      = pos,
       .anchor{0.5f, 0},
       .scale = scale,
       .flash = ColorFromRGBA(fb->flash()),
@@ -1348,6 +1354,33 @@ void GameDraw() {
 
   int        actualLevelIndex = -1;
   const auto fb_level         = GetFBLevel(g.save.level, &actualLevelIndex);
+
+  Vector2 playerPos{};
+  Vector2 playerPassengerPos{};
+  f32     playerRotation = 0;
+
+  // Calculating player data.
+  {  ///
+    playerPos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
+    if (pl.posFrom)
+      playerPos = ToWorld(pl.posFrom);
+
+    if (pl.pos) {
+      const auto pos2 = ToWorld(pl.pos);
+      if (pl.actionStartedAt.IsSet()) {
+        const auto actionDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
+        f32        posP      = pl.actionStartedAt.Elapsed().Progress(actionDur);
+        posP                 = MIN(1, posP);
+        playerPos            = Vector2Lerp(playerPos, pos2, EaseInOutQuad(posP));
+      }
+      else
+        playerPos = pos2;
+    }
+
+    playerPassengerPos
+      = playerPos
+        + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, playerRotation);
+  }
 
   // Drawing zones.
   if (gdebug.drawZones) {  ///
@@ -1376,8 +1409,18 @@ void GameDraw() {
       FOR_RANGE (int, passengerIndex, 3) {
         auto& p   = z.rows[0][passengerIndex];
         auto  pos = GetPassengerBottomPos(zone, passengerIndex);
-        if (p)
-          drawPassenger(pos, p, 0, scale, true);
+        if (p) {
+          Vector2 actionOffset{};
+          if ((pl.action == PlayerAction_PICKUP) || (pl.action == PlayerAction_EXCHANGE))
+          {
+            if ((zone == pl.pos.zone) && (passengerIndex == pl.actionPassengerIndex)) {
+              f32 p        = GetPlayerActionWithoutFlyingProgress();
+              actionOffset = Vector2Lerp({}, playerPassengerPos - pos, EaseInOutQuad(p));
+            }
+          }
+
+          drawPassenger(pos + actionOffset, p, 0, scale);
+        }
 
         if (gdebug.gizmos) {
           const auto r = GetPassengerRect(zone, passengerIndex);
@@ -1401,47 +1444,25 @@ void GameDraw() {
     DrawGroup_Begin(DrawZ_DEFAULT);
     DrawGroup_SetSortY(0);
 
-    f32 rotation = 0;
-
-    auto pos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
-    if (pl.posFrom)
-      pos = ToWorld(pl.posFrom);
-
-    if (pl.pos) {
-      const auto pos2 = ToWorld(pl.pos);
-      if (pl.actionStartedAt.IsSet()) {
-        const auto actionDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
-        f32        posP      = pl.actionStartedAt.Elapsed().Progress(actionDur);
-        posP                 = MIN(1, posP);
-        pos                  = Vector2Lerp(pos, pos2, EaseInOutQuad(posP));
+    if (pl.passenger) {
+      Vector2 actionOffset{};
+      if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
+        f32  p         = GetPlayerActionWithoutFlyingProgress();
+        auto targetPos = GetPassengerBottomPos(pl.pos.zone, pl.actionPassengerIndex);
+        actionOffset = Vector2Lerp({}, targetPos - playerPassengerPos, EaseInOutQuad(p));
       }
-      else
-        pos = pos2;
+
+      drawPassenger(
+        playerPassengerPos + actionOffset, pl.passenger, playerRotation, {1, 1}
+      );
     }
 
     DrawGroup_CommandTexture({
       .texID    = glib->player_texture_id(),
-      .rotation = rotation,
-      .pos      = pos,
+      .rotation = playerRotation,
+      .pos      = playerPos,
       .color    = color,
     });
-
-    if (pl.passenger) {
-      const auto originPos
-        = pos + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, rotation);
-
-      Vector2 actionOffset{};
-      if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
-        f32 p = GetPlayerActionWithoutFlyingElapsed().Progress(
-          lframe::FromSeconds(glib->player_action_duration_seconds())
-        );
-        p              = MIN(1, p);
-        auto targetPos = GetPassengerBottomPos(pl.pos.zone, pl.actionPassengerIndex);
-        actionOffset   = Vector2Lerp({}, targetPos - originPos, EaseInOutQuad(p));
-      }
-
-      drawPassenger(originPos + actionOffset, pl.passenger, rotation, {1, 1}, true);
-    }
 
     DrawGroup_End();
   }

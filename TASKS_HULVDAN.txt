@@ -19,10 +19,10 @@ x copied particles from cookier
 x ufo animation: fly
 x ufo animation: put
 x ufo animation: ufo flies over specific passenger
+x ufo animation: pick up
+x ufo animation: exchange up
+- ufo animation: exchange rounded?
 
-* ufo animation: pick up
-* ufo animation: exchange up
-* ufo animation: exchange rounded?
 * ufo animation:
 * ufo animation:
 * ufo animation:
