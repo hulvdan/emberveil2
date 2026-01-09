@@ -33,17 +33,17 @@ debug_variables: # {  ###
   # Game stuff:
   - name: drawTiledBackground
     type: bool
-  - name: drawZones
+  - name: drawShelves
     type: bool
 # }
 
 permutations_per_row: 200
-default_passenger_rows_per_zone: 3
+default_item_rows_per_shelf: 3
 default_empty_rows_factor_min: 0.1
 default_empty_rows_factor_max: 0.2
-zone_matching_duration_seconds: 0.4
-zone_matching_passenger_scale: 0.55
-player_inside_zone_offset_y: 1
+shelf_matching_duration_seconds: 0.4
+shelf_matching_item_scale: 0.55
+player_inside_shelf_offset_y: 1
 nohotreload_player_linear_damping: 1
 player_max_rotation: 0.2
 player_rotation_lerp_factor: 0.01
@@ -51,17 +51,17 @@ player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
 player_action_duration_seconds: 0.3
 player_fly_duration_seconds: 0.4
-passenger_margin:
+item_margin:
   x: 0.1
   y: 0.1
-passenger_max_shown: 999
-passenger_size:
+item_max_shown: 999
+item_size:
   x: 0.6
   y: 1.0
-passenger_put_seconds: 0.2
+item_put_seconds: 0.2
 level_advance_transition_seconds: 0.5
-passenger_pos_lerp_factor: 0.05
-zone_size:
+item_pos_lerp_factor: 0.05
+shelf_size:
   x: 2
   y: 1.6
 ui_frame_color: 0xe3c896ff
@@ -81,70 +81,70 @@ ui_frame_shadow_small_nine_slice:
   outer_right: 30
   outer_top: 30
   outer_bottom: 30
-passenger_inside_player_offset_y: -0.3
+item_inside_player_offset_y: -0.3
 player_texture_id: game_player_removeme
-passengers:
+items:
   - flash: 0xfb6b1dff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xe83b3bff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x831c5dff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xc32454ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xf04f78ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xf68181ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xfca790ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xe3c896ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xab947aff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x966c6cff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x625565ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x3e3546ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x0b5e65ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x0b8a8fff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x1ebc73ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x91db69ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xfbff86ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xfbb954ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xcd683dff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x9e4539ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x7a3045ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x6b3e75ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x905ea9ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xa884f3ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0xeaadedff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x8fd3ffff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x4d9be6ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x4d65b4ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x484a77ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x30e1b9ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
   - flash: 0x8ff8e2ff
-    texture_id: game_passenger_removeme
+    texture_id: game_item_removeme
 
 ###

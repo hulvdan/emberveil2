@@ -214,7 +214,7 @@ struct MakeBodyData {  ///
   bool          isPlayer = {};
 };
 
-struct Passenger {  ///
+struct Item {  ///
   int color = 0;
 
   operator bool() const {
@@ -222,11 +222,11 @@ struct Passenger {  ///
   }
 };
 
-using PassengerRow = Array<Passenger, 3>;
+using ItemRow = Array<Item, 3>;
 
-struct Zone {  ///
-  Vector2Int                     posi = {};
-  PushableArray<PassengerRow, 5> rows = {};
+struct Shelf {  ///
+  Vector2Int                posi = {};
+  PushableArray<ItemRow, 5> rows = {};
 
   FrameGame updatedAt = {};
 
@@ -237,7 +237,7 @@ struct Zone {  ///
   Rect Rect() const {
     return {
       .pos  = pos(),
-      .size = ToVector2(glib->zone_size()),
+      .size = ToVector2(glib->shelf_size()),
     };
   }
 
@@ -256,18 +256,18 @@ enum PlayerAction {  ///
 };
 
 struct PlayerPos : public Equatable<PlayerPos> {  ///
-  int zone           = -1;
-  int passengerIndex = -1;
+  int shelf     = -1;
+  int itemIndex = -1;
 
   [[nodiscard]] bool EqualTo(const PlayerPos& other) const {
     return (
-      (zone == other.zone)  //
-      && (passengerIndex == other.passengerIndex)
+      (shelf == other.shelf)  //
+      && (itemIndex == other.itemIndex)
     );
   }
 
   operator bool() const {
-    return zone >= 0;
+    return shelf >= 0;
   }
 };
 
@@ -310,16 +310,16 @@ struct GameData {
       PlayerPos posFrom = {};
       PlayerPos pos     = {};
 
-      int          actionPassengerIndex = -1;
-      PlayerAction action               = {};
-      FrameGame    actionStartedAt      = {};
-      Passenger    passenger            = {};
+      int          actionItemIndex = -1;
+      PlayerAction action          = {};
+      FrameGame    actionStartedAt = {};
+      Item         item            = {};
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
 
-    PushableArray<Zone, 15> zones = {};
+    PushableArray<Shelf, 15> shelves = {};
 
 #define VECTORS_TABLE X(BodyShape, bodyShapes)
 
@@ -603,103 +603,102 @@ void RunInit() {
     g.run.world         = b2CreateWorld(&worldDef);
   }
 
-  // Making zones.
-  if (fb_level->zones()) {  ///
-    ASSERT_FALSE(g.run.zones.count);
+  // Making shelves.
+  {  ///
+    ASSERT_FALSE(g.run.shelves.count);
 
-    int zone = -1;
-    for (auto fb_zone : *fb_level->zones()) {
-      zone++;
-      auto& z = *g.run.zones.Add();
-      z       = {.posi = ToVector2(fb_zone->pos())};
+    int shelf = -1;
+    for (auto fb_shelf : *fb_level->shelves()) {
+      shelf++;
+      auto& s = *g.run.shelves.Add();
+      s       = {.posi = ToVector2(fb_shelf->pos())};
+    }
+  }
+
+  // Filling shelves with items.
+  {  ///
+    ZoneScopedN("Filling shelves with items.");
+
+    TEMP_USAGE(&ge.meta.trashArena);
+
+    const auto trashArenaUsed = ge.meta.trashArena.used;
+    int        timesContinued = -1;
+
+  shelvesContinue:
+    ge.meta.trashArena.used = trashArenaUsed;
+
+    timesContinued++;
+    if (timesContinued >= 10)
+      INVALID_PATH;
+
+    for (auto& s : g.run.shelves)
+      s.rows.Reset();
+
+    g.run.remainingRows
+      = Round((f32)fb_level->shelves()->size() * glib->default_item_rows_per_shelf());
+    if (fb_level->override_total_item_rows())
+      g.run.remainingRows = fb_level->override_total_item_rows();
+
+    int emptyRows = Round(
+      (f32)g.run.remainingRows
+      * (Lerp(
+        glib->default_empty_rows_factor_min(),
+        glib->default_empty_rows_factor_max(),
+        GRAND.FRand()
+      ))
+    );
+    if (fb_level->override_empty_item_rows())
+      emptyRows = fb_level->override_empty_item_rows();
+
+    const int rowsToAllocate = g.run.remainingRows + emptyRows;
+
+    const auto rows_
+      = ALLOCATE_ARRAY_AND_INITIALIZE(&ge.meta.trashArena, ItemRow, rowsToAllocate);
+    View<ItemRow> rows{.count = rowsToAllocate, .base = rows_};
+
+    FOR_RANGE (int, i, g.run.remainingRows) {
+      auto& r = rows[i];
+      for (auto& p : r)
+        p.color = i + 1;
     }
 
-    // Filling zones with passengers.
-    {
-      ZoneScopedN("Filling zones with passengers.");
+    // Permutations.
+    FOR_RANGE (int, _, rowsToAllocate * glib->permutations_per_row()) {
+      const int rowIndex1  = GRAND.Rand() % rowsToAllocate;
+      const int rowIndex2  = GRAND.Rand() % rowsToAllocate;
+      const int itemIndex1 = GRAND.Rand() % 3;
+      const int itemIndex2 = GRAND.Rand() % 3;
 
-      TEMP_USAGE(&ge.meta.trashArena);
+      if ((rowIndex1 == rowIndex2) && (itemIndex1 == itemIndex2))
+        continue;
 
-      const auto trashArenaUsed = ge.meta.trashArena.used;
-      int        timesContinued = -1;
-
-    zonesContinue:
-      ge.meta.trashArena.used = trashArenaUsed;
-
-      timesContinued++;
-      if (timesContinued >= 10)
-        INVALID_PATH;
-
-      for (auto& z : g.run.zones)
-        z.rows.Reset();
-
-      g.run.remainingRows
-        = Round((f32)fb_level->zones()->size() * glib->default_passenger_rows_per_zone());
-      if (fb_level->override_total_passenger_rows())
-        g.run.remainingRows = fb_level->override_total_passenger_rows();
-
-      int emptyRows = Round(
-        (f32)g.run.remainingRows
-        * (Lerp(
-          glib->default_empty_rows_factor_min(),
-          glib->default_empty_rows_factor_max(),
-          GRAND.FRand()
-        ))
-      );
-      if (fb_level->override_empty_passenger_rows())
-        emptyRows = fb_level->override_empty_passenger_rows();
-
-      const int rowsToAllocate = g.run.remainingRows + emptyRows;
-
-      const auto rows_ = ALLOCATE_ARRAY_AND_INITIALIZE(
-        &ge.meta.trashArena, PassengerRow, rowsToAllocate
-      );
-      View<PassengerRow> rows{.count = rowsToAllocate, .base = rows_};
-
-      FOR_RANGE (int, i, rows.count) {
-        auto& r = rows[i];
-        for (auto& p : r)
-          p.color = i + 1;
-      }
-
-      // Permutations.
-      FOR_RANGE (int, _, rowsToAllocate * glib->permutations_per_row()) {
-        const int rowIndex1       = GRAND.Rand() % rowsToAllocate;
-        const int rowIndex2       = GRAND.Rand() % rowsToAllocate;
-        const int passengerIndex1 = GRAND.Rand() % 3;
-        const int passengerIndex2 = GRAND.Rand() % 3;
-
-        if ((rowIndex1 == rowIndex2) && (passengerIndex1 == passengerIndex2))
-          continue;
-
-        auto& r1 = rows[rowIndex1];
-        auto& r2 = rows[rowIndex2];
-        std::swap(r1[passengerIndex1], r2[passengerIndex2]);
-      }
-
-      // Checking that no rows contain 3 passengers of the same color.
-      for (auto& r : rows) {
-        const auto& p1 = r[0];
-        const auto& p2 = r[1];
-        const auto& p3 = r[2];
-        if (p1 && p2 && p3 && (p1.color == p2.color) && (p2.color == p3.color))
-          goto zonesContinue;
-      }
-
-      // Placing rows to zones.
-      FOR_RANGE (int, i, rows.count) {
-        auto r = rows[rows.count - 1];
-        if (r[0] || r[1] || r[2])
-          *g.run.zones[GRAND.Rand() % g.run.zones.count].rows.Add() = r;
-        rows.count--;
-        ASSERT(rows.count >= 0);
-      }
-
-      for (auto& z : g.run.zones)
-        *z.rows.Add() = {};
-
-      LOGD("Filling zones with passengers: timesContinued %d", timesContinued);
+      auto& r1 = *(rows.base + rowIndex1);
+      auto& r2 = *(rows.base + rowIndex2);
+      std::swap(r1[itemIndex1], r2[itemIndex2]);
     }
+
+    // Checking that no rows contain 3 items of the same color.
+    for (auto& r : rows) {
+      const auto& p1 = r[0];
+      const auto& p2 = r[1];
+      const auto& p3 = r[2];
+      if (p1 && p2 && p3 && (p1.color == p2.color) && (p2.color == p3.color))
+        goto shelvesContinue;
+    }
+
+    // Placing rows to shelves.
+    FOR_RANGE (int, i, rows.count) {
+      auto r = rows[rows.count - 1];
+      if (r[0] || r[1] || r[2])
+        *g.run.shelves[GRAND.Rand() % g.run.shelves.count].rows.Add() = r;
+      rows.count--;
+      ASSERT(rows.count >= 0);
+    }
+
+    for (auto& s : g.run.shelves)
+      *s.rows.Add() = {};
+
+    LOGD("Filling shelves with items: timesContinued %d", timesContinued);
   }
 }
 
@@ -1137,35 +1136,32 @@ void UpdateCamera() {  ///
   g.meta.camera.texturesScale = 1 / g.meta.camera.zoom;
 }
 
-f32 GetPassengerOffsetX(int passengerIndex) {  ///
-  ASSERT(passengerIndex >= 0);
-  ASSERT(passengerIndex <= 2);
+f32 GetItemOffsetX(int itemIndex) {  ///
+  ASSERT(itemIndex >= 0);
+  ASSERT(itemIndex <= 2);
   const f32 off
-    = (glib->zone_size()->x() / 2 - glib->passenger_margin()->x() - glib->passenger_size()->x() / 2);
-  return (passengerIndex - 1) * off;
+    = (glib->shelf_size()->x() / 2 - glib->item_margin()->x() - glib->item_size()->x() / 2);
+  return (itemIndex - 1) * off;
 }
 
 Vector2 ToWorld(PlayerPos pos) {  ///
   ASSERT(pos);
-  return g.run.zones[pos.zone].pos()
+  return g.run.shelves[pos.shelf].pos()
+         + Vector2(GetItemOffsetX(pos.itemIndex), glib->player_inside_shelf_offset_y());
+}
+
+Vector2 GetItemBottomPos(int shelf, int itemIndex) {  ///
+  return g.run.shelves[shelf].pos()
          + Vector2(
-           GetPassengerOffsetX(pos.passengerIndex), glib->player_inside_zone_offset_y()
+           GetItemOffsetX(itemIndex),
+           glib->item_margin()->y() - glib->shelf_size()->y() / 2
          );
 }
 
-Vector2 GetPassengerBottomPos(int zone, int passengerIndex) {  ///
-  return g.run.zones[zone].pos()
-         + Vector2(
-           GetPassengerOffsetX(passengerIndex),
-           glib->passenger_margin()->y() - glib->zone_size()->y() / 2
-         );
-}
-
-Rect GetPassengerRect(int zone, int passengerIndex) {  ///
+Rect GetItemRect(int shelf, int itemIndex) {  ///
   return {
-    .pos = GetPassengerBottomPos(zone, passengerIndex)
-           - Vector2(glib->passenger_size()->x() / 2, 0),
-    .size = ToVector2(glib->passenger_size()),
+    .pos  = GetItemBottomPos(shelf, itemIndex) - Vector2(glib->item_size()->x() / 2, 0),
+    .size = ToVector2(glib->item_size()),
   };
 }
 
@@ -1205,41 +1201,41 @@ void GameFixedUpdate() {
       while (g.run.bufferedActions.count) {
         const auto wp = g.run.bufferedActions[0];
 
-        bool skip                   = false;
-        bool anyPassengerWasClicked = false;
+        bool skip              = false;
+        bool anyItemWasClicked = false;
 
-        int zone = -1;
-        for (auto& z : g.run.zones) {
-          zone++;
+        int shelf = -1;
+        for (auto& s : g.run.shelves) {
+          shelf++;
 
-          FOR_RANGE (int, passengerIndex, 3) {
-            auto& p = z.rows[0][passengerIndex];
+          FOR_RANGE (int, itemIndex, 3) {
+            auto& p = s.rows[0][itemIndex];
 
-            const auto r = GetPassengerRect(zone, passengerIndex);
+            const auto r = GetItemRect(shelf, itemIndex);
             if (!r.ContainsInside(wp))
               continue;
 
-            anyPassengerWasClicked = true;
+            anyItemWasClicked = true;
 
             PlayerAction actionToSet{};
 
-            if (p && pl.passenger && (p.color != pl.passenger.color))
+            if (p && pl.item && (p.color != pl.item.color))
               actionToSet = PlayerAction_EXCHANGE;
-            else if (!pl.passenger && p)
+            else if (!pl.item && p)
               actionToSet = PlayerAction_PICKUP;
-            else if (pl.passenger && !p)
+            else if (pl.item && !p)
               actionToSet = PlayerAction_PUT;
 
             if (actionToSet) {
-              if (z.IsLocked())
+              if (s.IsLocked())
                 goto playerActionWasSet;
               else {
                 actionWasConsumed = true;
                 pl.action         = actionToSet;
                 pl.actionStartedAt.SetNow();
-                pl.actionPassengerIndex = passengerIndex;
-                pl.posFrom              = pl.pos;
-                pl.pos = {.zone = zone, .passengerIndex = passengerIndex};
+                pl.actionItemIndex = itemIndex;
+                pl.posFrom         = pl.pos;
+                pl.pos             = {.shelf = shelf, .itemIndex = itemIndex};
                 goto playerActionWasSet;
               }
             }
@@ -1250,7 +1246,7 @@ void GameFixedUpdate() {
           }
         }
 
-        if (!anyPassengerWasClicked)
+        if (!anyItemWasClicked)
           skip = true;
 
       playerActionContinue:
@@ -1267,22 +1263,22 @@ void GameFixedUpdate() {
 
     // Comitting player action.
     if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {  ///
-      auto& z             = g.run.zones[pl.pos.zone];
-      auto& zonePassenger = z.rows[0][pl.actionPassengerIndex];
+      auto& s         = g.run.shelves[pl.pos.shelf];
+      auto& shelfItem = s.rows[0][pl.actionItemIndex];
 
       switch (pl.action) {
       case PlayerAction_PICKUP: {
-        pl.passenger  = zonePassenger;
-        zonePassenger = {};
+        pl.item   = shelfItem;
+        shelfItem = {};
       } break;
 
       case PlayerAction_EXCHANGE: {
-        std::swap(pl.passenger, zonePassenger);
+        std::swap(pl.item, shelfItem);
       } break;
 
       case PlayerAction_PUT: {
-        zonePassenger = pl.passenger;
-        pl.passenger  = {};
+        shelfItem = pl.item;
+        pl.item   = {};
       } break;
 
       default:
@@ -1292,21 +1288,21 @@ void GameFixedUpdate() {
       pl.action          = {};
       pl.actionStartedAt = {};
 
-      z.updatedAt = {};
-      z.updatedAt.SetNow();
+      s.updatedAt = {};
+      s.updatedAt.SetNow();
     }
 
-    // Zone matching.
-    for (auto& z : g.run.zones) {  ///
-      if (!z.IsLocked())
+    // Shelf matching.
+    for (auto& s : g.run.shelves) {  ///
+      if (!s.IsLocked())
         continue;
 
-      const auto dur = lframe::FromSeconds(glib->zone_matching_duration_seconds());
-      if (z.updatedAt.Elapsed() < dur)
+      const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
+      if (s.updatedAt.Elapsed() < dur)
         continue;
 
-      z.rows.RemoveAt(0);
-      *z.rows.Add() = {};
+      s.rows.RemoveAt(0);
+      *s.rows.Add() = {};
 
       g.run.remainingRows--;
       ASSERT(g.run.remainingRows >= 0);
@@ -1367,12 +1363,10 @@ void GameDraw() {
   }
 
   LAMBDA (
-    void,
-    drawPassenger,
-    (Vector2 pos, const Passenger& p, f32 rotation, Vector2 scale, Color color)
+    void, drawItem, (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, Color color)
   )
   {  ///
-    const auto fb = glib->passengers()->Get(p.color);
+    const auto fb = glib->items()->Get(p.color);
     DrawGroup_CommandTexture({
       .texID    = fb->texture_id(),
       .rotation = rotation,
@@ -1387,7 +1381,7 @@ void GameDraw() {
   const auto fb_level         = GetFBLevel(g.save.level, &actualLevelIndex);
 
   Vector2 playerPos{};
-  Vector2 playerPassengerPos{};
+  Vector2 playerItemPos{};
   f32     playerRotation = 0;
 
   // Calculating player data.
@@ -1408,28 +1402,28 @@ void GameDraw() {
         playerPos = pos2;
     }
 
-    playerPassengerPos
+    playerItemPos
       = playerPos
-        + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, playerRotation);
+        + Vector2Rotate({0, glib->item_inside_player_offset_y()}, playerRotation);
   }
 
-  // Drawing zones.
-  if (gdebug.drawZones) {  ///
+  // Drawing shelves.
+  if (gdebug.drawShelves) {  ///
     DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
     DrawGroup_SetSortY(0);
 
-    int zone = -1;
-    for (const auto& z : g.run.zones) {
-      zone++;
+    int shelf = -1;
+    for (const auto& s : g.run.shelves) {
+      shelf++;
 
       Vector2 scale{1, 1};
-      if (z.IsLocked()) {
-        const auto dur = lframe::FromSeconds(glib->zone_matching_duration_seconds());
-        const auto p   = z.updatedAt.Elapsed().Progress(dur);
-        scale *= Lerp(1, glib->zone_matching_passenger_scale(), sinf(p * PI32));
+      if (s.IsLocked()) {
+        const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
+        const auto p   = s.updatedAt.Elapsed().Progress(dur);
+        scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
       }
 
-      const auto r = z.Rect();
+      const auto r = s.Rect();
 
       DrawGroup_CommandRect({
         .pos   = r.pos,
@@ -1437,24 +1431,24 @@ void GameDraw() {
         .color = Fade(CYAN, 0.5f),
       });
 
-      FOR_RANGE (int, passengerIndex, 3) {
-        auto& p   = z.rows[0][passengerIndex];
-        auto  pos = GetPassengerBottomPos(zone, passengerIndex);
+      FOR_RANGE (int, itemIndex, 3) {
+        auto& p   = s.rows[0][itemIndex];
+        auto  pos = GetItemBottomPos(shelf, itemIndex);
         if (p) {
           Vector2 actionOffset{};
           if ((pl.action == PlayerAction_PICKUP) || (pl.action == PlayerAction_EXCHANGE))
           {
-            if ((zone == pl.pos.zone) && (passengerIndex == pl.actionPassengerIndex)) {
+            if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
               f32 p        = GetPlayerActionWithoutFlyingProgress();
-              actionOffset = Vector2Lerp({}, playerPassengerPos - pos, EaseInOutQuad(p));
+              actionOffset = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
             }
           }
 
-          drawPassenger(pos + actionOffset, p, 0, scale, WHITE);
+          drawItem(pos + actionOffset, p, 0, scale, WHITE);
         }
 
         if (gdebug.gizmos) {
-          const auto r = GetPassengerRect(zone, passengerIndex);
+          const auto r = GetItemRect(shelf, itemIndex);
           DrawGroup_CommandRectLines({
             .pos    = r.pos,
             .size   = r.size,
@@ -1475,17 +1469,15 @@ void GameDraw() {
     DrawGroup_Begin(DrawZ_DEFAULT);
     DrawGroup_SetSortY(0);
 
-    if (pl.passenger) {
+    if (pl.item) {
       Vector2 actionOffset{};
       if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
         f32  p         = GetPlayerActionWithoutFlyingProgress();
-        auto targetPos = GetPassengerBottomPos(pl.pos.zone, pl.actionPassengerIndex);
-        actionOffset = Vector2Lerp({}, targetPos - playerPassengerPos, EaseInOutQuad(p));
+        auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex);
+        actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
       }
 
-      drawPassenger(
-        playerPassengerPos + actionOffset, pl.passenger, playerRotation, {1, 1}, WHITE
-      );
+      drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, WHITE);
     }
 
     DrawGroup_CommandTexture({
@@ -1608,7 +1600,7 @@ void GameDraw() {
         debugTextArena("ge.meta._transientDataArena", ge.meta._transientDataArena);
 
         IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
-        IM::Checkbox("Draw Zones", &gdebug.drawZones);
+        IM::Checkbox("Draw Shelves", &gdebug.drawShelves);
 
         if (IM::Button("Win") && !g.run.won.IsSet())
           g.run.won.SetNow();

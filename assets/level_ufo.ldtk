@@ -189,7 +189,7 @@
 			"tilesetUid": null
 		},
 		{
-			"identifier": "OverrideTotalPassengerRows",
+			"identifier": "OverrideTotalItemRows",
 			"doc": null,
 			"__type": "Int",
 			"uid": 14,
@@ -263,7 +263,7 @@
 			"tilesetUid": null
 		},
 		{
-			"identifier": "OverrideEmptyPassengerRows",
+			"identifier": "OverrideEmptyItemRows",
 			"doc": null,
 			"__type": "Int",
 			"uid": 16,
@@ -322,9 +322,9 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 38, "__tile": null, "defUid": 15, "realEditorValues": [{ "id": "V_Int", "params": [38] }] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 1, "__tile": null, "defUid": 16, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 1, "__tile": null, "defUid": 16, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }
 			],
 			"layerInstances": [
 				{
@@ -441,9 +441,9 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [null] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 6, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 16, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 2, "__tile": null, "defUid": 16, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
 			],
 			"layerInstances": [
 				{
@@ -608,9 +608,9 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 9, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [9] }] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 9, "__tile": null, "defUid": 14, "realEditorValues": [{ "id": "V_Int", "params": [9] }] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -775,9 +775,9 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -974,9 +974,9 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1173,9 +1173,9 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1404,9 +1404,9 @@
 			"externalRelPath": null,
 			"fieldInstances": [
 				{ "__identifier": "Cycle", "__type": "Bool", "__value": false, "__tile": null, "defUid": 13, "realEditorValues": [] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1670,9 +1670,9 @@
 					"id": "V_Bool",
 					"params": [ true ]
 				}] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -1904,9 +1904,9 @@
 					"id": "V_Bool",
 					"params": [ true ]
 				}] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{
@@ -2170,9 +2170,9 @@
 					"id": "V_Bool",
 					"params": [ true ]
 				}] },
-				{ "__identifier": "OverrideTotalPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
+				{ "__identifier": "OverrideTotalItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 14, "realEditorValues": [] },
 				{ "__identifier": "RandomSeed", "__type": "Int", "__value": 0, "__tile": null, "defUid": 15, "realEditorValues": [] },
-				{ "__identifier": "OverrideEmptyPassengerRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
+				{ "__identifier": "OverrideEmptyItemRows", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] }
 			],
 			"layerInstances": [
 				{

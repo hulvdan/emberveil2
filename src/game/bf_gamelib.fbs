@@ -115,16 +115,16 @@ table Zone {
     pos: Pos;
 }
 
-table Passenger {
+table Item {
     texture_id: int;
     flash: uint;
 }
 
 table Level {
     player: Posf;
-    zones: [Zone];
-    override_total_passenger_rows: int;
-    override_empty_passenger_rows: int;
+    shelves: [Zone];
+    override_total_item_rows: int;
+    override_empty_item_rows: int;
     random_seed: uint32;
 }
 // GAME STUFF END
@@ -152,11 +152,11 @@ table GameLibrary {
     // AUTOMATIC_TEXTURE_BIND_END
 
     permutations_per_row: int;
-    default_passenger_rows_per_zone: float;
+    default_item_rows_per_zone: float;
     default_empty_rows_factor_min: float;
     default_empty_rows_factor_max: float;
     zone_matching_duration_seconds: float;
-    zone_matching_passenger_scale: float;
+    zone_matching_item_scale: float;
     player_inside_zone_offset_y: float;
     nohotreload_player_linear_damping: float;
     player_max_rotation: float;
@@ -165,17 +165,17 @@ table GameLibrary {
     player_vertical_restoration_damping: float;
     player_action_duration_seconds: float;
     player_fly_duration_seconds: float;
-    passenger_margin: Posf;
-    passenger_max_shown: int;
-    passenger_size: Posf;
-    passenger_put_seconds: float;
+    item_margin: Posf;
+    item_max_shown: int;
+    item_size: Posf;
+    item_put_seconds: float;
     level_advance_transition_seconds: float;
-    passenger_pos_lerp_factor: float;
+    item_pos_lerp_factor: float;
     zone_size: Posf;
 
-    passenger_inside_player_offset_y: float;
+    item_inside_player_offset_y: float;
     player_texture_id: int;
-    passengers: [Passenger] (required);
+    items: [Item] (required);
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.

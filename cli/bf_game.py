@@ -85,21 +85,17 @@ def _process_gamelib(
                     "All levels must have the same size!"
                 )
 
-            zones = []
+            shelves = []
             for entity in entities.entityInstances:
                 if entity.identifier_ == "Zone":
-                    zones.append({"pos": (entity.grid_[0], sy - entity.grid_[1] - 1)})
+                    shelves.append({"pos": (entity.grid_[0], sy - entity.grid_[1] - 1)})
             player = bf.ldtk_get_single_entity(entities, "Player")
             levels.append(
                 {
                     "player": (player.grid_[0] + 1, sy - player.grid_[1] - 1),
-                    "zones": zones,
-                    "override_total_passenger_rows": level.field(
-                        "OverrideTotalPassengerRows"
-                    ),
-                    "override_empty_passenger_rows": level.field(
-                        "OverrideEmptyPassengerRows"
-                    ),
+                    "shelves": shelves,
+                    "override_total_item_rows": level.field("OverrideTotalItemRows"),
+                    "override_empty_item_rows": level.field("OverrideEmptyItemRows"),
                     "random_seed": level.field("RandomSeed"),
                 }
             )
