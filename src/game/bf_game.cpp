@@ -320,12 +320,31 @@ struct GameData {
   } run;
 } g = {};
 
-lframe GetPlayerActionDuration() {  ///
+lframe GetPlayerActionAndFlyingDuration() {  ///
   const auto& pl      = g.run.player;
   f32         seconds = glib->player_action_duration_seconds();
   if (pl.zoneFrom != pl.zone)
     seconds += glib->player_fly_duration_seconds();
   return lframe::FromSeconds(seconds);
+}
+
+lframe GetPlayerActionWithoutFlyingElapsed() {  ///
+  const auto& pl = g.run.player;
+  ASSERT(pl.actionStartedAt.IsSet());
+
+  if (!pl.actionStartedAt.IsSet())
+    return lframe::Unscaled(0);
+
+  auto e = pl.actionStartedAt.Elapsed();
+
+  if (pl.zoneFrom != pl.zone) {
+    const auto flyDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
+    e.value -= flyDur.value;
+    if (e.value < 0)
+      return lframe::Unscaled(0);
+  }
+
+  return e;
 }
 
 void DestroyBody(Body* body) {  ///
@@ -1175,7 +1194,7 @@ void GameFixedUpdate() {
         g.run.bufferedActions.RemoveAt(0);
     }
 
-    const auto actionDur = GetPlayerActionDuration();
+    const auto actionDur = GetPlayerActionAndFlyingDuration();
 
     // Comitting player action.
     if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {  ///
@@ -1382,13 +1401,20 @@ void GameDraw() {
       .color    = color,
     });
     if (pl.passenger) {
-      drawPassenger(
-        pos + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, rotation),
-        pl.passenger,
-        rotation,
-        {1, 1},
-        true
-      );
+      const auto originPos
+        = pos + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, rotation);
+
+      Vector2 actionOffset{};
+      if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
+        f32 p = GetPlayerActionWithoutFlyingElapsed().Progress(
+          lframe::FromSeconds(glib->player_action_duration_seconds())
+        );
+        p              = MIN(1, p);
+        auto targetPos = GetPassengerBottomPos(pl.zone, pl.actionPassengerIndex);
+        actionOffset   = Vector2Lerp({}, targetPos - originPos, EaseInOutQuad(p));
+      }
+
+      drawPassenger(originPos + actionOffset, pl.passenger, rotation, {1, 1}, true);
     }
 
     DrawGroup_End();
