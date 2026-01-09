@@ -273,6 +273,11 @@ struct GameData {
       Vector2 calculatedDir = {};
     } stickControl;
 
+    Vector2Int worldSize  = {};
+    Vector2    worldSizef = {};
+
+    Camera camera{};
+
     bool reload = {};
   } meta;
 
@@ -283,11 +288,7 @@ struct GameData {
   struct Run {
     u32 randomSeedForLevelHotReload = 0;
 
-    Vector2Int worldSize  = {};
-    Vector2    worldSizef = {};
-    b2WorldId  world      = {};
-
-    Camera camera{};
+    b2WorldId world = {};
 
     uint        remainingRows = 0;
     FrameVisual won           = {};
@@ -940,6 +941,9 @@ void GameInit() {  ///
 
   ReloadFontsIfNeeded();
   CheckGamelib();
+
+  g.meta.worldSize  = ToVector2Int(glib->world_size());
+  g.meta.worldSizef = (Vector2)g.meta.worldSize;
 }
 
 void GameInitAfterLoadingSavedata() {  ///
@@ -1042,11 +1046,11 @@ void DoUI() {
 }
 
 void UpdateCamera() {  ///
-  g.run.camera.pos = g.run.worldSizef / 2.0f;
+  g.meta.camera.pos = g.meta.worldSizef / 2.0f;
 
-  const auto v               = LOGICAL_RESOLUTIONf / g.run.worldSizef;
-  g.run.camera.zoom          = MIN(v.x, v.y);
-  g.run.camera.texturesScale = 1 / g.run.camera.zoom;
+  const auto v                = LOGICAL_RESOLUTIONf / g.meta.worldSizef;
+  g.meta.camera.zoom          = MIN(v.x, v.y);
+  g.meta.camera.texturesScale = 1 / g.meta.camera.zoom;
 }
 
 Vector2 GetPassengerBottomPos(int zone, int passengerIndex) {  ///
@@ -1071,9 +1075,6 @@ Rect GetPassengerRect(int zone, int passengerIndex) {  ///
 void GameFixedUpdate() {
   ZoneScoped;
 
-  g.run.worldSize  = ToVector2Int(glib->world_size());
-  g.run.worldSizef = (Vector2)g.run.worldSize;
-
   // Setup. {  ///
   auto& pl = g.run.player;
   ReloadFontsIfNeeded();
@@ -1095,7 +1096,7 @@ void GameFixedUpdate() {
     // Buffering player actions.
     if (IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
       const auto td = GetTouchData(ge.meta._latestActiveTouchID);
-      const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.run.camera);
+      const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.meta.camera);
       if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount)
         *g.run.bufferedActions.Add() = wp;
     }
@@ -1106,6 +1107,9 @@ void GameFixedUpdate() {
 
       while (g.run.bufferedActions.count) {
         const auto wp = g.run.bufferedActions[0];
+
+        bool skip                   = false;
+        bool anyPassengerWasClicked = false;
 
         int zone = -1;
         for (auto& z : g.run.zones) {
@@ -1118,11 +1122,13 @@ void GameFixedUpdate() {
             if (!r.ContainsInside(wp))
               continue;
 
+            anyPassengerWasClicked = true;
+
             PlayerAction actionToSet{};
 
             if (p && pl.passenger && (p.color != pl.passenger.color))
               actionToSet = PlayerAction_EXCHANGE;
-            else if (p && !pl.passenger)
+            else if (!pl.passenger && p)
               actionToSet = PlayerAction_PICKUP;
             else if (pl.passenger && !p)
               actionToSet = PlayerAction_PUT;
@@ -1139,8 +1145,20 @@ void GameFixedUpdate() {
                 goto playerActionWasSet;
               }
             }
+            else {
+              g.run.bufferedActions.RemoveAt(0);
+              skip = true;
+              goto playerActionContinue;
+            }
           }
         }
+
+        if (!anyPassengerWasClicked)
+          skip = true;
+
+      playerActionContinue:
+        if (skip)
+          g.run.bufferedActions.RemoveAt(0);
       }
 
     playerActionWasSet:
@@ -1230,12 +1248,12 @@ void GameDraw() {
 
   const auto& pl = g.run.player;
 
-  BeginMode2D(&g.run.camera);
+  BeginMode2D(&g.meta.camera);
 
   // Drawing tiled background.
   if (gdebug.drawTiledBackground) {  ///
-    FOR_RANGE (int, y, g.run.worldSize.y) {
-      FOR_RANGE (int, x, g.run.worldSize.x) {
+    FOR_RANGE (int, y, g.meta.worldSize.y) {
+      FOR_RANGE (int, x, g.meta.worldSize.x) {
         if ((x + y) % 2)
           continue;
         DrawGroup_OneShotRect(
@@ -1252,7 +1270,9 @@ void GameDraw() {
   }
 
   LAMBDA (
-    void, drawPassenger, (Vector2 pos, const Passenger& p, f32 rotation, bool hoverable)
+    void,
+    drawPassenger,
+    (Vector2 pos, const Passenger& p, f32 rotation, Vector2 scale, bool hoverable)
   )
   {  ///
     const auto fb = glib->passengers()->Get(p.color);
@@ -1261,6 +1281,7 @@ void GameDraw() {
       .rotation = rotation,
       .pos      = pos + p.offVisual,
       .anchor{0.5f, 0},
+      .scale = scale,
       .flash = ColorFromRGBA(fb->flash()),
     });
   };
@@ -1277,6 +1298,13 @@ void GameDraw() {
     for (const auto& z : g.run.zones) {
       zone++;
 
+      Vector2 scale{1, 1};
+      if (z.IsLocked()) {
+        const auto dur = lframe::FromSeconds(glib->zone_matching_duration_seconds());
+        const auto p   = z.updatedAt.Elapsed().Progress(dur);
+        scale *= Lerp(1, glib->zone_matching_passenger_scale(), sinf(p * PI32));
+      }
+
       const auto r = z.Rect();
       // const bool zonePassengersAreHoverable = ((zone == pl.zone) && pl.parked);
       const bool zonePassengersAreHoverable = true;
@@ -1291,7 +1319,7 @@ void GameDraw() {
         auto& p   = z.rows[0][passengerIndex];
         auto  pos = GetPassengerBottomPos(zone, passengerIndex);
         if (p)
-          drawPassenger(pos, p, 0, zonePassengersAreHoverable);
+          drawPassenger(pos, p, 0, scale, zonePassengersAreHoverable);
 
         if (zonePassengersAreHoverable) {
           const auto r = GetPassengerRect(zone, passengerIndex);
@@ -1332,6 +1360,7 @@ void GameDraw() {
         pos + Vector2Rotate({0, glib->passenger_inside_player_offset_y()}, rotation),
         pl.passenger,
         rotation,
+        {1, 1},
         true
       );
     }

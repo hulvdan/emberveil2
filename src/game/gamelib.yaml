@@ -18,6 +18,10 @@ placeholders: # {  ###
   - type: IMAGE
 # }
 
+particles: # {  ###
+  - type: INVALID
+# }
+
 debug_variables: # {  ###
   # Engine stuff:
   - name: gizmos
@@ -34,7 +38,8 @@ debug_variables: # {  ###
 # }
 
 permutations: 200
-zone_matching_duration_seconds: 0.5
+zone_matching_duration_seconds: 0.4
+zone_matching_passenger_scale: 0.55
 nohotreload_player_linear_damping: 1
 player_max_rotation: 0.2
 player_rotation_lerp_factor: 0.01

@@ -14,8 +14,8 @@ x sprite: 20 passengers
 x clicks buffer that ufo consumes
   skips those that can't be acted
 x ufo waits for locked zone until matching finishes
+x matching 3-combined passengers WITH animation
 
-* matching 3-combined passengers WITH animation
 * ufo actually moves to another zone
 *
 * ref ufo geometry dash
