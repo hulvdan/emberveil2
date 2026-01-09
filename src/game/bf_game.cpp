@@ -281,13 +281,6 @@ struct GameData {
 
     bool playerUsesKeyboardOrController = false;
 
-    struct {
-      bool    controlling   = false;
-      Vector2 startPos      = {};
-      Vector2 targetPos     = {};
-      Vector2 calculatedDir = {};
-    } stickControl;
-
     Vector2Int worldSize  = {};
     Vector2    worldSizef = {};
 
@@ -627,9 +620,8 @@ void RunInit() {
 
       TEMP_USAGE(&ge.meta.trashArena);
 
-      int timesContinued = -1;
-
       const auto trashArenaUsed = ge.meta.trashArena.used;
+      int        timesContinued = -1;
 
     zonesContinue:
       ge.meta.trashArena.used = trashArenaUsed;
@@ -638,11 +630,8 @@ void RunInit() {
       if (timesContinued >= 10)
         INVALID_PATH;
 
-      for (auto& z : g.run.zones) {
+      for (auto& z : g.run.zones)
         z.rows.Reset();
-        *z.rows.Add() = {};
-        ASSERT(z.rows.count == 1);
-      }
 
       g.run.remainingRows
         = Round((f32)fb_level->zones()->size() * glib->default_passenger_rows_per_zone());
@@ -705,6 +694,9 @@ void RunInit() {
         rows.count--;
         ASSERT(rows.count >= 0);
       }
+
+      for (auto& z : g.run.zones)
+        *z.rows.Add() = {};
 
       LOGD("Filling zones with passengers: timesContinued %d", timesContinued);
     }
@@ -1549,34 +1541,6 @@ void GameDraw() {
   }
 
   EndMode2D();
-
-  // // Drawing touch controls.
-  // if (g.meta.stickControl.controlling  //
-  //     && !gdebug.hideUIForVideo)
-  // {  ///
-  //   DrawGroup_Begin(DrawZ_TOUCH_CONTROLS);
-  //   DrawGroup_SetSortY(0);
-  //
-  //   const auto& c = g.meta.stickControl;
-  //
-  //   const auto startPos  = c.startPos;
-  //   auto       targetPos = c.targetPos;
-  //   if (startPos != targetPos)
-  //     targetPos = startPos + c.calculatedDir * g.ui.touchControlMaxLogicalOffset;
-  //
-  //   const struct {
-  //     Vector2 pos   = {};
-  //     int     texID = {};
-  //   } data[]{
-  //     {.pos = startPos, .texID = glib->ui_controls_touch_base_texture_id()},
-  //     {.pos = targetPos, .texID = glib->ui_controls_touch_handle_texture_id()},
-  //   };
-  //   for (auto& d : data) {
-  //     DrawGroup_CommandTexture({.texID = d.texID, .pos = d.pos});
-  //   }
-  //
-  //   DrawGroup_End();
-  // }
 
   DoUI();
 
