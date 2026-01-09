@@ -111,7 +111,7 @@ table Particle {
 }
 
 // GAME STUFF
-table Zone {
+table Shelf {
     pos: Pos;
 }
 
@@ -122,7 +122,7 @@ table Item {
 
 table Level {
     player: Posf;
-    shelves: [Zone];
+    shelves: [Shelf];
     override_total_item_rows: int;
     override_empty_item_rows: int;
     random_seed: uint32;
@@ -152,12 +152,12 @@ table GameLibrary {
     // AUTOMATIC_TEXTURE_BIND_END
 
     permutations_per_row: int;
-    default_item_rows_per_zone: float;
+    default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;
     default_empty_rows_factor_max: float;
-    zone_matching_duration_seconds: float;
-    zone_matching_item_scale: float;
-    player_inside_zone_offset_y: float;
+    shelf_matching_duration_seconds: float;
+    shelf_matching_item_scale: float;
+    player_inside_shelf_offset_y: float;
     nohotreload_player_linear_damping: float;
     player_max_rotation: float;
     player_rotation_lerp_factor: float;
@@ -171,7 +171,7 @@ table GameLibrary {
     item_put_seconds: float;
     level_advance_transition_seconds: float;
     item_pos_lerp_factor: float;
-    zone_size: Posf;
+    shelf_size: Posf;
 
     item_inside_player_offset_y: float;
     player_texture_id: int;
