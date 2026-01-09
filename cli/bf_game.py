@@ -94,7 +94,12 @@ def _process_gamelib(
                 {
                     "player": (player.grid_[0] + 1, sy - player.grid_[1] - 1),
                     "zones": zones,
-                    "override_passenger_rows": level.field("OverridePassengerRows"),
+                    "override_total_passenger_rows": level.field(
+                        "OverrideTotalPassengerRows"
+                    ),
+                    "override_empty_passenger_rows": level.field(
+                        "OverrideEmptyPassengerRows"
+                    ),
                     "random_seed": level.field("RandomSeed"),
                 }
             )

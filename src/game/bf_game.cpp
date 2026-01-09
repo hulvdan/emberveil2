@@ -625,9 +625,15 @@ void RunInit() {
     {
       ZoneScopedN("Filling zones with passengers.");
 
+      TEMP_USAGE(&ge.meta.trashArena);
+
       int timesContinued = -1;
 
+      const auto trashArenaUsed = ge.meta.trashArena.used;
+
     zonesContinue:
+      ge.meta.trashArena.used = trashArenaUsed;
+
       timesContinued++;
       if (timesContinued >= 10)
         INVALID_PATH;
@@ -638,35 +644,66 @@ void RunInit() {
         ASSERT(z.rows.count == 1);
       }
 
-      g.run.remainingRows = (int)fb_level->zones()->size();
-      if (fb_level->override_passenger_rows())
-        g.run.remainingRows = fb_level->override_passenger_rows();
+      g.run.remainingRows
+        = Round((f32)fb_level->zones()->size() * glib->default_passenger_rows_per_zone());
+      if (fb_level->override_total_passenger_rows())
+        g.run.remainingRows = fb_level->override_total_passenger_rows();
 
-      // TEMPORARY!
-      ASSERT(g.run.remainingRows <= (int)fb_level->zones()->size());
+      int emptyRows = Round(
+        (f32)g.run.remainingRows
+        * (Lerp(
+          glib->default_empty_rows_factor_min(),
+          glib->default_empty_rows_factor_max(),
+          GRAND.FRand()
+        ))
+      );
+      if (fb_level->override_empty_passenger_rows())
+        emptyRows = fb_level->override_empty_passenger_rows();
 
-      FOR_RANGE (int, row, g.run.remainingRows) {
-        auto& z = g.run.zones[row];
-        FOR_RANGE (int, passengerIndexInRow, 3)
-          z.rows[0][passengerIndexInRow] = {.color = row + 1};
+      const int rowsToAllocate = g.run.remainingRows + emptyRows;
+
+      const auto rows_ = ALLOCATE_ARRAY_AND_INITIALIZE(
+        &ge.meta.trashArena, PassengerRow, rowsToAllocate
+      );
+      View<PassengerRow> rows{.count = rowsToAllocate, .base = rows_};
+
+      FOR_RANGE (int, i, rows.count) {
+        auto& r = rows[i];
+        for (auto& p : r)
+          p.color = i + 1;
       }
 
       // Permutations.
-      FOR_RANGE (int, _, g.run.remainingRows * glib->permutations()) {
-        auto& r1 = g.run.zones[GRAND.Rand() % g.run.zones.count].rows[0];
-        auto& r2 = g.run.zones[GRAND.Rand() % g.run.zones.count].rows[0];
-        std::swap(r1[GRAND.Rand() % 3], r2[GRAND.Rand() % 3]);
+      FOR_RANGE (int, _, rowsToAllocate * glib->permutations_per_row()) {
+        const int rowIndex1       = GRAND.Rand() % rowsToAllocate;
+        const int rowIndex2       = GRAND.Rand() % rowsToAllocate;
+        const int passengerIndex1 = GRAND.Rand() % 3;
+        const int passengerIndex2 = GRAND.Rand() % 3;
+
+        if ((rowIndex1 == rowIndex2) && (passengerIndex1 == passengerIndex2))
+          continue;
+
+        auto& r1 = rows[rowIndex1];
+        auto& r2 = rows[rowIndex2];
+        std::swap(r1[passengerIndex1], r2[passengerIndex2]);
       }
 
       // Checking that no rows contain 3 passengers of the same color.
-      for (const auto& z : g.run.zones) {
-        for (const auto& r : z.rows) {
-          const auto& p1 = r[0];
-          const auto& p2 = r[1];
-          const auto& p3 = r[2];
-          if (p1 && p2 && p3 && (p1.color == p2.color) && (p2.color == p3.color))
-            goto zonesContinue;
-        }
+      for (auto& r : rows) {
+        const auto& p1 = r[0];
+        const auto& p2 = r[1];
+        const auto& p3 = r[2];
+        if (p1 && p2 && p3 && (p1.color == p2.color) && (p2.color == p3.color))
+          goto zonesContinue;
+      }
+
+      // Placing rows to zones.
+      FOR_RANGE (int, i, rows.count) {
+        auto r = rows[rows.count - 1];
+        if (r[0] || r[1] || r[2])
+          *g.run.zones[GRAND.Rand() % g.run.zones.count].rows.Add() = r;
+        rows.count--;
+        ASSERT(rows.count >= 0);
       }
 
       LOGD("Filling zones with passengers: timesContinued %d", timesContinued);
@@ -1338,7 +1375,9 @@ void GameDraw() {
   }
 
   LAMBDA (
-    void, drawPassenger, (Vector2 pos, const Passenger& p, f32 rotation, Vector2 scale)
+    void,
+    drawPassenger,
+    (Vector2 pos, const Passenger& p, f32 rotation, Vector2 scale, Color color)
   )
   {  ///
     const auto fb = glib->passengers()->Get(p.color);
@@ -1419,7 +1458,7 @@ void GameDraw() {
             }
           }
 
-          drawPassenger(pos + actionOffset, p, 0, scale);
+          drawPassenger(pos + actionOffset, p, 0, scale, WHITE);
         }
 
         if (gdebug.gizmos) {
@@ -1453,7 +1492,7 @@ void GameDraw() {
       }
 
       drawPassenger(
-        playerPassengerPos + actionOffset, pl.passenger, playerRotation, {1, 1}
+        playerPassengerPos + actionOffset, pl.passenger, playerRotation, {1, 1}, WHITE
       );
     }
 

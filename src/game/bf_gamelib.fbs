@@ -123,7 +123,8 @@ table Passenger {
 table Level {
     player: Posf;
     zones: [Zone];
-    override_passenger_rows: int;
+    override_total_passenger_rows: int;
+    override_empty_passenger_rows: int;
     random_seed: uint32;
 }
 // GAME STUFF END
@@ -150,7 +151,10 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
-    permutations: int;
+    permutations_per_row: int;
+    default_passenger_rows_per_zone: float;
+    default_empty_rows_factor_min: float;
+    default_empty_rows_factor_max: float;
     zone_matching_duration_seconds: float;
     zone_matching_passenger_scale: float;
     player_inside_zone_offset_y: float;
