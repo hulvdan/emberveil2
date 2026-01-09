@@ -311,7 +311,7 @@ struct GameData {
     FrameVisual advanceScheduled = {};  // TODO: Transition.
     FrameVisual advancedAt       = {};
 
-    PushableArray<Vector2, 8> bufferedActions = {};
+    PushableArray<Vector2, 12> bufferedActions = {};
 
     struct Player {
       PlayerPos posFrom = {};
