@@ -12,8 +12,14 @@ x click on passenger -> ufo moves to this zone
 x sprite: ufo
 x sprite: 20 passengers
 
+* clicks buffer that ufo consumes
+  skips those that can't be acted
+*
 * matching 3-combined passengers WITH animation
 * ufo actually moves to another zone
+*
+* ref ufo geometry dash
+* warm pastel palette
 *
 * show progress on top (sortirovka po polochkam-like)
 *
@@ -43,3 +49,4 @@ RELEASED
   (receives 2 stars by default + 1 pickupable)
 ENGINE
 * fix ui gizmos positioning
+* happy: assert on clay counter. latch. so that i don't RETURN inside CLAY
