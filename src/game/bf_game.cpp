@@ -229,6 +229,8 @@ struct Zone {  ///
   Vector2Int                     posi = {};
   PushableArray<PassengerRow, 5> rows = {};
 
+  FrameGame updatedAt = {};
+
   Vector2 pos() const {
     return Vector2(posi) + Vector2Half();
   }
@@ -238,6 +240,12 @@ struct Zone {  ///
       .pos  = pos(),
       .size = ToVector2(glib->zone_size()),
     };
+  }
+
+  bool IsLocked() const {
+    return rows[0][0]                                 //
+           && (rows[0][0].color == rows[0][1].color)  //
+           && (rows[0][1].color == rows[0][2].color);
   }
 };
 
@@ -1094,9 +1102,10 @@ void GameFixedUpdate() {
 
     // Setting player action.
     if (!pl.action) {  ///
+      bool actionWasConsumed = false;
+
       while (g.run.bufferedActions.count) {
         const auto wp = g.run.bufferedActions[0];
-        g.run.bufferedActions.RemoveAt(0);
 
         int zone = -1;
         for (auto& z : g.run.zones) {
@@ -1105,16 +1114,25 @@ void GameFixedUpdate() {
           FOR_RANGE (int, passengerIndex, 3) {
             auto& p = z.rows[0][passengerIndex];
 
-            auto r = GetPassengerRect(zone, passengerIndex);
-            if (r.ContainsInside(wp)) {
-              if (p && pl.passenger && (p.color != pl.passenger.color))
-                pl.action = PlayerAction_EXCHANGE;
-              else if (p && !pl.passenger)
-                pl.action = PlayerAction_PICKUP;
-              else if (pl.passenger && !p)
-                pl.action = PlayerAction_PUT;
+            const auto r = GetPassengerRect(zone, passengerIndex);
+            if (!r.ContainsInside(wp))
+              continue;
 
-              if (pl.action) {
+            PlayerAction actionToSet{};
+
+            if (p && pl.passenger && (p.color != pl.passenger.color))
+              actionToSet = PlayerAction_EXCHANGE;
+            else if (p && !pl.passenger)
+              actionToSet = PlayerAction_PICKUP;
+            else if (pl.passenger && !p)
+              actionToSet = PlayerAction_PUT;
+
+            if (actionToSet) {
+              if (z.IsLocked())
+                goto playerActionWasSet;
+              else {
+                actionWasConsumed = true;
+                pl.action         = actionToSet;
                 pl.actionStartedAt.SetNow();
                 pl.actionPassengerIndex = passengerIndex;
                 pl.zone                 = zone;
@@ -1125,7 +1143,9 @@ void GameFixedUpdate() {
         }
       }
 
-    playerActionWasSet: {}
+    playerActionWasSet:
+      if (actionWasConsumed)
+        g.run.bufferedActions.RemoveAt(0);
     }
 
     const auto actionDur = lframe::FromSeconds(glib->player_action_duration_seconds());
