@@ -256,14 +256,21 @@ enum PlayerAction {  ///
   PlayerAction_PUT,
 };
 
-// struct PlayerPos {  ///
-//   int zone           = -1;
-//   int passengerIndex = -1;
-//
-//   operator bool() const {
-//     return zone >= 0;
-//   }
-// };
+struct PlayerPos : public Equatable<PlayerPos> {  ///
+  int zone           = -1;
+  int passengerIndex = -1;
+
+  [[nodiscard]] bool EqualTo(const PlayerPos& other) const {
+    return (
+      (zone == other.zone)  //
+      && (passengerIndex == other.passengerIndex)
+    );
+  }
+
+  operator bool() const {
+    return zone >= 0;
+  }
+};
 
 struct GameData {
   struct Meta {
@@ -308,11 +315,8 @@ struct GameData {
     PushableArray<Vector2, 5> bufferedActions = {};
 
     struct Player {
-      int zoneFrom = -1;
-      int zone     = -1;
-
-      // PlayerPos posFrom = {};
-      // PlayerPos pos     = {};
+      PlayerPos posFrom = {};
+      PlayerPos pos     = {};
 
       int          actionPassengerIndex = -1;
       PlayerAction action               = {};
@@ -336,7 +340,7 @@ struct GameData {
 lframe GetPlayerActionAndFlyingDuration() {  ///
   const auto& pl      = g.run.player;
   f32         seconds = glib->player_action_duration_seconds();
-  if (pl.zoneFrom != pl.zone)
+  if (pl.posFrom != pl.pos)
     seconds += glib->player_fly_duration_seconds();
   return lframe::FromSeconds(seconds);
 }
@@ -350,7 +354,7 @@ lframe GetPlayerActionWithoutFlyingElapsed() {  ///
 
   auto e = pl.actionStartedAt.Elapsed();
 
-  if (pl.zoneFrom != pl.zone) {
+  if (pl.posFrom != pl.pos) {
     const auto flyDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
     e.value -= flyDur.value;
     if (e.value < 0)
@@ -990,6 +994,8 @@ void GameInit() {  ///
 void GameInitAfterLoadingSavedata() {  ///
   ZoneScoped;
 
+  g.save.level = 0;
+
   RunInit();
 
   LOGI("GameInitAfterLoadingSavedata...");
@@ -1094,15 +1100,28 @@ void UpdateCamera() {  ///
   g.meta.camera.texturesScale = 1 / g.meta.camera.zoom;
 }
 
+f32 GetPassengerOffsetX(int passengerIndex) {  ///
+  ASSERT(passengerIndex >= 0);
+  ASSERT(passengerIndex <= 2);
+  const f32 off
+    = (glib->zone_size()->x() / 2 - glib->passenger_margin()->x() - glib->passenger_size()->x() / 2);
+  return (passengerIndex - 1) * off;
+}
+
+Vector2 ToWorld(PlayerPos pos) {  ///
+  ASSERT(pos);
+  return g.run.zones[pos.zone].pos()
+         + Vector2(
+           GetPassengerOffsetX(pos.passengerIndex), glib->player_inside_zone_offset_y()
+         );
+}
+
 Vector2 GetPassengerBottomPos(int zone, int passengerIndex) {  ///
-  f32 off = glib->zone_size()->x() / 2 - glib->passenger_margin()->x()
-            - glib->passenger_size()->x() / 2;
-  if (passengerIndex == 0)
-    off *= -1;
-  else if (passengerIndex == 1)
-    off = 0;
   return g.run.zones[zone].pos()
-         + Vector2(off, glib->passenger_margin()->y() - glib->zone_size()->y() / 2);
+         + Vector2(
+           GetPassengerOffsetX(passengerIndex),
+           glib->passenger_margin()->y() - glib->zone_size()->y() / 2
+         );
 }
 
 Rect GetPassengerRect(int zone, int passengerIndex) {  ///
@@ -1182,8 +1201,8 @@ void GameFixedUpdate() {
                 pl.action         = actionToSet;
                 pl.actionStartedAt.SetNow();
                 pl.actionPassengerIndex = passengerIndex;
-                pl.zoneFrom             = pl.zone;
-                pl.zone                 = zone;
+                pl.posFrom              = pl.pos;
+                pl.pos = {.zone = zone, .passengerIndex = passengerIndex};
                 goto playerActionWasSet;
               }
             }
@@ -1211,7 +1230,7 @@ void GameFixedUpdate() {
 
     // Comitting player action.
     if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {  ///
-      auto& z             = g.run.zones[pl.zone];
+      auto& z             = g.run.zones[pl.pos.zone];
       auto& zonePassenger = z.rows[0][pl.actionPassengerIndex];
 
       switch (pl.action) {
@@ -1347,8 +1366,6 @@ void GameDraw() {
       }
 
       const auto r = z.Rect();
-      // const bool zonePassengersAreHoverable = ((zone == pl.zone) && pl.parked);
-      const bool zonePassengersAreHoverable = true;
 
       DrawGroup_CommandRect({
         .pos   = r.pos,
@@ -1360,9 +1377,9 @@ void GameDraw() {
         auto& p   = z.rows[0][passengerIndex];
         auto  pos = GetPassengerBottomPos(zone, passengerIndex);
         if (p)
-          drawPassenger(pos, p, 0, scale, zonePassengersAreHoverable);
+          drawPassenger(pos, p, 0, scale, true);
 
-        if (zonePassengersAreHoverable) {
+        if (gdebug.gizmos) {
           const auto r = GetPassengerRect(zone, passengerIndex);
           DrawGroup_CommandRectLines({
             .pos    = r.pos,
@@ -1386,17 +1403,12 @@ void GameDraw() {
 
     f32 rotation = 0;
 
-    Vector2 pos{};
-    if (pl.zoneFrom >= 0) {
-      pos = g.run.zones[pl.zoneFrom].pos()
-            + Vector2(0, glib->player_inside_zone_offset_y());
-    }
-    else
-      pos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
+    auto pos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
+    if (pl.posFrom)
+      pos = ToWorld(pl.posFrom);
 
-    if (pl.zone >= 0) {
-      const auto pos2
-        = g.run.zones[pl.zone].pos() + Vector2(0, glib->player_inside_zone_offset_y());
+    if (pl.pos) {
+      const auto pos2 = ToWorld(pl.pos);
       if (pl.actionStartedAt.IsSet()) {
         const auto actionDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
         f32        posP      = pl.actionStartedAt.Elapsed().Progress(actionDur);
@@ -1424,7 +1436,7 @@ void GameDraw() {
           lframe::FromSeconds(glib->player_action_duration_seconds())
         );
         p              = MIN(1, p);
-        auto targetPos = GetPassengerBottomPos(pl.zone, pl.actionPassengerIndex);
+        auto targetPos = GetPassengerBottomPos(pl.pos.zone, pl.actionPassengerIndex);
         actionOffset   = Vector2Lerp({}, targetPos - originPos, EaseInOutQuad(p));
       }
 

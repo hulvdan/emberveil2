@@ -18,10 +18,8 @@ x matching 3-combined passengers WITH animation
 x copied particles from cookier
 x ufo animation: fly
 x ufo animation: put
+x ufo animation: ufo flies over specific passenger
 
-* ufo animation: ufo flies over specific passenger easeinoutcubic / quart
-  then moves back to zone's center
-  (or not strictly OVER passenger, but towards his pos)
 * ufo animation: pick up
 * ufo animation: exchange up
 * ufo animation: exchange rounded?
