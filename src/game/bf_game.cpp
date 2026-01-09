@@ -1152,7 +1152,8 @@ void GameFixedUpdate() {
 
     // Comitting player action.
     if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {  ///
-      auto& zonePassenger = g.run.zones[pl.zone].rows[0][pl.actionPassengerIndex];
+      auto& z             = g.run.zones[pl.zone];
+      auto& zonePassenger = z.rows[0][pl.actionPassengerIndex];
 
       switch (pl.action) {
       case PlayerAction_PICKUP: {
@@ -1168,10 +1169,32 @@ void GameFixedUpdate() {
         zonePassenger = pl.passenger;
         pl.passenger  = {};
       } break;
+
+      default:
+        INVALID_PATH;
       }
 
       pl.action          = {};
       pl.actionStartedAt = {};
+
+      z.updatedAt = {};
+      z.updatedAt.SetNow();
+    }
+
+    // Zone matching.
+    for (auto& z : g.run.zones) {  ///
+      if (!z.IsLocked())
+        continue;
+
+      const auto dur = lframe::FromSeconds(glib->zone_matching_duration_seconds());
+      if (z.updatedAt.Elapsed() < dur)
+        continue;
+
+      z.rows.RemoveAt(0);
+      *z.rows.Add() = {};
+
+      g.run.remainingRows--;
+      ASSERT(g.run.remainingRows >= 0);
     }
 
     // Checking if player's won.
