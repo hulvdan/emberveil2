@@ -615,7 +615,7 @@ enum DrawCommandType {  ///
 };
 
 struct DrawGroup {  ///
-  DrawZ z                  = DrawZ_DEFAULT;
+  DrawZ z                  = {};
   f32   sortY              = f32_inf;
   int   commandsCount      = 0;
   int   commandsStartIndex = -1;

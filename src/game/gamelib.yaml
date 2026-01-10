@@ -2,8 +2,8 @@ draw_z: # {  ###
   - INVALID
   - SCREEN_BACKGROUND
   - DEBUG_TILED_BACKGROUND
-  - DEFAULT
-  - DRAG
+  - SHELVES
+  - PLAYER
   - UI
   - VIGNETTE
   - SCREEN_FADE

@@ -1474,7 +1474,12 @@ void GameDraw() {
 
   // Calculating player data.
   {  ///
-    playerPos = ToVector2(fb_level->player()) + Vector2(-0.5f, 0.5f);
+    playerPos = ToVector2(fb_level->player());
+    if (g.meta.verticalOrientation)
+      playerPos += Vector2(0.5f, -0.5f);
+    else
+      playerPos += Vector2(-0.5f, 0.5f);
+
     if (pl.posFrom)
       playerPos = ToWorld(pl.posFrom);
 
@@ -1497,7 +1502,7 @@ void GameDraw() {
 
   // Drawing shelves.
   if (gdebug.drawShelves) {  ///
-    DrawGroup_Begin(DrawZ_DEBUG_TILED_BACKGROUND);
+    DrawGroup_Begin(DrawZ_SHELVES);
     DrawGroup_SetSortY(0);
 
     int shelf = -1;
@@ -1554,7 +1559,7 @@ void GameDraw() {
   {  ///
     auto color = WHITE;
 
-    DrawGroup_Begin(DrawZ_DEFAULT);
+    DrawGroup_Begin(DrawZ_PLAYER);
     DrawGroup_SetSortY(0);
 
     if (pl.item) {
