@@ -5,24 +5,9 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 casual
 sort by colors
 
-Сортировка: Вертолётное Такси
+НЛО Сортировка: По Полочкам
 
-x draw zones
-x click on passenger -> ufo moves to this zone
-x sprite: ufo
-x sprite: 20 passengers
-x clicks buffer that ufo consumes
-  skips those that can't be acted
-x ufo waits for locked zone until matching finishes
-x matching 3-combined passengers WITH animation
-x copied particles from cookier
-x ufo animation: fly
-x ufo animation: put
-x ufo animation: ufo flies over specific passenger
-x ufo animation: pick up
-x ufo animation: exchange up
-- ufo animation: exchange rounded?
-x support multiple rows
+x placement alg
 x lost conditions
 x lost screen
 x assert colors (shelves * 3)
