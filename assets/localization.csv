@@ -1,6 +1,8 @@
 id;russian;english;comment
 UI_LEVEL_TOP_LEVEL;Ур.;Lvl.;
-UI_NEXT_LEVEL;Продолжить;Keep Going;
+UI_LEVEL_NEXT;Продолжить;Keep Going;
+UI_LEVEL_RESTART;Заново;Restart;
+UI_LEVEL_SKIP;Пропустить;Skip;
 UI_PASSENGER_PUT_DOWN;Положить;Put Down;
 UI_PASSENGER_EXCHANGE;Сменить;Exchange;
 UI_PASSENGER_PICK_UP;Поднять;Pick Up;

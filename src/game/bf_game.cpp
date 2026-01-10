@@ -299,10 +299,11 @@ struct GameData {
     b2WorldId world = {};
 
     uint        remainingRows = 0;
-    FrameVisual won           = {};
+    FrameVisual gameplayEnded = {};
+    bool        won           = false;
 
-    FrameVisual advanceScheduled = {};  // TODO: Transition.
-    FrameVisual advancedAt       = {};
+    FrameVisual levelControlPressed           = {};
+    FrameVisual levelStartedAfterTransitionAt = {};
 
     PushableArray<Vector2, 12> bufferedActions = {};
 
@@ -514,7 +515,7 @@ void GameLoad(const BFSave::Save* save) {  ///
 
 void GameDumpStateForSaving(BFSave::SaveT& save) {  ///
   save.level = g.save.level;
-  if (g.run.won.IsSet())
+  if (g.run.gameplayEnded.IsSet() && g.run.won)
     save.level += 1;
 }
 
@@ -584,17 +585,46 @@ const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
   return fb_levels->Get(index);
 }
 
-bool DoesEmptySpotExist() {  ///
-  FOR_RANGE (int, shelfIndex, g.run.shelves.count) {
-    const auto& s = g.run.shelves[shelfIndex];
+int SolvableRowOfThreeExists() {  ///
+  FOR_RANGE (int, shelfIndex1, g.run.shelves.count) {
+    FOR_RANGE (int, itemIndex1, 3) {
+      const auto& item1 = g.run.shelves[shelfIndex1].rows[0][itemIndex1];
+      if (!item1)
+        continue;
 
-    FOR_RANGE (int, itemIndex, 3) {
-      if (!s.rows[0][itemIndex])
+      int countOfThisColor = 0;
+      if (g.run.player.item.color == item1.color)
+        countOfThisColor++;
+
+      FOR_RANGE (int, shelfIndex2, g.run.shelves.count) {
+        FOR_RANGE (int, itemIndex2, 3) {
+          const auto& item2 = g.run.shelves[shelfIndex2].rows[0][itemIndex2];
+          if (item1.color == item2.color)
+            countOfThisColor++;
+        }
+      }
+
+      if (countOfThisColor >= 3)
         return true;
     }
   }
 
   return false;
+}
+
+int CountEmptySpots() {  ///
+  int result = 0;
+
+  FOR_RANGE (int, shelfIndex, g.run.shelves.count) {
+    const auto& s = g.run.shelves[shelfIndex];
+
+    FOR_RANGE (int, itemIndex, 3) {
+      if (!s.rows[0][itemIndex])
+        result++;
+    }
+  }
+
+  return result;
 }
 
 bool PushSpotBack(int shelfIndex, int itemIndex) {  ///
@@ -790,8 +820,8 @@ void RunInit() {
 void RunReset() {  ///
   ZoneScoped;
 
-  const bool advanced = g.run.advanceScheduled.IsSet();
-  const auto world    = g.run.world;
+  const bool levelControlPressed = g.run.levelControlPressed.IsSet();
+  const auto world               = g.run.world;
   b2DestroyWorld(g.run.world);
 
   // Resetting `g.run` to a default value,
@@ -813,8 +843,8 @@ void RunReset() {  ///
 #undef X
   };
 
-  if (advanced)
-    g.run.advancedAt.SetNow();
+  if (levelControlPressed)
+    g.run.levelStartedAfterTransitionAt.SetNow();
 }
 
 void GamePreInit(GamePreInitOpts opts) {  ///
@@ -1131,7 +1161,7 @@ void DoUI() {
 #include "engine/bf_clay_ui.cpp"
 
   auto& pl   = g.run.player;
-  blockInput = g.run.advanceScheduled.IsSet();
+  blockInput = g.run.levelControlPressed.IsSet();
 
 #define GAP_SMALL (8)
 #define GAP_BIG (20)
@@ -1162,8 +1192,7 @@ void DoUI() {
     }
   }
 
-  // Level won screen.
-  if (g.run.won.IsSet()) {
+  if (g.run.gameplayEnded.IsSet()) {
     CLAY(  ///
       {
         .layout{
@@ -1179,7 +1208,7 @@ void DoUI() {
         },
       }
     ) {
-      // Next level button.
+      // Won / Lost. Next level / Restart button.
       CLAY(  ///
         {
           .layout{
@@ -1196,10 +1225,12 @@ void DoUI() {
           },
         }
       ) {
-        BF_CLAY_TEXT_LOCALIZED(Loc_UI_NEXT_LEVEL__CAPS);
+        BF_CLAY_TEXT_LOCALIZED(
+          g.run.won ? Loc_UI_LEVEL_NEXT__CAPS : Loc_UI_LEVEL_RESTART__CAPS
+        );
 
-        if (!g.run.advanceScheduled.IsSet() && clickedOrTouchedThisComponent())
-          g.run.advanceScheduled.SetNow();
+        if (!g.run.levelControlPressed.IsSet() && clickedOrTouchedThisComponent())
+          g.run.levelControlPressed.SetNow();
       }
     }
   }
@@ -1543,22 +1574,32 @@ void GameFixedUpdate() {
         s.rows.RemoveAt(0);
     }
 
-    // Checking if player's won.
-    if (!g.run.remainingRows && !g.run.won.IsSet()) {  ///
-      g.run.won.SetNow();
-      Save();
+    if (!g.run.gameplayEnded.IsSet()) {
+      // Checking if player's won.
+      if (!g.run.remainingRows) {  ///
+        g.run.gameplayEnded.SetNow();
+        g.run.won = true;
+        Save();
+      }
+      // Checking if player's lost.
+      else if (!SolvableRowOfThreeExists()) {  ///
+        const int requiredEmptySpots = (pl.item ? 3 : 2);
+        if (CountEmptySpots() < requiredEmptySpots)
+          g.run.gameplayEnded.SetNow();
+      }
     }
 
     ge.meta.frameGame++;
   }
 
   // Advancing level.
-  if (g.run.advanceScheduled.IsSet()) {  ///
-    if ((g.run.advanceScheduled.Elapsed()
+  if (g.run.levelControlPressed.IsSet()) {  ///
+    if ((g.run.levelControlPressed.Elapsed()
          >= lframe::FromSeconds(glib->level_advance_transition_seconds()))
         && !g.meta.reload)
     {
-      g.save.level++;
+      if (g.run.won)
+        g.save.level++;
       g.meta.reload = true;
       ShowInterAd();
     }
@@ -1777,14 +1818,15 @@ void GameDraw() {
       = lframe::FromSeconds(glib->level_advance_transition_seconds());
 
     // f32 transitionP = 0;
-    if (g.run.advancedAt.IsSet()) {
-      ge.settings.screenFade
-        = MAX(0, 1 - g.run.advancedAt.Elapsed().Progress(transitionDur));
+    if (g.run.levelStartedAfterTransitionAt.IsSet()) {
+      ge.settings.screenFade = MAX(
+        0, 1 - g.run.levelStartedAfterTransitionAt.Elapsed().Progress(transitionDur)
+      );
       // transitionP = ge.settings.screenFade;
     }
-    if (g.run.advanceScheduled.IsSet()) {
+    if (g.run.levelControlPressed.IsSet()) {
       ge.settings.screenFade
-        = MIN(1, g.run.advanceScheduled.Elapsed().Progress(transitionDur));
+        = MIN(1, g.run.levelControlPressed.Elapsed().Progress(transitionDur));
       // transitionP = ge.settings.screenFade;
     }
   }
@@ -1837,8 +1879,13 @@ void GameDraw() {
         IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
         IM::Checkbox("Draw Shelves", &gdebug.drawShelves);
 
-        if (IM::Button("Win") && !g.run.won.IsSet())
-          g.run.won.SetNow();
+        if (IM::Button("Win") && !g.run.gameplayEnded.IsSet()) {
+          g.run.gameplayEnded.SetNow();
+          g.run.won = true;
+        }
+
+        if (IM::Button("Lose") && !g.run.gameplayEnded.IsSet())
+          g.run.gameplayEnded.SetNow();
 
         if (IM::Button("Reset Level"))
           g.meta.reload = true;
