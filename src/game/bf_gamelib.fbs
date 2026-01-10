@@ -151,7 +151,8 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
-    permutations_per_row: int;
+    player_infinity_duration_seconds: float;
+    player_infinity_symbol_offset: Posf;
     default_depth: int;
     default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;

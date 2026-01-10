@@ -1468,9 +1468,17 @@ void GameDraw() {
   int        actualLevelIndex = -1;
   const auto fb_level         = GetFBLevel(g.save.level, &actualLevelIndex);
 
-  Vector2 playerPos{};
-  Vector2 playerItemPos{};
-  f32     playerRotation = 0;
+  Vector2    playerPos{};
+  Vector2    playerItemPos{};
+  const auto infinityDur = lframe::FromSeconds(glib->player_infinity_duration_seconds());
+  const f32  infinityP
+    = (f32)(ge.meta.frameVisual % infinityDur.value) / (f32)infinityDur.value;
+
+  const auto playerPosInfinityOffset
+    = InfinitySymbol(infinityP) * ToVector2(glib->player_infinity_symbol_offset());
+
+  // f32 playerRotation = InfinitySymbolRotation(infinityP);
+  f32 playerRotation = 0;
 
   // Calculating player data.
   {  ///
@@ -1483,6 +1491,8 @@ void GameDraw() {
     if (pl.posFrom)
       playerPos = ToWorld(pl.posFrom);
 
+    f32 playerInfinityPosOffsetScale = 1;
+
     if (pl.pos) {
       const auto pos2 = ToWorld(pl.pos);
       if (pl.actionStartedAt.IsSet()) {
@@ -1493,7 +1503,15 @@ void GameDraw() {
       }
       else
         playerPos = pos2;
+
+      if (pl.actionStartedAt.IsSet()) {
+        f32 posP
+          = pl.actionStartedAt.Elapsed().Progress(GetPlayerActionAndFlyingDuration());
+        playerInfinityPosOffsetScale = 1 - sinf(posP * PI32);
+      }
     }
+
+    playerPos += playerPosInfinityOffset * playerInfinityPosOffsetScale;
 
     playerItemPos
       = playerPos

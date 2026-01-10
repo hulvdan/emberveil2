@@ -16,6 +16,10 @@ x vertical orientation
 
 * shelf test sprite
 * background items darken + fade
+* ufo hovers - infinity symbol
+*
+* more items sprites
+*
 * ufo animation: slight rotation when moving
 *
 * ref ufo geometry dash

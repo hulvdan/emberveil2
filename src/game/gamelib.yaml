@@ -37,7 +37,10 @@ debug_variables: # {  ###
     type: bool
 # }
 
-permutations_per_row: 200
+player_infinity_duration_seconds: 3
+player_infinity_symbol_offset:
+  x: 0.3
+  y: 0.1
 default_depth: 4
 default_item_rows_per_shelf: 3
 default_empty_rows_factor_min: 0.1
