@@ -22,9 +22,11 @@ x ufo animation: ufo flies over specific passenger
 x ufo animation: pick up
 x ufo animation: exchange up
 - ufo animation: exchange rounded?
+x support multiple rows
 
-* support multiple rows
 * shelf test sprite
+* lost screen
+* lost conditions
 * ufo animation: slight rotation when moving
 *
 * ref ufo geometry dash

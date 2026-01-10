@@ -152,6 +152,7 @@ table GameLibrary {
     // AUTOMATIC_TEXTURE_BIND_END
 
     permutations_per_row: int;
+    default_depth: int;
     default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;
     default_empty_rows_factor_max: float;

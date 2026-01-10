@@ -38,6 +38,7 @@ debug_variables: # {  ###
 # }
 
 permutations_per_row: 200
+default_depth: 4
 default_item_rows_per_shelf: 3
 default_empty_rows_factor_min: 0.1
 default_empty_rows_factor_max: 0.2

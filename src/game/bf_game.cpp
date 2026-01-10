@@ -225,8 +225,8 @@ struct Item {  ///
 using ItemRow = Array<Item, 3>;
 
 struct Shelf {  ///
-  Vector2Int                posi = {};
-  PushableArray<ItemRow, 5> rows = {};
+  Vector2Int                        posi = {};
+  PushableArray<ItemRow, MAX_DEPTH> rows = {};
 
   FrameGame updatedAt = {};
 
@@ -584,10 +584,42 @@ const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
   return fb_levels->Get(index);
 }
 
+bool DoesEmptySpotExist() {  ///
+  FOR_RANGE (int, shelfIndex, g.run.shelves.count) {
+    const auto& s = g.run.shelves[shelfIndex];
+
+    FOR_RANGE (int, itemIndex, 3) {
+      if (!s.rows[0][itemIndex])
+        return true;
+    }
+  }
+
+  return false;
+}
+
+bool PushSpotBack(int shelfIndex, int itemIndex) {  ///
+  auto& r = g.run.shelves[shelfIndex].rows;
+
+  if (r.count >= r.maxCount) {
+    if (r[r.count - 1][itemIndex])
+      return false;  // blocked
+  }
+
+  if (r.count < r.maxCount)
+    *r.Add() = {};
+
+  for (int d = r.count - 1; d > 0; d--)
+    r[d][itemIndex] = r[d - 1][itemIndex];
+
+  r[0][itemIndex] = {};
+  return true;
+}
+
 void RunInit() {
   ZoneScoped;
 
-  const auto fb_level               = GetFBLevel(g.save.level);
+  const auto fb_level = GetFBLevel(g.save.level);
+
   g.run.randomSeedForLevelHotReload = fb_level->random_seed();
 
   // Consistent GRAND state.
@@ -607,14 +639,15 @@ void RunInit() {
   {  ///
     ASSERT_FALSE(g.run.shelves.count);
 
-    int shelf = -1;
+    // int shelfIndex = -1;
     for (auto fb_shelf : *fb_level->shelves()) {
-      shelf++;
+      // shelfIndex++;
       auto& s = *g.run.shelves.Add();
       s       = {.posi = ToVector2(fb_shelf->pos())};
     }
   }
 
+#if 0
   // Filling shelves with items.
   {  ///
     ZoneScopedN("Filling shelves with items.");
@@ -700,6 +733,58 @@ void RunInit() {
 
     LOGD("Filling shelves with items: timesContinued %d", timesContinued);
   }
+#else
+  // Filling shelves with items.
+  {  ///
+    ZoneScopedN("Filling shelves with items.");
+
+    auto& shelves = g.run.shelves;
+
+    for (auto& s : shelves) {
+      s.rows        = {};
+      *s.rows.Add() = {};
+    }
+
+    g.run.remainingRows
+      = Round((f32)fb_level->shelves()->size() * glib->default_item_rows_per_shelf());
+    if (fb_level->override_total_item_rows())
+      g.run.remainingRows = fb_level->override_total_item_rows();
+
+    int emptySpots = shelves.count * 3;
+
+    FOR_RANGE (int, colorIndex, g.run.remainingRows) {
+      FOR_RANGE (int, _, 3) {
+        if (!emptySpots) {
+          int guard = 0;
+          while (1) {
+            if (PushSpotBack(GRAND.Rand() % shelves.count, GRAND.Rand() % 3)) {
+              emptySpots++;
+              break;
+            }
+            if (guard++ >= 10000)
+              INVALID_PATH;
+          }
+        }
+
+        int shelfIndex, itemIndex = -1;
+        int guard = 0;
+        while (1) {
+          shelfIndex = GRAND.Rand() % shelves.count;
+          itemIndex  = GRAND.Rand() % 3;
+          if (!g.run.shelves[shelfIndex].rows[0][itemIndex])
+            break;
+          if (guard++ >= 10000)
+            INVALID_PATH;
+        }
+        ASSERT(shelfIndex >= 0);
+        ASSERT(itemIndex >= 0);
+
+        shelves[shelfIndex].rows[0][itemIndex].color = colorIndex + 1;
+        emptySpots--;
+      }
+    }
+  }
+#endif
 }
 
 void RunReset() {  ///
@@ -1030,8 +1115,6 @@ void GameInit() {  ///
 void GameInitAfterLoadingSavedata() {  ///
   ZoneScoped;
 
-  g.save.level = 0;
-
   RunInit();
 
   LOGI("GameInitAfterLoadingSavedata...");
@@ -1164,6 +1247,151 @@ Rect GetItemRect(int shelf, int itemIndex) {  ///
     .size = ToVector2(glib->item_size()),
   };
 }
+
+// int VisibleItem(int s, int itemIndex) {  ///
+//   return g.run.shelves[s].rows[0][itemIndex].color;
+// }
+//
+// void PullForward(int s, int itemIndex) {  ///
+//   for (int d = 1; d < MAX_DEPTH; d++) {
+//     if (g.run.shelves[s].rows[d][itemIndex].color != 0) {
+//       g.run.shelves[s].rows[0][itemIndex].color
+//         = g.run.shelves[s].rows[d][itemIndex].color;
+//       g.run.shelves[s].rows[d][itemIndex].color = 0;
+//       return;
+//     }
+//   }
+// }
+//
+// void PlaceItemTriple(int color, int depthRow) {  ///
+//   int placed         = 0;
+//   int usedShelves[3] = {-1, -1, -1};
+//
+//   while (placed < 3) {
+//     int s = GRAND.Rand() % shelves.count;
+//     int c = GRAND.Rand() % 3;
+//
+//     if (g.run.shelves[s].rows[depthRow][c].color != 0)
+//       continue;
+//
+//     // spread across shelves
+//     int ok = 1;
+//     for (int i = 0; i < placed; i++)
+//       if (usedShelves[i] == s)
+//         ok = 0;
+//
+//     if (!ok)
+//       continue;
+//
+//     g.run.shelves[s].rows[depthRow][c].color = color;
+//     usedShelves[placed++]                    = s;
+//   }
+// }
+//
+// int CountVisible(int color) {  ///
+//   int count = 0;
+//   for (int s = 0; s < shelves.count; s++)
+//     for (int c = 0; c < 3; c++)
+//       if (VisibleItem(s, c) == color)
+//         count++;
+//   return count;
+// }
+//
+// void ForceVisibleTriple(int colorCount) {  ///
+//   for (int c = 1; c <= colorCount; c++)
+//     if (CountVisible(c) >= 3)
+//       return;
+//
+//   int chosen = 1 + GRAND.Rand() % colorCount;
+//   int forced = 0;
+//
+//   while (forced < 3) {
+//     int s = GRAND.Rand() % shelves.count;
+//     int c = GRAND.Rand() % 3;
+//
+//     if (g.run.shelves[s].rows[0][c].color == 0) {
+//       g.run.shelves[s].rows[0][c].color = chosen;
+//       forced++;
+//     }
+//   }
+// }
+//
+// int FastSimulate(int colorCount) {  ///
+//   const auto backup = g.run.shelves;
+//
+//   int alive = 1;
+//
+//   while (alive) {
+//     alive = 0;
+//
+//     for (int color = 1; color <= colorCount; color++) {
+//       if (CountVisible(color) >= 3) {
+//         int removed = 0;
+//
+//         for (int s = 0; s < shelves.count && removed < 3; s++) {
+//           for (int c = 0; c < 3 && removed < 3; c++) {
+//             if (VisibleItem(s, c) == color) {
+//               g.run.shelves[s].rows[0][c].color = 0;
+//               PullForward(s, c);
+//               removed++;
+//             }
+//           }
+//         }
+//
+//         alive = 1;
+//         break;
+//       }
+//     }
+//
+//     if (!alive) {
+//       for (int s = 0; s < shelves.count; s++) {
+//         for (int c = 0; c < 3; c++) {
+//           if (VisibleItem(s, c) != 0)
+//             return 0;  // deadlock
+//         }
+//       }
+//     }
+//   }
+//
+//   g.run.shelves = backup;
+//   return 1;
+// }
+//
+// void GenerateBoard(int colorCount) {  ///
+//   while (true) {
+//     if ((shelves.count * MAX_DEPTH * 3) < (3 * colorCount))
+//       INVALID_PATH;
+//
+//     for (auto& s : g.run.shelves) {
+//       s.rows.Reset();
+//       FOR_RANGE (int, i, MAX_DEPTH)
+//         *s.rows.Add() = {};
+//     }
+//
+//     int depthCount[4]{};
+//     depthCount[3] = colorCount / 8;
+//     depthCount[2] = colorCount / 4;
+//     depthCount[1] = colorCount / 3;
+//     depthCount[0] = colorCount - depthCount[1] - depthCount[2] - depthCount[3];
+//
+//     int colors[MAX_COLORS]{};
+//     FOR_RANGE (int, i, colorCount)
+//       colors[i] = i + 1;
+//
+//     GRAND.Shuffle(colors, MAX_COLORS);
+//
+//     int index = 0;
+//     for (int d = 2; d >= 0; d--) {
+//       for (int i = 0; i < depthCount[d]; i++)
+//         PlaceItemTriple(colors[index++], d);
+//     }
+//
+//     ForceVisibleTriple(colorCount);
+//
+//     if (FastSimulate(colorCount))
+//       break;
+//   }
+// }
 
 void GameFixedUpdate() {
   ZoneScoped;
@@ -1306,6 +1534,13 @@ void GameFixedUpdate() {
 
       g.run.remainingRows--;
       ASSERT(g.run.remainingRows >= 0);
+    }
+
+    // Pushing back rows from shelves if front ones are empty.
+    for (auto& s : g.run.shelves) {  ///
+      auto& r = s.rows[0];
+      if ((s.rows.count > 1) && !r[0] && !r[1] && !r[2])
+        s.rows.RemoveAt(0);
     }
 
     // Checking if player's won.
