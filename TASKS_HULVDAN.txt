@@ -11,8 +11,11 @@ x placement alg
 x lost conditions
 x lost screen
 x assert colors (shelves * 3)
+x player can skip level
+x vertical orientation
 
 * shelf test sprite
+* background items darken + fade
 * ufo animation: slight rotation when moving
 *
 * ref ufo geometry dash

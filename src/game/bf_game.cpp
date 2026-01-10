@@ -230,9 +230,7 @@ struct Shelf {  ///
 
   FrameGame updatedAt = {};
 
-  Vector2 pos() const {
-    return Vector2(posi) + Vector2Half();
-  }
+  Vector2 pos() const;
 
   Rect Rect() const {
     return {
@@ -287,6 +285,9 @@ struct GameData {
     Camera camera{};
 
     bool reload = {};
+
+    glm::mat3 mat                 = {};
+    bool      verticalOrientation = {};
   } meta;
 
   struct Save {
@@ -303,6 +304,7 @@ struct GameData {
     bool        won           = false;
 
     FrameVisual levelControlPressed           = {};
+    bool        levelControlPressedSkip       = false;
     FrameVisual levelStartedAfterTransitionAt = {};
 
     PushableArray<Vector2, 12> bufferedActions = {};
@@ -329,6 +331,10 @@ struct GameData {
 #undef X
   } run;
 } g = {};
+
+Vector2 Shelf::pos() const {  ///
+  return (Vector2)(g.meta.mat * Vector3(posi, 1));
+}
 
 lframe GetPlayerActionAndFlyingDuration() {  ///
   const auto& pl      = g.run.player;
@@ -1049,9 +1055,6 @@ void GameInit() {  ///
 
   ReloadFontsIfNeeded();
   CheckGamelib();
-
-  g.meta.worldSize  = ToVector2Int(glib->world_size());
-  g.meta.worldSizef = (Vector2)g.meta.worldSize;
 }
 
 void GameInitAfterLoadingSavedata() {  ///
@@ -1120,11 +1123,24 @@ void DoUI() {
         },
       }
     ) {
+      LAMBDA (bool, componentButton, (Loc loc)) {  ///
+        bool result = false;
+        CLAY({}) {
+          BF_CLAY_TEXT_LOCALIZED(loc);
+
+          result = clickedOrTouchedThisComponent();
+        };
+        return result;
+      };
+
       // Won / Lost. Next level / Restart button.
       CLAY(  ///
         {
           .layout{
             BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL),
+            .childGap = GAP_BIG,
+            BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+            .layoutDirection = CLAY_TOP_TO_BOTTOM,
           },
           .floating{
             .zIndex = zIndex,
@@ -1137,12 +1153,19 @@ void DoUI() {
           },
         }
       ) {
-        BF_CLAY_TEXT_LOCALIZED(
-          g.run.won ? Loc_UI_LEVEL_NEXT__CAPS : Loc_UI_LEVEL_RESTART__CAPS
-        );
+        if (g.run.won) {
+          if (componentButton(Loc_UI_LEVEL_NEXT__CAPS))
+            g.run.levelControlPressed.SetNow();
+        }
+        else {
+          if (componentButton(Loc_UI_LEVEL_RESTART__CAPS))
+            g.run.levelControlPressed.SetNow();
 
-        if (!g.run.levelControlPressed.IsSet() && clickedOrTouchedThisComponent())
-          g.run.levelControlPressed.SetNow();
+          if (componentButton(Loc_UI_LEVEL_SKIP__CAPS)) {
+            g.run.levelControlPressed.SetNow();
+            g.run.levelControlPressedSkip = true;
+          }
+        }
       }
     }
   }
@@ -1191,153 +1214,30 @@ Rect GetItemRect(int shelf, int itemIndex) {  ///
   };
 }
 
-// int VisibleItem(int s, int itemIndex) {  ///
-//   return g.run.shelves[s].rows[0][itemIndex].color;
-// }
-//
-// void PullForward(int s, int itemIndex) {  ///
-//   for (int d = 1; d < MAX_DEPTH; d++) {
-//     if (g.run.shelves[s].rows[d][itemIndex].color != 0) {
-//       g.run.shelves[s].rows[0][itemIndex].color
-//         = g.run.shelves[s].rows[d][itemIndex].color;
-//       g.run.shelves[s].rows[d][itemIndex].color = 0;
-//       return;
-//     }
-//   }
-// }
-//
-// void PlaceItemTriple(int color, int depthRow) {  ///
-//   int placed         = 0;
-//   int usedShelves[3] = {-1, -1, -1};
-//
-//   while (placed < 3) {
-//     int s = GRAND.Rand() % shelves.count;
-//     int c = GRAND.Rand() % 3;
-//
-//     if (g.run.shelves[s].rows[depthRow][c].color != 0)
-//       continue;
-//
-//     // spread across shelves
-//     int ok = 1;
-//     for (int i = 0; i < placed; i++)
-//       if (usedShelves[i] == s)
-//         ok = 0;
-//
-//     if (!ok)
-//       continue;
-//
-//     g.run.shelves[s].rows[depthRow][c].color = color;
-//     usedShelves[placed++]                    = s;
-//   }
-// }
-//
-// int CountVisible(int color) {  ///
-//   int count = 0;
-//   for (int s = 0; s < shelves.count; s++)
-//     for (int c = 0; c < 3; c++)
-//       if (VisibleItem(s, c) == color)
-//         count++;
-//   return count;
-// }
-//
-// void ForceVisibleTriple(int colorCount) {  ///
-//   for (int c = 1; c <= colorCount; c++)
-//     if (CountVisible(c) >= 3)
-//       return;
-//
-//   int chosen = 1 + GRAND.Rand() % colorCount;
-//   int forced = 0;
-//
-//   while (forced < 3) {
-//     int s = GRAND.Rand() % shelves.count;
-//     int c = GRAND.Rand() % 3;
-//
-//     if (g.run.shelves[s].rows[0][c].color == 0) {
-//       g.run.shelves[s].rows[0][c].color = chosen;
-//       forced++;
-//     }
-//   }
-// }
-//
-// int FastSimulate(int colorCount) {  ///
-//   const auto backup = g.run.shelves;
-//
-//   int alive = 1;
-//
-//   while (alive) {
-//     alive = 0;
-//
-//     for (int color = 1; color <= colorCount; color++) {
-//       if (CountVisible(color) >= 3) {
-//         int removed = 0;
-//
-//         for (int s = 0; s < shelves.count && removed < 3; s++) {
-//           for (int c = 0; c < 3 && removed < 3; c++) {
-//             if (VisibleItem(s, c) == color) {
-//               g.run.shelves[s].rows[0][c].color = 0;
-//               PullForward(s, c);
-//               removed++;
-//             }
-//           }
-//         }
-//
-//         alive = 1;
-//         break;
-//       }
-//     }
-//
-//     if (!alive) {
-//       for (int s = 0; s < shelves.count; s++) {
-//         for (int c = 0; c < 3; c++) {
-//           if (VisibleItem(s, c) != 0)
-//             return 0;  // deadlock
-//         }
-//       }
-//     }
-//   }
-//
-//   g.run.shelves = backup;
-//   return 1;
-// }
-//
-// void GenerateBoard(int colorCount) {  ///
-//   while (true) {
-//     if ((shelves.count * MAX_DEPTH * 3) < (3 * colorCount))
-//       INVALID_PATH;
-//
-//     for (auto& s : g.run.shelves) {
-//       s.rows.Reset();
-//       FOR_RANGE (int, i, MAX_DEPTH)
-//         *s.rows.Add() = {};
-//     }
-//
-//     int depthCount[4]{};
-//     depthCount[3] = colorCount / 8;
-//     depthCount[2] = colorCount / 4;
-//     depthCount[1] = colorCount / 3;
-//     depthCount[0] = colorCount - depthCount[1] - depthCount[2] - depthCount[3];
-//
-//     int colors[MAX_COLORS]{};
-//     FOR_RANGE (int, i, colorCount)
-//       colors[i] = i + 1;
-//
-//     GRAND.Shuffle(colors, MAX_COLORS);
-//
-//     int index = 0;
-//     for (int d = 2; d >= 0; d--) {
-//       for (int i = 0; i < depthCount[d]; i++)
-//         PlaceItemTriple(colors[index++], d);
-//     }
-//
-//     ForceVisibleTriple(colorCount);
-//
-//     if (FastSimulate(colorCount))
-//       break;
-//   }
-// }
+void EndGameplay() {  ///
+  g.run.gameplayEnded.SetNow();
+  g.run.bufferedActions.Reset();
+}
 
 void GameFixedUpdate() {
   ZoneScoped;
+
+  g.meta.worldSize  = ToVector2Int(glib->world_size());
+  g.meta.worldSizef = (Vector2)g.meta.worldSize;
+
+  g.meta.verticalOrientation
+    = (ge.meta.screenSize.x / ge.meta.screenSize.y < VERTICAL_RATIO_BREAKPOINT);
+
+  auto& m = g.meta.mat;
+  m       = glm::mat3(1);
+
+  if (g.meta.verticalOrientation) {
+    m = glm::translate(m, g.meta.worldSizef / 2.0f);
+    m *= glm::mat3(0, -1, 0, 1, 0, 0, 0, 0, 1);
+    m = glm::translate(m, -g.meta.worldSizef / 2.0f);
+  }
+
+  m = glm::translate(m, {0.5f, 0.5f});
 
   // Setup. {  ///
   auto& pl = g.run.player;
@@ -1489,15 +1389,16 @@ void GameFixedUpdate() {
     if (!g.run.gameplayEnded.IsSet()) {
       // Checking if player's won.
       if (!g.run.remainingRows) {  ///
-        g.run.gameplayEnded.SetNow();
+        EndGameplay();
         g.run.won = true;
         Save();
       }
+
       // Checking if player's lost.
       else if (!SolvableRowOfThreeExists()) {  ///
         const int requiredEmptySpots = (pl.item ? 3 : 2);
         if (CountEmptySpots() < requiredEmptySpots)
-          g.run.gameplayEnded.SetNow();
+          EndGameplay();
       }
     }
 
@@ -1510,7 +1411,7 @@ void GameFixedUpdate() {
          >= lframe::FromSeconds(glib->level_advance_transition_seconds()))
         && !g.meta.reload)
     {
-      if (g.run.won)
+      if (g.run.won || g.run.levelControlPressedSkip)
         g.save.level++;
       g.meta.reload = true;
       ShowInterAd();
@@ -1539,9 +1440,8 @@ void GameDraw() {
           continue;
         DrawGroup_OneShotRect(
           {
-            .pos{(f32)x, (f32)y},
-            .size{1, 1},
-            .anchor{},
+            .pos   = g.meta.mat * Vector3(x, y, 1),
+            .size  = g.meta.mat * Vector3(1, 1, 0),
             .color = Fade(WHITE, 0.1f),
           },
           DrawZ_DEBUG_TILED_BACKGROUND
@@ -1792,12 +1692,12 @@ void GameDraw() {
         IM::Checkbox("Draw Shelves", &gdebug.drawShelves);
 
         if (IM::Button("Win") && !g.run.gameplayEnded.IsSet()) {
-          g.run.gameplayEnded.SetNow();
+          EndGameplay();
           g.run.won = true;
         }
 
         if (IM::Button("Lose") && !g.run.gameplayEnded.IsSet())
-          g.run.gameplayEnded.SetNow();
+          EndGameplay();
 
         if (IM::Button("Reset Level"))
           g.meta.reload = true;

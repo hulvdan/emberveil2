@@ -439,7 +439,7 @@ struct Rect {  ///
 };
 
 constexpr Vector2Int ASSETS_REFERENCE_RESOLUTION = {1920, 1080};
-constexpr Vector2Int LOGICAL_RESOLUTION          = {1280, 720};
+constexpr Vector2Int LOGICAL_RESOLUTION          = {1280, 815};
 constexpr Vector2    LOGICAL_RESOLUTIONf         = (Vector2)LOGICAL_RESOLUTION;
 constexpr f32        ASSETS_TO_LOGICAL_RATIO     = 1280.0f / 3840.0f;
 
@@ -2789,10 +2789,11 @@ BF_FORCE_INLINE void DrawGroup_CommandRect(
   DrawRectData        data,
   DrawCommandSetSortY setSortY = DrawCommandSetSortY_DO_NOTHING
 ) {  ///
-  ASSERT(data.size.x >= 0);
-  ASSERT(data.size.y >= 0);
   if ((data.size.x == 0) || (data.size.y == 0))
     return;
+
+  data.size.x = fabs(data.size.x);
+  data.size.y = fabs(data.size.y);
 
   _ApplyCurrentCamera(&data.pos, &data.size);
 
