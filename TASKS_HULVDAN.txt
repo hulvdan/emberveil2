@@ -13,10 +13,10 @@ x lost screen
 x assert colors (shelves * 3)
 x player can skip level
 x vertical orientation
+x ufo hovers - infinity symbol
 
 * shelf test sprite
 * background items darken + fade
-* ufo hovers - infinity symbol
 *
 * more items sprites
 *
