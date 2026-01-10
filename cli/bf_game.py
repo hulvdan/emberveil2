@@ -90,11 +90,23 @@ def _process_gamelib(
                 if entity.identifier_ == "Zone":
                     shelves.append({"pos": (entity.grid_[0], sy - entity.grid_[1] - 1)})
             player = bf.ldtk_get_single_entity(entities, "Player")
+
+            total_item_rows = level.field("OverrideTotalItemRows")
+            if not total_item_rows:
+                total_item_rows = round(
+                    len(shelves) * gamelib["default_item_rows_per_shelf"]
+                )
+
+            assert total_item_rows <= len(gamelib["items"]), (
+                f"Level index={level_index} requires {total_item_rows} rows. "
+                f"{len(gamelib['items'])} items are set in gamelib"
+            )
+
             levels.append(
                 {
                     "player": (player.grid_[0] + 1, sy - player.grid_[1] - 1),
                     "shelves": shelves,
-                    "override_total_item_rows": level.field("OverrideTotalItemRows"),
+                    "override_total_item_rows": total_item_rows,
                     "override_empty_item_rows": level.field("OverrideEmptyItemRows"),
                     "random_seed": level.field("RandomSeed"),
                 }

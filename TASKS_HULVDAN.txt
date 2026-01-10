@@ -25,6 +25,7 @@ x ufo animation: exchange up
 x support multiple rows
 x lost conditions
 x lost screen
+x assert colors (shelves * 3)
 
 * shelf test sprite
 * ufo animation: slight rotation when moving

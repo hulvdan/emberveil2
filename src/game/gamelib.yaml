@@ -147,5 +147,27 @@ items:
     texture_id: game_item_removeme
   - flash: 0x8ff8e2ff
     texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
+  - flash: 0x8ff8e2ff
+    texture_id: game_item_removeme
 
 ###

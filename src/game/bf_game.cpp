@@ -677,93 +677,6 @@ void RunInit() {
     }
   }
 
-#if 0
-  // Filling shelves with items.
-  {  ///
-    ZoneScopedN("Filling shelves with items.");
-
-    TEMP_USAGE(&ge.meta.trashArena);
-
-    const auto trashArenaUsed = ge.meta.trashArena.used;
-    int        timesContinued = -1;
-
-  shelvesContinue:
-    ge.meta.trashArena.used = trashArenaUsed;
-
-    timesContinued++;
-    if (timesContinued >= 10)
-      INVALID_PATH;
-
-    for (auto& s : g.run.shelves)
-      s.rows.Reset();
-
-    g.run.remainingRows
-      = Round((f32)fb_level->shelves()->size() * glib->default_item_rows_per_shelf());
-    if (fb_level->override_total_item_rows())
-      g.run.remainingRows = fb_level->override_total_item_rows();
-
-    int emptyRows = Round(
-      (f32)g.run.remainingRows
-      * (Lerp(
-        glib->default_empty_rows_factor_min(),
-        glib->default_empty_rows_factor_max(),
-        GRAND.FRand()
-      ))
-    );
-    if (fb_level->override_empty_item_rows())
-      emptyRows = fb_level->override_empty_item_rows();
-
-    const int rowsToAllocate = g.run.remainingRows + emptyRows;
-
-    const auto rows_
-      = ALLOCATE_ARRAY_AND_INITIALIZE(&ge.meta.trashArena, ItemRow, rowsToAllocate);
-    View<ItemRow> rows{.count = rowsToAllocate, .base = rows_};
-
-    FOR_RANGE (int, i, g.run.remainingRows) {
-      auto& r = rows[i];
-      for (auto& p : r)
-        p.color = i + 1;
-    }
-
-    // Permutations.
-    FOR_RANGE (int, _, rowsToAllocate * glib->permutations_per_row()) {
-      const int rowIndex1  = GRAND.Rand() % rowsToAllocate;
-      const int rowIndex2  = GRAND.Rand() % rowsToAllocate;
-      const int itemIndex1 = GRAND.Rand() % 3;
-      const int itemIndex2 = GRAND.Rand() % 3;
-
-      if ((rowIndex1 == rowIndex2) && (itemIndex1 == itemIndex2))
-        continue;
-
-      auto& r1 = *(rows.base + rowIndex1);
-      auto& r2 = *(rows.base + rowIndex2);
-      std::swap(r1[itemIndex1], r2[itemIndex2]);
-    }
-
-    // Checking that no rows contain 3 items of the same color.
-    for (auto& r : rows) {
-      const auto& p1 = r[0];
-      const auto& p2 = r[1];
-      const auto& p3 = r[2];
-      if (p1 && p2 && p3 && (p1.color == p2.color) && (p2.color == p3.color))
-        goto shelvesContinue;
-    }
-
-    // Placing rows to shelves.
-    FOR_RANGE (int, i, rows.count) {
-      auto r = rows[rows.count - 1];
-      if (r[0] || r[1] || r[2])
-        *g.run.shelves[GRAND.Rand() % g.run.shelves.count].rows.Add() = r;
-      rows.count--;
-      ASSERT(rows.count >= 0);
-    }
-
-    for (auto& s : g.run.shelves)
-      *s.rows.Add() = {};
-
-    LOGD("Filling shelves with items: timesContinued %d", timesContinued);
-  }
-#else
   // Filling shelves with items.
   {  ///
     ZoneScopedN("Filling shelves with items.");
@@ -814,7 +727,6 @@ void RunInit() {
       }
     }
   }
-#endif
 }
 
 void RunReset() {  ///
