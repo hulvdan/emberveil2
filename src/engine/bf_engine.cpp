@@ -2663,6 +2663,33 @@ Vector2 LogicalPosToWorld(Vector2 pos, Camera* camera) {  ///
   return pos;
 }
 
+void DrawParticles() {  ///
+  for (const auto& particle : ge.run.particles) {
+    ASSERT(particle.type);
+    const auto fb = fb_particles->Get(particle.type);
+
+    auto       e = particle.createdAt.Elapsed();
+    const auto p = Clamp01(e.Progress(particle.duration));
+
+    f32 fade = EaseOutQuad(1 - p);
+    if (fb->fades_in())
+      fade *= MIN(1, EaseOutQuad(e.Progress(ANIMATION_0_FRAMES)));
+
+    if (fade < 0)
+      continue;
+
+    DrawGroup_CommandTexture({
+      .texID = GetTextureIDByProgress(
+        fb->variations()->Get(particle.variation)->texture_ids(), p
+      ),
+      .rotation = particle.rotation,
+      .pos      = particle.pos,
+      .scale    = Vector2(fb->scale_x(), fb->scale_y()) * particle.scale,
+      .color    = Fade(particle.color, fade),
+    });
+  }
+}
+
 void _ApplyCurrentCamera(Vector2* point, Vector2* size, bool isTexture = false) {  ///
   if (ge.meta._currentCamera) {
     ASSERT(ge.meta._currentCamera->zoom > 0);
