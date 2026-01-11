@@ -270,8 +270,18 @@ def process_images():
         blend_image_on_top=DEBUG_SHADOWS,
     ).save(bf.ART_TEXTURES_DIR / "ui_frame_shadow_small.png")
 
+    # game_particle_star
+    bf_image.outline(bf_image.star(320), radius=20, color=(255, 255, 255, 255)).save(
+        bf.ART_TEXTURES_DIR / "game_particle_star.png"
+    )
+
+    # game_feedback_circle
+    bf_image.outline(
+        bf_image.ellipse(60), radius=100, is_shadow=True, color=(255, 255, 255, 255)
+    ).save(bf.ART_TEXTURES_DIR / "game_feedback_circle.png")
+
     # game_particle_diamond
-    diamond_size = 160
+    diamond_size = 320
     rh = Image.new("RGBA", (diamond_size, diamond_size), (255, 255, 255, 255))
     ell = bf_image.ellipse(diamond_size, fill=(0, 0, 0, 255))
     for off in ((0, 0), (1, 0), (0, 1), (1, 1)):

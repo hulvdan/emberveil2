@@ -105,6 +105,9 @@ table Particle {
     disable_rotation: bool;
     scale_x: float = 1;
     scale_y: float = 1;
+    scale_target: float = inf;
+    scale_target_x: float = inf;
+    scale_target_y: float = inf;
     fades_in: bool = false;
     color: uint = 0xffffffff;
     variations: [ParticleVariation];
@@ -154,6 +157,8 @@ table GameLibrary {
 
     world_mat_x_scale: float;
     world_mat_y_scale: float;
+    matching_particles_offset_y: float;
+    matching_particles_big_rotation: float;
     item_draw_depth_show_total_rows: int;
     item_draw_depth_darken_min: float;
     item_draw_depth_fade_min: float;

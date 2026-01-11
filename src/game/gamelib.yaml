@@ -19,17 +19,40 @@ placeholders: # {  ###
 
 particles: # {  ###
   - type: INVALID
-  - type: DIAMOND
+  - type: DIAMOND_BIG
     duration_seconds: 0.3
-    # duration_plus_minus: float;
     disable_rotation: true
-    scale_x: 1
-    scale_y: 1
+    scale_x: 0.9
+    scale_y: 0.9
+    scale_target: 1.1
     fades_in: true
-    # color: uint = 0xffffffff;
     variations:
       - texture_ids:
-          - game_particle_diamond
+          - game_particle_star
+  - type: STAR
+    duration_seconds: 0.3
+    disable_rotation: true
+    scale_x: 0.3
+    scale_y: 0.3
+    scale_target: 1.2
+    fades_in: true
+    variations:
+      - texture_ids:
+          - game_particle_star
+  - type: CIRCLE
+    duration_seconds: 0.5
+    disable_rotation: true
+    scale_x: 0.3
+    scale_y: 0.3
+    scale_target: 30
+    # scale_target_x: 1.3
+    # scale_target_y: 1.3
+    fades_in: true
+    color: 0xfbb954ff
+    color: 0xfbff86ff
+    variations:
+      - texture_ids:
+          - game_feedback_circle
 # }
 
 debug_variables: # {  ###
@@ -49,6 +72,8 @@ debug_variables: # {  ###
 
 world_mat_x_scale: 1.0
 world_mat_y_scale: 0.7
+matching_particles_offset_y: -0.3
+matching_particles_big_rotation: 0.3
 item_draw_depth_show_total_rows: 3
 item_draw_depth_darken_min: 0.4
 item_draw_depth_fade_min: 0.8

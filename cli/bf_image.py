@@ -1,4 +1,5 @@
 # Imports.  {  ###
+import math
 from pathlib import Path
 from typing import Any, Callable, TypeAlias
 
@@ -8,6 +9,8 @@ from bf_lib import ART_TEXTURES_DIR, log, recursive_mkdir
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance
 
 # }
+
+ColorLike: TypeAlias = tuple[int, int, int, int] | tuple[int, int, int] | str
 
 ConveyorDatum: TypeAlias = tuple[Image.Image, Path]
 ConveyorCallable: TypeAlias = Callable[[Image.Image, Path], ConveyorDatum]
@@ -373,6 +376,28 @@ def rectangle(*args: Any, **kwargs: Any) -> Image.Image:
 
 def ellipse(*args: Any, **kwargs: Any) -> Image.Image:
     return _shape("ellipse", *args, **kwargs)
+
+
+def star(size: int, inner_radius_scale: float = 0.5, color: ColorLike = "white"):
+    # {  ###
+    points = []
+
+    outer_r = size / 2
+    inner_r = outer_r * inner_radius_scale
+
+    for i in range(10):
+        r = inner_r if i % 2 else outer_r
+        a = i * math.pi / 5 - math.pi / 2
+        x = outer_r + math.cos(a) * r
+        y = outer_r + math.sin(a) * r
+        points.append((x, y))
+
+    img = Image.new("RGBA", (size, size))
+    draw = ImageDraw.Draw(img)
+
+    draw.polygon(points, fill=color)
+    return img
+    # }
 
 
 def spritesheetify(

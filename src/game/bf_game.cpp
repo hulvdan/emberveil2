@@ -1378,8 +1378,39 @@ void GameFixedUpdate() {
       s.updatedAt.SetNow();
     }
 
+    LAMBDA (void, makeMatchingParticles, (Vector2 shelfPos)) {  ///
+      auto pp = shelfPos + Vector2(0, glib->matching_particles_offset_y());
+
+      MakeParticles({
+        .type = ParticleType_CIRCLE,
+        .pos  = pp,
+        .scalePlusMinus{},
+      });
+
+      MakeParticles({
+        .type = ParticleType_DIAMOND_BIG,
+        .pos  = pp,
+        .scalePlusMinus{},
+        .rotation = glib->matching_particles_big_rotation(),
+      });
+
+      FOR_RANGE (int, i, 5) {
+        auto r = glib->matching_particles_big_rotation() + i * 2 * PI32 / 5;
+        MakeParticles({
+          .type = ParticleType_STAR,
+          .pos  = pp + Vector2Rotate({0, 0.6f}, r + PI32),
+          .scalePlusMinus{},
+          .rotation = r,
+        });
+      }
+    };
+
     // Shelf matching.
     for (auto& s : g.run.shelves) {  ///
+
+      if (1 && (!(ge.meta.frameVisual % (2 * FIXED_FPS))))
+        makeMatchingParticles(s.pos());
+
       if (!s.IsLocked())
         continue;
 
@@ -1387,10 +1418,7 @@ void GameFixedUpdate() {
       if (s.updatedAt.Elapsed() < dur)
         continue;
 
-      MakeParticles({
-        .type = ParticleType_DIAMOND,
-        .pos  = s.pos(),
-      });
+      makeMatchingParticles(s.pos());
 
       s.rows.RemoveAt(0);
       *s.rows.Add() = {};
@@ -1643,6 +1671,8 @@ void GameDraw() {
       .color    = color,
     });
   }
+
+  DrawParticles();
 
   DrawGroup_End();
 
