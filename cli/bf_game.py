@@ -121,6 +121,32 @@ def _process_gamelib(
         gamelib["cycleable_levels_indices"] = cycleable_levels_indices
     # }
 
+    # Particles.
+    # ============================================================
+    # {  ###
+    genline(
+        "using ParticleRenderFunction_t = void(*)(f32 p, lframe e, ParticleRenderData data);\n"
+    )
+
+    particle_render_function_names = set()
+    for _i, particle in enumerate_table("particles"):
+        if n := particle.get("render_function_name"):
+            particle_render_function_names.add(n)
+
+    for n in particle_render_function_names:
+        genline(f"void ParticleRender_{n}(f32 p, lframe e, ParticleRenderData data);")
+
+    genline("")
+
+    genline("constexpr ParticleRenderFunction_t particleRenderFunctions[]{")
+    for _i, particle in enumerate_table("particles"):
+        if n := particle.pop("render_function_name", None):
+            genline(f"  ParticleRender_{n},")
+        else:
+            genline("  nullptr,")
+    genline("};\n")
+    # }
+
     # Placeholders.
     # ============================================================
     if 1:  # {  ###

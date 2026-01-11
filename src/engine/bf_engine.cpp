@@ -45,22 +45,10 @@
 #include "zpl.h"
 
 #include "bf_version.cpp"
-#include "hands/bf_codegen.cpp"
-#include "flatbuffers/bf_save_generated.h"
 
-void BF_IM_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line);
-void BF_IM_WriteAll(ImGuiContext*, ImGuiSettingsHandler*, ImGuiTextBuffer* buf);
-
-void* BF_IM_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name) {
-  if (strcmp(name, "Main") == 0)
-    return (void*)1;
-  return nullptr;
-}
-
-#if BF_DEBUG
-#  define STB_IMAGE_WRITE_IMPLEMENTATION
-#  include "stb_image_write.h"
-#endif
+struct ParticleRenderData {  ///
+  Color* color = {};
+};
 
 struct lframe {  ///
   i64 value = i64_max;
@@ -114,6 +102,23 @@ struct lframe {  ///
   void SetRandSeconds(f32 v);
   void SetRandSeconds(f32 v1, f32 v2);
 };
+
+#include "hands/bf_codegen.cpp"
+#include "flatbuffers/bf_save_generated.h"
+
+void BF_IM_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line);
+void BF_IM_WriteAll(ImGuiContext*, ImGuiSettingsHandler*, ImGuiTextBuffer* buf);
+
+void* BF_IM_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name) {
+  if (strcmp(name, "Main") == 0)
+    return (void*)1;
+  return nullptr;
+}
+
+#if BF_DEBUG
+#  define STB_IMAGE_WRITE_IMPLEMENTATION
+#  include "stb_image_write.h"
+#endif
 
 struct FrameGame {  ///
   i64 _value = i64_max;
@@ -5746,6 +5751,10 @@ void DrawParticles() {  ///
 
     auto color = particle.color;
     color.a *= fade;
+
+    const auto f = particleRenderFunctions[particle.type];
+    if (f)
+      f(p, e, {.color = &color});
 
     DrawGroup_CommandTexture({
       .texID = GetTextureIDByProgress(

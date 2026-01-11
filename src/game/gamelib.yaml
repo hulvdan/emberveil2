@@ -20,7 +20,7 @@ placeholders: # {  ###
 particles: # {  ###
   - type: INVALID
   - type: DIAMOND_BIG
-    duration_seconds: 0.3
+    duration_seconds: 0.4
     disable_rotation: true
     scale_x: 0.9
     scale_y: 0.9
@@ -29,8 +29,9 @@ particles: # {  ###
     variations:
       - texture_ids:
           - game_particle_star
+    render_function_name: COMMON
   - type: STAR
-    duration_seconds: 0.3
+    duration_seconds: 0.5
     disable_rotation: true
     scale_x: 0.3
     scale_y: 0.3
@@ -39,8 +40,9 @@ particles: # {  ###
     variations:
       - texture_ids:
           - game_particle_star
+    render_function_name: COMMON
   - type: CIRCLE
-    duration_seconds: 0.7
+    duration_seconds: 0.8
     disable_rotation: true
     scale_x: 0.3
     scale_y: 0.3

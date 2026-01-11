@@ -1847,4 +1847,20 @@ void GameDraw() {
   }
 }
 
+Color particleColors[]{
+  ColorFromRGBA(0xe83b3bff),
+  // ColorFromRGBA(0xfb6b1dff),
+  ColorFromRGBA(0xfbb954ff),
+  ColorFromRGBA(0xfbff86ff),
+  ColorFromRGBA(0xfbb954ff),
+  ColorFromRGBA(0xeaadedff),
+};
+
+void ParticleRender_COMMON(f32 p, lframe e, ParticleRenderData data) {  ///
+  auto color    = particleColors[ProgressToIndex(p, ARRAY_COUNT(particleColors))];
+  data.color->r = color.r;
+  data.color->g = color.g;
+  data.color->b = color.b;
+}
+
 ///

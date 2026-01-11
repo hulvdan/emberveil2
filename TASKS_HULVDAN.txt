@@ -11,6 +11,7 @@ x background items darken + fade
 x better infinity
 x shelf test sprite
 x polish: matching animation + particles
+x colored particles
 
 * gather shelf stylized references
 * draw shelf
