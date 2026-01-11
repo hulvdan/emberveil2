@@ -40,7 +40,7 @@ particles: # {  ###
       - texture_ids:
           - game_particle_star
   - type: CIRCLE
-    duration_seconds: 0.5
+    duration_seconds: 0.7
     disable_rotation: true
     scale_x: 0.3
     scale_y: 0.3
@@ -48,8 +48,8 @@ particles: # {  ###
     # scale_target_x: 1.3
     # scale_target_y: 1.3
     fades_in: true
-    color: 0xfbb954ff
-    color: 0xfbff86ff
+    # color: 0xfbb954af
+    color: 0xfbff867f
     variations:
       - texture_ids:
           - game_feedback_circle
@@ -66,7 +66,7 @@ debug_variables: # {  ###
   # Game stuff:
   - name: drawTiledBackground
     type: bool
-  - name: drawShelves
+  - name: matchingParticles
     type: bool
 # }
 
@@ -74,7 +74,11 @@ world_mat_x_scale: 1.0
 world_mat_y_scale: 0.7
 matching_particles_offset_y: -0.3
 matching_particles_big_rotation: 0.3
-item_draw_depth_show_total_rows: 3
+matching_particles_parts_seconds:
+  - 0.2
+  - 0.3
+  - 0.45
+item_draw_depth_show_total_rows: 2
 item_draw_depth_darken_min: 0.4
 item_draw_depth_fade_min: 0.8
 player_infinity_duration_seconds: 3

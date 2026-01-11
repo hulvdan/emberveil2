@@ -159,6 +159,7 @@ table GameLibrary {
     world_mat_y_scale: float;
     matching_particles_offset_y: float;
     matching_particles_big_rotation: float;
+    matching_particles_parts_seconds: [float];
     item_draw_depth_show_total_rows: int;
     item_draw_depth_darken_min: float;
     item_draw_depth_fade_min: float;

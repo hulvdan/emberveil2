@@ -5494,23 +5494,19 @@ SDL_AppResult EngineUpdate() {  ///
         TEMP_USAGE(&ge.meta._transientDataArena);
         GameFixedUpdate();
 
-        // Updating particles.
-        for (auto& p : g.run.particles) {
-          p.pos += p.velocity * FIXED_DT;
-          p.rotation += p.rotationSpeed * FIXED_DT;
-        }
+        auto fb_particles = glib->particles();
 
         // Removing old particles.
         {  ///
           ZoneScopedN("Removing old particles.");
 
-          const auto total = g.run.particles.count;
+          const auto total = ge.other.particles.count;
           int        off   = 0;
           FOR_RANGE (int, i, total) {
-            const auto& particle = g.run.particles[i - off];
-            const auto  fb       = fb_particles->Get(particle.type);
+            const auto& particle = ge.other.particles[i - off];
+            auto        fb       = fb_particles->Get(particle.type);
             if (particle.createdAt.Elapsed() >= particle.duration) {
-              g.run.particles.UnstableRemoveAt(i - off);
+              ge.other.particles.UnstableRemoveAt(i - off);
               off++;
             }
           }
@@ -5521,9 +5517,9 @@ SDL_AppResult EngineUpdate() {  ///
           ZoneScopedN("Sorting particles.");
 
           qsort(
-            (void*)g.run.particles.base,
-            g.run.particles.count,
-            sizeof(*g.run.particles.base),
+            (void*)ge.other.particles._base,
+            ge.other.particles.count,
+            sizeof(*ge.other.particles._base),
             (int (*)(const void*, const void*))ParticleCmp
           );
         }
@@ -5745,14 +5741,20 @@ void DrawParticles() {  ///
     if (fb->scale_target_y() != f32_inf)
       scale.y *= Lerp(1, fb->scale_target_y(), p);
 
+    const f32 elapsedSeconds
+      = particle.createdAt.Elapsed().Progress(lframe::Unscaled(FIXED_FPS));
+
+    auto color = particle.color;
+    color.a *= fade;
+
     DrawGroup_CommandTexture({
       .texID = GetTextureIDByProgress(
         fb->variations()->Get(particle.variation)->texture_ids(), p
       ),
-      .rotation = particle.rotation,
-      .pos      = particle.pos,
+      .rotation = particle.rotation + particle.rotationSpeed * elapsedSeconds,
+      .pos      = particle.pos + particle.velocity * elapsedSeconds,
       .scale    = scale * particle.scale,
-      .color    = Fade(particle.color, fade),
+      .color    = color,
     });
   }
 }

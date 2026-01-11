@@ -228,7 +228,8 @@ struct Shelf {  ///
   Vector2Int                        posi = {};
   PushableArray<ItemRow, MAX_DEPTH> rows = {};
 
-  FrameGame updatedAt = {};
+  FrameGame updatedAt     = {};
+  FrameGame lastMatchedAt = {};
 
   Vector2 pos() const;
 
@@ -1376,49 +1377,71 @@ void GameFixedUpdate() {
 
       s.updatedAt = {};
       s.updatedAt.SetNow();
+
+      if (s.IsLocked())
+        s.lastMatchedAt = s.updatedAt;
     }
 
-    LAMBDA (void, makeMatchingParticles, (Vector2 shelfPos)) {  ///
+    auto parts = glib->matching_particles_parts_seconds();
+
+    LAMBDA (void, makeMatchingParticles, (Vector2 shelfPos, lframe e)) {  ///
       auto pp = shelfPos + Vector2(0, glib->matching_particles_offset_y());
 
-      MakeParticles({
-        .type = ParticleType_CIRCLE,
-        .pos  = pp,
-        .scalePlusMinus{},
-      });
+      LAMBDA (bool, part, (int i)) {
+        return e == lframe::FromSeconds(parts->Get(i));
+      };
 
-      MakeParticles({
-        .type = ParticleType_DIAMOND_BIG,
-        .pos  = pp,
-        .scalePlusMinus{},
-        .rotation = glib->matching_particles_big_rotation(),
-      });
-
-      FOR_RANGE (int, i, 5) {
-        auto r = glib->matching_particles_big_rotation() + i * 2 * PI32 / 5;
+      if (part(0))
         MakeParticles({
-          .type = ParticleType_STAR,
-          .pos  = pp + Vector2Rotate({0, 0.6f}, r + PI32),
+          .type = ParticleType_CIRCLE,
+          .pos  = pp,
           .scalePlusMinus{},
-          .rotation = r,
+          .rotationSpeedPlusMinus = 0,
         });
-      }
+
+      if (part(1))
+        MakeParticles({
+          .type = ParticleType_DIAMOND_BIG,
+          .pos  = pp,
+          .scalePlusMinus{},
+          .rotation               = glib->matching_particles_big_rotation(),
+          .rotationSpeedPlusMinus = 0,
+        });
+
+      if (part(2))
+        FOR_RANGE (int, i, 5) {
+          auto r = glib->matching_particles_big_rotation() + i * 2 * PI32 / 5;
+          MakeParticles({
+            .type = ParticleType_STAR,
+            .pos  = pp + Vector2Rotate({0, 0.6f}, r + PI32),
+            .scalePlusMinus{},
+            .rotation               = r,
+            .rotationSpeedPlusMinus = 0,
+          });
+        }
     };
 
     // Shelf matching.
     for (auto& s : g.run.shelves) {  ///
+      if (gdebug.matchingParticles) {
+        makeMatchingParticles(
+          s.pos(), lframe::Unscaled(ge.meta.frameVisual % (2 * FIXED_FPS))
+        );
+      }
 
-      if (1 && (!(ge.meta.frameVisual % (2 * FIXED_FPS))))
-        makeMatchingParticles(s.pos());
+      lframe e{};
+      if (s.lastMatchedAt.IsSet()) {
+        e = s.lastMatchedAt.Elapsed();
+        makeMatchingParticles(s.pos(), e);
+      }
 
       if (!s.IsLocked())
         continue;
 
       const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
-      if (s.updatedAt.Elapsed() < dur)
-        continue;
 
-      makeMatchingParticles(s.pos());
+      if (e < dur)
+        continue;
 
       s.rows.RemoveAt(0);
       *s.rows.Add() = {};
@@ -1588,60 +1611,56 @@ void GameDraw() {
   DrawGroup_SetSortY(0);
 
   // Drawing shelves.
-  if (gdebug.drawShelves) {  ///
+  FOR_RANGE (int, mode, 2) {  ///
+    // mode 0 - drawing shelves, 1 - drawing items.
+    int shelf = -1;
+    for (const auto& s : g.run.shelves) {
+      shelf++;
 
-    FOR_RANGE (int, mode, 2) {  // 0 - drawing shelves, 1 - drawing items.
-      int shelf = -1;
-      for (const auto& s : g.run.shelves) {
-        shelf++;
+      const auto r = s.Rect();
 
-        const auto r = s.Rect();
+      if (!mode) {
+        DrawGroup_CommandTexture({
+          .texID = glib->game_shelf_texture_id(),
+          .pos   = r.pos,
+        });
+      }
+      else {
+        for (int depth = s.rows.count - 1; depth >= 0; depth--) {
+          Vector2 scale{1, 1};
+          if (s.IsLocked() && !depth) {
+            const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
+            const auto p   = s.updatedAt.Elapsed().Progress(dur);
+            scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
+          }
 
-        if (!mode) {
-          DrawGroup_CommandTexture({
-            .texID = glib->game_shelf_texture_id(),
-            .pos   = r.pos,
-          });
-        }
-        else {
-          for (int depth = s.rows.count - 1; depth >= 0; depth--) {
-            Vector2 scale{1, 1};
-            if (s.IsLocked() && !depth) {
-              const auto dur
-                = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
-              const auto p = s.updatedAt.Elapsed().Progress(dur);
-              scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
-            }
-
-            FOR_RANGE (int, itemIndex, 3) {
-              auto& p   = s.rows[depth][itemIndex];
-              auto  pos = GetItemBottomPos(shelf, itemIndex);
-              if (p) {
-                Vector2 actionOffset{};
-                if (!depth) {
-                  if ((pl.action == PlayerAction_PICKUP)
-                      || (pl.action == PlayerAction_EXCHANGE))
-                  {
-                    if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
-                      f32 p = GetPlayerActionWithoutFlyingProgress();
-                      actionOffset
-                        = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
-                    }
+          FOR_RANGE (int, itemIndex, 3) {
+            auto& p   = s.rows[depth][itemIndex];
+            auto  pos = GetItemBottomPos(shelf, itemIndex);
+            if (p) {
+              Vector2 actionOffset{};
+              if (!depth) {
+                if ((pl.action == PlayerAction_PICKUP)
+                    || (pl.action == PlayerAction_EXCHANGE))
+                {
+                  if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
+                    f32 p        = GetPlayerActionWithoutFlyingProgress();
+                    actionOffset = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
                   }
                 }
-
-                drawItem(pos + actionOffset, p, 0, scale, (f32)depth);
               }
 
-              if (gdebug.gizmos && !depth) {
-                const auto r = GetItemRect(shelf, itemIndex);
-                DrawGroup_CommandRectLines({
-                  .pos    = r.pos,
-                  .size   = r.size,
-                  .anchor = {},
-                  .color  = YELLOW,
-                });
-              }
+              drawItem(pos + actionOffset, p, 0, scale, (f32)depth);
+            }
+
+            if (gdebug.gizmos && !depth) {
+              const auto r = GetItemRect(shelf, itemIndex);
+              DrawGroup_CommandRectLines({
+                .pos    = r.pos,
+                .size   = r.size,
+                .anchor = {},
+                .color  = YELLOW,
+              });
             }
           }
         }
@@ -1784,7 +1803,7 @@ void GameDraw() {
         debugTextArena("ge.meta._transientDataArena", ge.meta._transientDataArena);
 
         IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
-        IM::Checkbox("Draw Shelves", &gdebug.drawShelves);
+        IM::Checkbox("Draw Matching Particles", &gdebug.matchingParticles);
 
         if (IM::Button("Win") && !g.run.gameplayEnded.IsSet()) {
           EndGameplay();
