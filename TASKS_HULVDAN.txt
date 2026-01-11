@@ -7,10 +7,12 @@ sort by colors
 
 НЛО Сортировка: По Полочкам
 
-* background items darken + fade
-* better infinity
-*
+x background items darken + fade
+x better infinity
+
 * shelf test sprite
+* polish: matching animation + particles
+* polish: popping rows to front depth easing
 *
 * more items sprites
 *

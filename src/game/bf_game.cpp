@@ -317,6 +317,9 @@ struct GameData {
       PlayerAction action          = {};
       FrameGame    actionStartedAt = {};
       Item         item            = {};
+
+      FrameGame infinityAt      = {};
+      bool      infinityReverse = false;
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -1332,7 +1335,17 @@ void GameFixedUpdate() {
 
     const auto actionDur = GetPlayerActionAndFlyingDuration();
 
-    // Comitting player action.
+    // Resetting player infinity progress and direction in the middle of action.
+    if (pl.action) {  ///
+      const auto e = pl.actionStartedAt.Elapsed();
+      if (e.value == GetPlayerActionAndFlyingDuration().value / 2) {
+        pl.infinityAt = {};
+        pl.infinityAt.SetNow();
+        pl.infinityReverse = !pl.infinityReverse;
+      }
+    }
+
+    // Committing player action.
     if (pl.action && (pl.actionStartedAt.Elapsed() >= actionDur)) {  ///
       auto& s         = g.run.shelves[pl.pos.shelf];
       auto& shelfItem = s.rows[0][pl.actionItemIndex];
@@ -1454,7 +1467,7 @@ void GameDraw() {
     void, drawItem, (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, f32 depth)
   )
   {  ///
-    const f32 dm = glib->item_draw_depth_max();
+    const f32 dm = glib->item_draw_depth_show_total_rows();
     if (depth > dm)
       return;
 
@@ -1482,8 +1495,15 @@ void GameDraw() {
   Vector2    playerPos{};
   Vector2    playerItemPos{};
   const auto infinityDur = lframe::FromSeconds(glib->player_infinity_duration_seconds());
-  const f32  infinityP
-    = (f32)(ge.meta.frameVisual % infinityDur.value) / (f32)infinityDur.value;
+  f32        infinityP   = 0;
+  if (pl.infinityAt.IsSet()) {
+    infinityP
+      = (f32)(pl.infinityAt.Elapsed().value % infinityDur.value) / (f32)infinityDur.value;
+    if (pl.infinityReverse)
+      infinityP *= -1;
+  }
+  else
+    infinityP = (f32)(ge.meta.frameGame % infinityDur.value) / (f32)infinityDur.value;
 
   const auto playerPosInfinityOffset
     = InfinitySymbol(infinityP) * ToVector2(glib->player_infinity_symbol_offset());
@@ -1518,7 +1538,7 @@ void GameDraw() {
       if (pl.actionStartedAt.IsSet()) {
         f32 posP
           = pl.actionStartedAt.Elapsed().Progress(GetPlayerActionAndFlyingDuration());
-        playerInfinityPosOffsetScale = 1 - sinf(posP * PI32);
+        playerInfinityPosOffsetScale = 1 - EaseInQuad(sinf(posP * PI32));
       }
     }
 
@@ -1550,14 +1570,15 @@ void GameDraw() {
           });
         }
         else {
-          Vector2 scale{1, 1};
-          if (s.IsLocked()) {
-            const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
-            const auto p   = s.updatedAt.Elapsed().Progress(dur);
-            scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
-          }
-
           for (int depth = s.rows.count - 1; depth >= 0; depth--) {
+            Vector2 scale{1, 1};
+            if (s.IsLocked() && !depth) {
+              const auto dur
+                = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
+              const auto p = s.updatedAt.Elapsed().Progress(dur);
+              scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
+            }
+
             FOR_RANGE (int, itemIndex, 3) {
               auto& p   = s.rows[depth][itemIndex];
               auto  pos = GetItemBottomPos(shelf, itemIndex);

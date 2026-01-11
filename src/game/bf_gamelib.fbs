@@ -151,7 +151,7 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
-    item_draw_depth_max: int;
+    item_draw_depth_show_total_rows: int;
     item_draw_depth_darken_min: float;
     item_draw_depth_fade_min: float;
     player_infinity_duration_seconds: float;
