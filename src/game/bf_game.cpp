@@ -772,6 +772,8 @@ void RunReset() {  ///
 void GamePreInit(GamePreInitOpts opts) {  ///
   ZoneScoped;
 
+  ge.settings.backgroundColor = ColorFromRGBA(0xdad0f4ff);
+
   *opts.baseFont = &g.meta.fontUI;
 }
 

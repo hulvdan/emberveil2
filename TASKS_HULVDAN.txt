@@ -12,11 +12,14 @@ x better infinity
 x shelf test sprite
 x polish: matching animation + particles
 x colored particles
+x background color
 
 * gather shelf stylized references
+* draw items
 * draw shelf
 *
 * polish: popping rows to front depth easing
+* polish: can drag (press picks up -> release puts down / exchanges)
 *
 * more items sprites
 *
