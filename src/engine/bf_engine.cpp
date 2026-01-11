@@ -828,7 +828,7 @@ struct Particle {  ///
   Vector2      velocity      = {};
   f32          rotation      = {};
   f32          rotationSpeed = 0;
-  f32          scale         = 1;
+  Vector2      scale         = {1, 1};
   Color        color         = {};
   lframe       duration      = {};
   FrameGame    createdAt     = {};
@@ -863,8 +863,8 @@ struct MakeParticlesData {  ///
   f32               initialOffsetPlusMinus = 0;
   Easing_function_t initialOffsetEasing    = EaseLinear;
 
-  f32 scale          = 1;
-  f32 scalePlusMinus = 0.2f;
+  Vector2 scale          = {1, 1};
+  Vector2 scalePlusMinus = {0.2f, 0.2f};
 
   f32   rotation               = 0;
   f32   rotationSpeedPlusMinus = PI32;
@@ -5521,6 +5521,40 @@ SDL_AppResult EngineUpdate() {  ///
         TEMP_USAGE(&ge.meta.trashArena);
         TEMP_USAGE(&ge.meta._transientDataArena);
         GameFixedUpdate();
+
+        // Updating particles.
+        for (auto& p : g.run.particles) {
+          p.pos += p.velocity * FIXED_DT;
+          p.rotation += p.rotationSpeed * FIXED_DT;
+        }
+
+        // Removing old particles.
+        {  ///
+          ZoneScopedN("Removing old particles.");
+
+          const auto total = g.run.particles.count;
+          int        off   = 0;
+          FOR_RANGE (int, i, total) {
+            const auto& particle = g.run.particles[i - off];
+            const auto  fb       = fb_particles->Get(particle.type);
+            if (particle.createdAt.Elapsed() >= particle.duration) {
+              g.run.particles.UnstableRemoveAt(i - off);
+              off++;
+            }
+          }
+        }
+
+        // Sorting particles.
+        {  ///
+          ZoneScopedN("Sorting particles.");
+
+          qsort(
+            (void*)g.run.particles.base,
+            g.run.particles.count,
+            sizeof(*g.run.particles.base),
+            (int (*)(const void*, const void*))ParticleCmp
+          );
+        }
       }
     }
 
