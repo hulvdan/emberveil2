@@ -1234,11 +1234,13 @@ void GameFixedUpdate() {
   auto& m = g.meta.mat;
   m       = glm::mat3(1);
 
-  if (g.meta.verticalOrientation) {
-    m = glm::translate(m, g.meta.worldSizef / 2.0f);
+  m = glm::translate(m, g.meta.worldSizef / 2.0f);
+  m *= glm::mat3(
+    glib->world_mat_x_scale(), 0, 0, 0, glib->world_mat_y_scale(), 0, 0, 0, 1
+  );
+  if (g.meta.verticalOrientation)
     m *= glm::mat3(0, -1, 0, 1, 0, 0, 0, 0, 1);
-    m = glm::translate(m, -g.meta.worldSizef / 2.0f);
-  }
+  m = glm::translate(m, -g.meta.worldSizef / 2.0f);
 
   m = glm::translate(m, {0.5f, 0.5f});
 
@@ -1563,10 +1565,9 @@ void GameDraw() {
         const auto r = s.Rect();
 
         if (!mode) {
-          DrawGroup_CommandRect({
+          DrawGroup_CommandTexture({
+            .texID = glib->game_shelf_texture_id(),
             .pos   = r.pos,
-            .size  = r.size,
-            .color = Fade(CYAN, 0.5f),
           });
         }
         else {

@@ -36,6 +36,8 @@ debug_variables: # {  ###
     type: bool
 # }
 
+world_mat_x_scale: 1.0
+world_mat_y_scale: 0.7
 item_draw_depth_show_total_rows: 3
 item_draw_depth_darken_min: 0.4
 item_draw_depth_fade_min: 0.8

@@ -639,7 +639,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Zone",
-							"__grid": [5,1],
+							"__grid": [5,2],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -648,14 +648,14 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,16],
+							"px": [80,32],
 							"fieldInstances": [],
 							"__worldX": 464,
-							"__worldY": 16
+							"__worldY": 32
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [5,5],
+							"__grid": [5,4],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -664,10 +664,10 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,80],
+							"px": [80,64],
 							"fieldInstances": [],
 							"__worldX": 464,
-							"__worldY": 80
+							"__worldY": 64
 						},
 						{
 							"__identifier": "Zone",
@@ -1005,7 +1005,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Zone",
-							"__grid": [5,1],
+							"__grid": [5,2],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -1014,14 +1014,14 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,16],
+							"px": [80,32],
 							"fieldInstances": [],
 							"__worldX": 848,
-							"__worldY": 16
+							"__worldY": 32
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [5,5],
+							"__grid": [5,4],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -1030,10 +1030,10 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,80],
+							"px": [80,64],
 							"fieldInstances": [],
 							"__worldX": 848,
-							"__worldY": 80
+							"__worldY": 64
 						},
 						{
 							"__identifier": "Zone",
@@ -1451,7 +1451,7 @@
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [3,3],
+							"__grid": [4,3],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -1460,9 +1460,9 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [48,48],
+							"px": [64,48],
 							"fieldInstances": [],
-							"__worldX": 1200,
+							"__worldX": 1216,
 							"__worldY": 48
 						},
 						{
@@ -1499,7 +1499,7 @@
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [7,3],
+							"__grid": [6,3],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -1508,9 +1508,9 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [112,48],
+							"px": [96,48],
 							"fieldInstances": [],
-							"__worldX": 1264,
+							"__worldX": 1248,
 							"__worldY": 48
 						},
 						{
@@ -1547,7 +1547,7 @@
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [9,3],
+							"__grid": [8,3],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -1556,9 +1556,9 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [144,48],
+							"px": [128,48],
 							"fieldInstances": [],
-							"__worldX": 1296,
+							"__worldX": 1280,
 							"__worldY": 48
 						},
 						{
@@ -1595,7 +1595,7 @@
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [1,3],
+							"__grid": [2,3],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -1604,9 +1604,9 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [16,48],
+							"px": [32,48],
 							"fieldInstances": [],
-							"__worldX": 1168,
+							"__worldX": 1184,
 							"__worldY": 48
 						},
 						{
@@ -2015,7 +2015,7 @@
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [5,1],
+							"__grid": [5,2],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2024,14 +2024,14 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,16],
+							"px": [80,32],
 							"fieldInstances": [],
 							"__worldX": 1616,
-							"__worldY": 16
+							"__worldY": 32
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [5,5],
+							"__grid": [5,4],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2040,10 +2040,10 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,80],
+							"px": [80,64],
 							"fieldInstances": [],
 							"__worldX": 1616,
-							"__worldY": 80
+							"__worldY": 64
 						},
 						{
 							"__identifier": "Zone",
@@ -2265,7 +2265,7 @@
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [7,1],
+							"__grid": [7,2],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2274,14 +2274,14 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [112,16],
+							"px": [112,32],
 							"fieldInstances": [],
 							"__worldX": 1840,
-							"__worldY": 16
+							"__worldY": 32
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [5,2],
+							"__grid": [5,1],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2290,14 +2290,14 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,32],
+							"px": [80,16],
 							"fieldInstances": [],
 							"__worldX": 1808,
-							"__worldY": 32
+							"__worldY": 16
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [5,4],
+							"__grid": [5,5],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2306,14 +2306,14 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [80,64],
+							"px": [80,80],
 							"fieldInstances": [],
 							"__worldX": 1808,
-							"__worldY": 64
+							"__worldY": 80
 						},
 						{
 							"__identifier": "Zone",
-							"__grid": [7,5],
+							"__grid": [7,4],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -2322,10 +2322,10 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 1,
-							"px": [112,80],
+							"px": [112,64],
 							"fieldInstances": [],
 							"__worldX": 1840,
-							"__worldY": 80
+							"__worldY": 64
 						},
 						{
 							"__identifier": "Zone",
@@ -2405,6 +2405,22 @@
 							"px": [112,48],
 							"fieldInstances": [],
 							"__worldX": 1840,
+							"__worldY": 48
+						},
+						{
+							"__identifier": "Zone",
+							"__grid": [5,3],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#2CE8F5",
+							"iid": "6904d550-d380-11f0-888e-55be138e7850",
+							"width": 16,
+							"height": 16,
+							"defUid": 1,
+							"px": [80,48],
+							"fieldInstances": [],
+							"__worldX": 1808,
 							"__worldY": 48
 						}
 					]

@@ -89,6 +89,7 @@ def _process_gamelib(
             for entity in entities.entityInstances:
                 if entity.identifier_ == "Zone":
                     shelves.append({"pos": (entity.grid_[0], sy - entity.grid_[1] - 1)})
+            shelves.sort(key=lambda x: (x["pos"][1], x["pos"][0]))  # type: ignore
             player = bf.ldtk_get_single_entity(entities, "Player")
 
             total_item_rows = level.field("OverrideTotalItemRows")

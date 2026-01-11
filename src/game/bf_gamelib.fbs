@@ -149,21 +149,24 @@ table GameLibrary {
 
     // AUTOMATIC_TEXTURE_BIND_START
     vignette_texture_id: int;
+    game_shelf_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    world_mat_x_scale: float;
+    world_mat_y_scale: float;
     item_draw_depth_show_total_rows: int;
     item_draw_depth_darken_min: float;
     item_draw_depth_fade_min: float;
-    player_infinity_duration_seconds: float;
-    player_infinity_symbol_offset: Posf;
     default_depth: int;
     default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;
     default_empty_rows_factor_max: float;
     shelf_matching_duration_seconds: float;
     shelf_matching_item_scale: float;
-    player_inside_shelf_offset_y: float;
     nohotreload_player_linear_damping: float;
+    player_inside_shelf_offset_y: float;
+    player_infinity_duration_seconds: float;
+    player_infinity_symbol_offset: Posf;
     player_max_rotation: float;
     player_rotation_lerp_factor: float;
     player_vertical_restoration_stiffness: float;

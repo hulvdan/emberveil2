@@ -81,7 +81,7 @@ def outline(
         cv2.BORDER_CONSTANT,
         value=(0, 0, 0, 0),
     )
-    alpha = cv2.copyMakeBorder(  #  type: ignore  # noqa
+    alpha = cv2.copyMakeBorder(  #  type: ignore
         alpha,
         extend_padding,
         extend_padding,
@@ -115,7 +115,7 @@ def outline(
     stroke = _cv2pil(stroke)
     if blend_image_on_top:
         bigger_img = _cv2pil(bigger_img)
-        stroke = Image.alpha_composite(stroke, bigger_img)  # type: ignore  # noqa
+        stroke = Image.alpha_composite(stroke, bigger_img)  # type: ignore
     return stroke
     # }
 
