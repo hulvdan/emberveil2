@@ -10,6 +10,7 @@
 /.temp/
 /assets/art/src/main*.png
 /assets/art/src/screenshots_processed/
+/assets/level*/backups/
 /codegen/
 /compile_commands.json
 /res/*.basis

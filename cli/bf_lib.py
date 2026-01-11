@@ -2,6 +2,7 @@
 import colorsys
 import csv
 import hashlib
+import math
 import re
 import socket
 import subprocess
@@ -14,9 +15,11 @@ from pathlib import Path
 from typing import Any, Iterator, Sequence, TypeVar
 
 import fnvhash
+import pydantic_core
 import pyfiglet
 import yaml
 from bf_typer import log
+from pydantic import BaseModel
 
 # }
 
@@ -848,6 +851,15 @@ def test_bannerify():
 # }
 
 
+# !banner: locale
+# ██╗      ██████╗  ██████╗ █████╗ ██╗     ███████╗
+# ██║     ██╔═══██╗██╔════╝██╔══██╗██║     ██╔════╝
+# ██║     ██║   ██║██║     ███████║██║     █████╗
+# ██║     ██║   ██║██║     ██╔══██║██║     ██╔══╝
+# ███████╗╚██████╔╝╚██████╗██║  ██║███████╗███████╗
+# ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝
+
+
 @dataclass
 class LocalizationResult:
     loc_ids: list[str]
@@ -875,6 +887,338 @@ def read_localization_csv() -> LocalizationResult:
                     )
 
     return result
+    # }
+
+
+# !banner: ldtk
+# ██╗     ██████╗ ████████╗██╗  ██╗
+# ██║     ██╔══██╗╚══██╔══╝██║ ██╔╝
+# ██║     ██║  ██║   ██║   █████╔╝
+# ██║     ██║  ██║   ██║   ██╔═██╗
+# ███████╗██████╔╝   ██║   ██║  ██╗
+# ╚══════╝╚═════╝    ╚═╝   ╚═╝  ╚═╝
+
+
+class LdtkEntity(BaseModel):
+    # {  ###
+    identifier: str
+    # uid: int
+    # tags: [str]
+    # exportToToc: bool
+    # allowOutOfBounds: bool
+    # doc: null
+    # width: 16
+    # height: 16
+    # resizableX: false
+    # resizableY: false
+    # minWidth: null
+    # maxWidth: null
+    # minHeight: null
+    # maxHeight: null
+    # keepAspectRatio: true
+    # tileOpacity: 1
+    # fillOpacity: 1
+    # lineOpacity: 1
+    # hollow: false
+    # color: "#63C74D"
+    # renderMode: "Ellipse"
+    # showName: true
+    # tilesetId: null
+    # tileRenderMode: "FitInside"
+    # tileRect: null
+    # uiTileRect: null
+    # nineSliceBorders: []
+    # maxCount: 0
+    # limitScope: "PerLevel"
+    # limitBehavior: "MoveLastOne"
+    # pivotX: 0.5
+    # pivotY: 0.5
+    # fieldDefs: []
+    # }
+
+
+class LdtkTilesetTileCustomdata(BaseModel):
+    # {  ###
+    data: str
+    tileId: int
+    # }
+
+
+class LdtkTilesetTileEnumTag(BaseModel):
+    # {  ###
+    enumValueId: str
+    tileIds: list[int]
+    # }
+
+
+class LdtkTileset(BaseModel):
+    # {  ###
+    identifier: str
+    cHei_: int
+    cWid_: int
+    customData: list[LdtkTilesetTileCustomdata]
+    enumTags: list[LdtkTilesetTileEnumTag]
+    uid: int
+    # }
+
+
+class LdtkIntGridValueDef(BaseModel):
+    # {  ###
+    value: int
+    identifier: str | None
+    # }
+
+
+class LdtkLayerDef(BaseModel):
+    # {  ###
+    identifier: str
+    intGridValues: list[LdtkIntGridValueDef]
+    # }
+
+
+class LdtkDefs(BaseModel):
+    # {  ###
+    entities: list[LdtkEntity]
+    tilesets: list[LdtkTileset]
+    layers: list[LdtkLayerDef]
+    # }
+
+
+class LdtkFieldInstance(BaseModel):
+    # {  ###
+    identifier_: str  # direction
+    type_: str
+    # __type  :  LocalEnum.direction
+    value_: Any  # right
+    # __tile  :  null
+    # defUid  :  60
+    # realEditorValues: list
+    # }
+
+
+def ldtk_field_function(self, identifier: str, default: Any = None) -> Any:
+    # {  ###
+    try:
+        value = next(
+            field for field in self.fieldInstances if field.identifier_ == identifier
+        )
+        return value.value_
+
+    except StopIteration:
+        if default is not None:
+            return default
+
+        assert False, 'Field "{}" not found !\nAvailable values are: {}'.format(
+            identifier,
+            ", ".join(field.identifier_ for field in self.fieldInstances),
+        )
+
+    # }
+
+
+def ldtk_field_ref_function(self, identifier: str, reference_layer) -> Any:
+    # {  ###
+    try:
+        value = next(
+            field for field in self.fieldInstances if field.identifier_ == identifier
+        )
+
+        assert value.type_ == "EntityRef"
+        assert reference_layer is not None
+        if value.value_ is not None:
+            return ldtk_get_referenced_entity(reference_layer, value.value_["entityIid"])
+        return None
+
+    except StopIteration:
+        assert False, 'Field "{}" not found !\nAvailable values are: {}'.format(
+            identifier,
+            ", ".join(field.identifier_ for field in self.fieldInstances),
+        )
+    # }
+
+
+class LdtkEntityInstance(BaseModel):
+    # {  ###
+    identifier_: str  # "entities"
+    grid_: tuple[int, int]
+    pivot_: tuple[float, float]
+    # tile_: TileEntityField | None
+    tags_: list[str]
+    # tile_: null
+    # smartColor_: "#63C74D"
+    iid: str
+    width: int  # 16
+    height: int  # 16
+    # defUid: 51
+    px: tuple[int, int]
+    fieldInstances: list[LdtkFieldInstance]
+    # worldX_: int  # 104
+    # worldY_: int  # -61
+
+    @property
+    def size(self) -> list[int]:
+        assert self.width % 16 == 0
+        assert self.height % 16 == 0
+        x = self.width // 16
+        y = self.height // 16
+        return [x, y]
+
+    field = ldtk_field_function
+    field_ref = ldtk_field_ref_function
+
+    def direction_field(self, identifier: str) -> float | None:
+        field = self.field(identifier)
+
+        if field is None:
+            return 0
+
+        x = field["cx"]
+        y = field["cy"]
+
+        return math.atan2(y - self.grid_[1], x - self.grid_[0])
+
+    # }
+
+
+class LdtkLayerTile(BaseModel):
+    # {  ###
+    px: tuple[int, int]
+    # src: list[int]
+    # }
+
+
+class LdtkLayerInstance(BaseModel):
+    # {  ###
+    identifier_: str  # "entities"
+    # type_: str  # "Entities"
+    cWid_: int  # 71
+    cHei_: int  # 54
+    # gridSize_: int  # 16
+    # opacity_: int # 1
+    # pxTotalOffsetX_: int # 0
+    # pxTotalOffsetY_: int # 0
+    # tilesetDefUid_: null
+    # tilesetRelPath_: null
+    # iid: "94e96550-c210-11ef-acf4-8363d5ef1ebd"
+    # levelId: 0
+    # layerDefUid: 52
+    # pxOffsetX: 0
+    # pxOffsetY: 0
+    # visible: true
+    # optionalRules: []
+    intGridCsv: list[int]
+    # autoLayerTiles: []
+    # seed: 5679830
+    # overrideTilesetUid: null
+    gridTiles: list[LdtkLayerTile]
+    entityInstances: list[LdtkEntityInstance]
+
+    @property
+    def size(self) -> list[int]:
+        return [self.cWid_, self.cHei_]
+
+    # }
+
+
+class LdtkLevel(BaseModel):
+    # {  ###
+    identifier: str
+    iid: str
+    uid: int
+    worldX: int
+    worldY: int
+    worldDepth: int
+    # pxWid: int
+    # pxHei: int
+    # bgColor_: "#000000"
+    # bgColor: null
+    # useAutoIdentifier: true
+    # bgRelPath: null
+    # bgPos: null
+    # bgPivotX: 0.5
+    # bgPivotY: 0.5
+    # smartColor_: "#737373"
+    # bgPos_: null
+    # externalRelPath: null
+    fieldInstances: list[LdtkFieldInstance]
+    layerInstances: list[LdtkLayerInstance]
+    # neighbours_: [
+
+    field = ldtk_field_function
+    field_ref = ldtk_field_ref_function
+
+    def get_layer(self, name: str) -> LdtkLayerInstance:
+        for layer in self.layerInstances:
+            if layer.identifier_ == name:
+                return layer
+        assert False
+
+    # }
+
+
+class Ldtk(BaseModel):
+    # {  ###
+    defs: LdtkDefs
+    levels: list[LdtkLevel]
+    # }
+
+
+def ldtk_try_get_single_entity(
+    layer: LdtkLayerInstance, identifier: str
+) -> LdtkEntityInstance | None:
+    # {  ###
+    found = None
+    for e in layer.entityInstances:
+        if e.identifier_ == identifier:
+            assert found is None
+            found = e
+    return found
+    # }
+
+
+def ldtk_get_single_entity(
+    layer: LdtkLayerInstance, identifier: str
+) -> LdtkEntityInstance:
+    # {  ###
+    found = ldtk_try_get_single_entity(layer, identifier)
+    assert found is not None
+    return found
+    # }
+
+
+def ldtk_get_referenced_entity(
+    layer: LdtkLayerInstance, referenced_iid: str
+) -> LdtkEntityInstance:
+    return next(e for e in layer.entityInstances if e.iid == referenced_iid)
+
+
+def _ldtk_transform_field_names(data) -> None:
+    """Перевод полей формата `__aboba` в `aboba_`."""
+    # {  ###
+    if not isinstance(data, dict):
+        return
+
+    for key in [k for k in data if k.startswith("__")]:
+        new_key = key[2:] + "_"
+        data[new_key] = data.pop(key)
+
+    for value in data.values():
+        if isinstance(value, dict):
+            _ldtk_transform_field_names(value)
+        elif isinstance(value, list):
+            for v in value:
+                if isinstance(v, dict):
+                    _ldtk_transform_field_names(v)
+    # }
+
+
+def ldtk_load(filepath: Path | str) -> Ldtk:
+    # {  ###
+    with open(filepath) as in_file:
+        data = in_file.read()
+    loaded_json = pydantic_core.from_json(data)
+    _ldtk_transform_field_names(loaded_json)
+    return Ldtk.model_validate(loaded_json)
     # }
 
 

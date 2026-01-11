@@ -81,7 +81,7 @@ def outline(
         cv2.BORDER_CONSTANT,
         value=(0, 0, 0, 0),
     )
-    alpha = cv2.copyMakeBorder(  #  type: ignore  # noqa
+    alpha = cv2.copyMakeBorder(  #  type: ignore
         alpha,
         extend_padding,
         extend_padding,
@@ -115,7 +115,7 @@ def outline(
     stroke = _cv2pil(stroke)
     if blend_image_on_top:
         bigger_img = _cv2pil(bigger_img)
-        stroke = Image.alpha_composite(stroke, bigger_img)  # type: ignore  # noqa
+        stroke = Image.alpha_composite(stroke, bigger_img)  # type: ignore
     return stroke
     # }
 
@@ -385,6 +385,8 @@ def spritesheetify(
     out_dir: Path,
     out_filename_prefix: str = "",
     out_filenames: list[str] | None = None,
+    trim_transparent: bool = True,
+    stop_on_finding_empty_sprite: bool = True,
 ) -> None:
     # {  ###
     recursive_mkdir(out_dir)
@@ -421,14 +423,18 @@ def spritesheetify(
                             str(out_filenames)[:200], x, y
                         )
                     )
-                break
+                if stop_on_finding_empty_sprite:
+                    break
 
             if out_filenames is None:
                 filename = str(t + 1)
             else:
                 filename = out_filenames[t]
 
-            img2 = img.crop(bbox)
+            if trim_transparent:
+                img2 = img.crop(bbox)
+            else:
+                img2 = img
             img2.save(out_dir / (out_filename_prefix + filename + ".png"))
 
     log.info(f"spritesheetify: {image_path}... Success!")

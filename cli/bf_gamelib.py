@@ -762,7 +762,7 @@ def convert_gamelib_json_to_binary(
 
     # Asserting on not found textures.
     if 1:
-        not_found_textures: list[str] = []
+        not_found_textures: set[str] = set()
         transform_texture_id = lambda data, key: transform_to_texture_index(
             data,
             key,
@@ -780,7 +780,7 @@ def convert_gamelib_json_to_binary(
         )
         if not_found_textures:
             assert False, "Couldn't find textures:\n{}".format(
-                "\n".join(f"- {x}" for x in not_found_textures)
+                "\n".join(sorted(f"- {x}" for x in not_found_textures))
             )
 
     degrees_to_radians_recursive_transform(gamelib)
@@ -1012,7 +1012,7 @@ def transform_to_texture_indexes_list(
     data: dict[str, Any],
     key: str,
     texture_name_2_index: dict[str, int],
-    not_found_textures: list[str],
+    not_found_textures: set[str],
 ) -> None:
     # {  ###
     textures = data[key]
@@ -1025,7 +1025,7 @@ def transform_to_texture_indexes_list(
             if texture_name in texture_name_2_index:
                 textures[i] = texture_name_2_index[texture_name]
             else:
-                not_found_textures.append(texture_name)
+                not_found_textures.add(texture_name)
     # }
 
 
@@ -1033,7 +1033,7 @@ def transform_to_texture_index(
     data: dict[str, Any],
     key: str,
     texture_name_2_index: dict[str, int],
-    not_found_textures: list[str],
+    not_found_textures: set[str],
 ) -> None:
     # {  ###
     texture_name = data[key]
@@ -1046,7 +1046,7 @@ def transform_to_texture_index(
     if texture_name in texture_name_2_index:
         data[key] = texture_name_2_index[texture_name]
     else:
-        not_found_textures.append(texture_name)
+        not_found_textures.add(texture_name)
     # }
 
 
