@@ -82,8 +82,35 @@ table Sound {
 }
 
 table Flattened {
-  start: int;
-  end: int;
+    start: int;
+    end: int;
+}
+
+table ParticleEmitter {
+    particle_type: int;
+    offset: Posf;
+    offset_plus_minus: Posf;
+    interval_seconds: float;
+    fade: float = 1;
+}
+
+table ParticleVariation {
+    texture_ids: [int];
+}
+
+table Particle {
+    type: string (required);
+    duration_seconds: float;
+    duration_plus_minus: float;
+    disable_rotation: bool;
+    scale_x: float = 1;
+    scale_y: float = 1;
+    scale_target: float = inf;
+    scale_target_x: float = inf;
+    scale_target_y: float = inf;
+    fades_in: bool = false;
+    color: uint = 0xffffffff;
+    variations: [ParticleVariation];
 }
 
 // GAME STUFF
@@ -112,6 +139,7 @@ table GameLibrary {
     // Then makes code generation magic (enums in `bf_codegen.cpp`, recursive replaces)
     // TABLE_GEN_START
     placeholders: [Placeholder] (required);
+    particles: [Particle] (required);
     // TABLE_GEN_END
     // GAME STUFF END
 }

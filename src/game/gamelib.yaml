@@ -2,9 +2,9 @@ draw_z: # {  ###
   - INVALID
   - SCREEN_BACKGROUND
   - DEFAULT
+  - UI
   - VIGNETTE
   - SCREEN_FADE
-  - UI
   - INACTIVE_WINDOW_DIM
   - GIZMOS
 # }
@@ -14,6 +14,10 @@ placeholders: # {  ###
   - type: STRING
   - type: BROKEN_LOCALE
   - type: IMAGE
+# }
+
+particles: # {  ###
+  - type: INVALID
 # }
 
 debug_variables: # {  ###

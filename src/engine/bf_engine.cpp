@@ -1147,8 +1147,7 @@ void MakeParticles(MakeParticlesData data) {  ///
     const auto variation = (u16)(GRAND.Rand() % fb->variations()->size());
 
     const f32 vel   = data.velocity + data.velocityPlusMinus * GRAND.FRand11();
-    const f32 angle = data.fixedRotation + data.velocityAngle
-                      + data.velocityAnglePlusMinus * GRAND.FRand11();
+    const f32 angle = data.velocityAngle + data.velocityAnglePlusMinus * GRAND.FRand11();
 
     const f32 initialOffset = data.initialOffset
                               + Lerp(
@@ -1157,11 +1156,11 @@ void MakeParticles(MakeParticlesData data) {  ///
                                 data.initialOffsetEasing(GRAND.FRand())
                               );
 
-    f32 rotation = (fb->disable_rotation() ? 0 : GRAND.Angle());
-
+    f32 rotation      = (fb->disable_rotation() ? 0 : GRAND.Angle()) + data.rotation;
     f32 rotationSpeed = data.rotationSpeedPlusMinus * GRAND.FRand11();
 
-    const f32 scale = data.scale + data.scalePlusMinus * GRAND.FRand11();
+    const auto scale
+      = data.scale + data.scalePlusMinus * Vector2(GRAND.FRand11(), GRAND.FRand11());
 
     const f32 durationSeconds
       = fb->duration_seconds() + fb->duration_plus_minus() * GRAND.FRand11();
@@ -1212,12 +1211,12 @@ void EmitParticles(EmitParticlesData data) {  ///
               * Vector2(GRAND.FRand11(), GRAND.FRand11()) * data.offsetPlusMinusScale;
 
   MakeParticles({
-    .type           = (ParticleType)data.fb_emitter->particle_type(),
-    .pos            = data.pos,
-    .velocity       = data.velocity,
-    .velocityAngle  = data.velocityAngle,
-    .scale          = 1.0f,
-    .scalePlusMinus = 0.1f,
+    .type          = (ParticleType)data.fb_emitter->particle_type(),
+    .pos           = data.pos,
+    .velocity      = data.velocity,
+    .velocityAngle = data.velocityAngle,
+    .scale{1, 1},
+    .scalePlusMinus = Vector2One() * 0.1f,
     .color          = Fade(WHITE, data.fb_emitter->fade()),
   });
 }
@@ -2661,33 +2660,6 @@ Vector2 LogicalPosToWorld(Vector2 pos, Camera* camera) {  ///
   pos /= camera->zoom;
   pos += camera->pos;
   return pos;
-}
-
-void DrawParticles() {  ///
-  for (const auto& particle : ge.run.particles) {
-    ASSERT(particle.type);
-    const auto fb = fb_particles->Get(particle.type);
-
-    auto       e = particle.createdAt.Elapsed();
-    const auto p = Clamp01(e.Progress(particle.duration));
-
-    f32 fade = EaseOutQuad(1 - p);
-    if (fb->fades_in())
-      fade *= MIN(1, EaseOutQuad(e.Progress(ANIMATION_0_FRAMES)));
-
-    if (fade < 0)
-      continue;
-
-    DrawGroup_CommandTexture({
-      .texID = GetTextureIDByProgress(
-        fb->variations()->Get(particle.variation)->texture_ids(), p
-      ),
-      .rotation = particle.rotation,
-      .pos      = particle.pos,
-      .scale    = Vector2(fb->scale_x(), fb->scale_y()) * particle.scale,
-      .color    = Fade(particle.color, fade),
-    });
-  }
 }
 
 void _ApplyCurrentCamera(Vector2* point, Vector2* size, bool isTexture = false) {  ///
@@ -5522,23 +5494,19 @@ SDL_AppResult EngineUpdate() {  ///
         TEMP_USAGE(&ge.meta._transientDataArena);
         GameFixedUpdate();
 
-        // Updating particles.
-        for (auto& p : g.run.particles) {
-          p.pos += p.velocity * FIXED_DT;
-          p.rotation += p.rotationSpeed * FIXED_DT;
-        }
+        auto fb_particles = glib->particles();
 
         // Removing old particles.
         {  ///
           ZoneScopedN("Removing old particles.");
 
-          const auto total = g.run.particles.count;
+          const auto total = ge.other.particles.count;
           int        off   = 0;
           FOR_RANGE (int, i, total) {
-            const auto& particle = g.run.particles[i - off];
-            const auto  fb       = fb_particles->Get(particle.type);
+            const auto& particle = ge.other.particles[i - off];
+            auto        fb       = fb_particles->Get(particle.type);
             if (particle.createdAt.Elapsed() >= particle.duration) {
-              g.run.particles.UnstableRemoveAt(i - off);
+              ge.other.particles.UnstableRemoveAt(i - off);
               off++;
             }
           }
@@ -5549,9 +5517,9 @@ SDL_AppResult EngineUpdate() {  ///
           ZoneScopedN("Sorting particles.");
 
           qsort(
-            (void*)g.run.particles.base,
-            g.run.particles.count,
-            sizeof(*g.run.particles.base),
+            (void*)ge.other.particles._base,
+            ge.other.particles.count,
+            sizeof(*ge.other.particles._base),
             (int (*)(const void*, const void*))ParticleCmp
           );
         }
@@ -5737,7 +5705,59 @@ BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
 #  undef X
 #endif
 
+void DrawParticles();
+
+int GetTextureIDByProgress(const flatbuffers::Vector<int>* texs, f32 p) {  ///
+  ASSERT(p >= 0);
+  int index = p * texs->size();
+  index     = MIN(index, texs->size() - 1);
+  return texs->Get(index);
+}
+
 #include "game/bf_game.cpp"
+
+void DrawParticles() {  ///
+  auto fb_particles = glib->particles();
+
+  for (const auto& particle : ge.other.particles) {
+    ASSERT(particle.type);
+    const auto fb = fb_particles->Get(particle.type);
+
+    auto       e = particle.createdAt.Elapsed();
+    const auto p = Clamp01(e.Progress(particle.duration));
+
+    f32 fade = EaseOutQuad(1 - p);
+    if (fb->fades_in())
+      fade *= MIN(1, EaseOutQuad(e.Progress(ANIMATION_0_FRAMES)));
+
+    if (fade < 0)
+      continue;
+
+    Vector2 scale{fb->scale_x(), fb->scale_y()};
+    if (fb->scale_target() != f32_inf)
+      scale *= Lerp(1, fb->scale_target(), p);
+    if (fb->scale_target_x() != f32_inf)
+      scale.x *= Lerp(1, fb->scale_target_x(), p);
+    if (fb->scale_target_y() != f32_inf)
+      scale.y *= Lerp(1, fb->scale_target_y(), p);
+
+    const f32 elapsedSeconds
+      = particle.createdAt.Elapsed().Progress(lframe::Unscaled(FIXED_FPS));
+
+    auto color = particle.color;
+    color.a *= fade;
+
+    DrawGroup_CommandTexture({
+      .texID = GetTextureIDByProgress(
+        fb->variations()->Get(particle.variation)->texture_ids(), p
+      ),
+      .rotation = particle.rotation + particle.rotationSpeed * elapsedSeconds,
+      .pos      = particle.pos + particle.velocity * elapsedSeconds,
+      .scale    = scale * particle.scale,
+      .color    = color,
+    });
+  }
+}
 
 #ifdef SDL_PLATFORM_EMSCRIPTEN
 #  include "hands/bf_emscripten_binds.cpp"
