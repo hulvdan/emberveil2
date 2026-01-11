@@ -21,6 +21,7 @@ import bf_image
 import bf_lib as bf
 import bf_swatch
 from bf_typer import command, timing
+from PIL import Image
 
 # }
 
@@ -248,7 +249,7 @@ def process_images():
     # {  ###
     UI_FRAME_RADIUS = 30
 
-    # `ui_frame`.
+    # ui_frame
     frame_image = bf_image.rectangle(
         112,
         radius=UI_FRAME_RADIUS,
@@ -260,7 +261,7 @@ def process_images():
 
     DEBUG_SHADOWS = 0
 
-    # `ui_frame_shadow_small`.
+    # ui_frame_shadow_small
     bf_image.outline(
         image=bf_image.red(frame_image),
         radius=60,
@@ -268,6 +269,21 @@ def process_images():
         is_shadow=True,
         blend_image_on_top=DEBUG_SHADOWS,
     ).save(bf.ART_TEXTURES_DIR / "ui_frame_shadow_small.png")
+
+    # game_particle_diamond
+    diamond_size = 160
+    rh = Image.new("RGBA", (diamond_size, diamond_size), (255, 255, 255, 255))
+    ell = bf_image.ellipse(diamond_size, fill=(0, 0, 0, 255))
+    for off in ((0, 0), (1, 0), (0, 1), (1, 1)):
+        rh.paste(
+            ell,
+            (
+                off[0] * diamond_size - diamond_size // 2,
+                off[1] * diamond_size - diamond_size // 2,
+            ),
+            ell,
+        )
+    bf_image.extract_white(rh).save(bf.ART_TEXTURES_DIR / "game_particle_diamond.png")
     # }
 
 

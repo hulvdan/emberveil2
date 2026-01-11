@@ -866,6 +866,7 @@ struct MakeParticlesData {  ///
   f32 scale          = 1;
   f32 scalePlusMinus = 0.2f;
 
+  f32   rotation               = 0;
   f32   rotationSpeedPlusMinus = PI32;
   Color color                  = WHITE;
 };
@@ -1146,7 +1147,8 @@ void MakeParticles(MakeParticlesData data) {  ///
     const auto variation = (u16)(GRAND.Rand() % fb->variations()->size());
 
     const f32 vel   = data.velocity + data.velocityPlusMinus * GRAND.FRand11();
-    const f32 angle = data.velocityAngle + data.velocityAnglePlusMinus * GRAND.FRand11();
+    const f32 angle = data.fixedRotation + data.velocityAngle
+                      + data.velocityAnglePlusMinus * GRAND.FRand11();
 
     const f32 initialOffset = data.initialOffset
                               + Lerp(

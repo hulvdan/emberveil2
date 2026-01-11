@@ -11,6 +11,7 @@ x background items darken + fade
 x better infinity
 x shelf test sprite
 
+* romb sprite
 * polish: matching animation + particles
 *
 * gather shelf stylized references

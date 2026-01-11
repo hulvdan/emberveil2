@@ -19,6 +19,17 @@ placeholders: # {  ###
 
 particles: # {  ###
   - type: INVALID
+  - type: DIAMOND
+    duration_seconds: 0.3
+    # duration_plus_minus: float;
+    disable_rotation: true
+    scale_x: 1
+    scale_y: 1
+    fades_in: true
+    # color: uint = 0xffffffff;
+    variations:
+      - texture_ids:
+          - game_particle_diamond
 # }
 
 debug_variables: # {  ###

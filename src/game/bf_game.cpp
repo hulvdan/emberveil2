@@ -1387,6 +1387,11 @@ void GameFixedUpdate() {
       if (s.updatedAt.Elapsed() < dur)
         continue;
 
+      MakeParticles({
+        .type = ParticleType_DIAMOND,
+        .pos  = s.pos(),
+      });
+
       s.rows.RemoveAt(0);
       *s.rows.Add() = {};
 
