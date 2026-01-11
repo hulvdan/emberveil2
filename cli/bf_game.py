@@ -64,7 +64,7 @@ def _process_gamelib(
 
     # Levels.
     # ============================================================
-    # {  ///
+    # {  ###
     if 1:
         d = bf.ldtk_load(bf.ASSETS_DIR / "level_ufo.ldtk")
         levels = []
@@ -119,6 +119,15 @@ def _process_gamelib(
         gamelib["world_size"] = s
         gamelib["levels"] = levels
         gamelib["cycleable_levels_indices"] = cycleable_levels_indices
+    # }
+
+    # Items.
+    # ============================================================
+    # {  ###
+    items = []
+    for f in list(bf.ART_TEXTURES_DIR.glob("processed__game_item_*.png")):
+        items.append({"texture_id": f.stem})
+    gamelib["items"] = items
     # }
 
     # Particles.
@@ -320,6 +329,17 @@ def process_images():
             ell,
         )
     bf_image.extract_white(rh).save(bf.ART_TEXTURES_DIR / "game_particle_diamond.png")
+
+    for f in list(bf.ART_TEXTURES_DIR.glob("processed__*.png")):
+        f.unlink()
+    bf_image.spritesheetify(
+        bf.ART_DIR / "src" / "main_001.png",
+        cell_size=480,
+        size=(7, 8),
+        gap=10,
+        out_dir=bf.ART_TEXTURES_DIR,
+        out_filename_prefix="processed__game_item_",
+    )
     # }
 
 
