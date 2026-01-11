@@ -9,9 +9,13 @@ sort by colors
 
 x background items darken + fade
 x better infinity
+x shelf test sprite
 
-* shelf test sprite
 * polish: matching animation + particles
+*
+* gather shelf stylized references
+* draw shelf
+*
 * polish: popping rows to front depth easing
 *
 * more items sprites
