@@ -117,7 +117,7 @@ table Shelf {
 
 table Item {
     texture_id: int;
-    flash: uint;
+    color: uint;
 }
 
 table Level {
@@ -151,6 +151,9 @@ table GameLibrary {
     vignette_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    item_draw_depth_max: int;
+    item_draw_depth_darken_min: float;
+    item_draw_depth_fade_min: float;
     player_infinity_duration_seconds: float;
     player_infinity_symbol_offset: Posf;
     default_depth: int;

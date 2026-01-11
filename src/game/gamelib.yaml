@@ -2,8 +2,7 @@ draw_z: # {  ###
   - INVALID
   - SCREEN_BACKGROUND
   - DEBUG_TILED_BACKGROUND
-  - SHELVES
-  - PLAYER
+  - DEFAULT
   - UI
   - VIGNETTE
   - SCREEN_FADE
@@ -37,6 +36,9 @@ debug_variables: # {  ###
     type: bool
 # }
 
+item_draw_depth_max: 2
+item_draw_depth_darken_min: 0.4
+item_draw_depth_fade_min: 0.8
 player_infinity_duration_seconds: 3
 player_infinity_symbol_offset:
   x: 0.3
@@ -88,89 +90,89 @@ ui_frame_shadow_small_nine_slice:
 item_inside_player_offset_y: -0.3
 player_texture_id: game_player_removeme
 items:
-  - flash: 0xfb6b1dff
+  - color: 0xfb6b1dff
     texture_id: game_item_removeme
-  - flash: 0xe83b3bff
+  - color: 0xe83b3bff
     texture_id: game_item_removeme
-  - flash: 0x831c5dff
+  - color: 0x831c5dff
     texture_id: game_item_removeme
-  - flash: 0xc32454ff
+  - color: 0xc32454ff
     texture_id: game_item_removeme
-  - flash: 0xf04f78ff
+  - color: 0xf04f78ff
     texture_id: game_item_removeme
-  - flash: 0xf68181ff
+  - color: 0xf68181ff
     texture_id: game_item_removeme
-  - flash: 0xfca790ff
+  - color: 0xfca790ff
     texture_id: game_item_removeme
-  - flash: 0xe3c896ff
+  - color: 0xe3c896ff
     texture_id: game_item_removeme
-  - flash: 0xab947aff
+  - color: 0xab947aff
     texture_id: game_item_removeme
-  - flash: 0x966c6cff
+  - color: 0x966c6cff
     texture_id: game_item_removeme
-  - flash: 0x625565ff
+  - color: 0x625565ff
     texture_id: game_item_removeme
-  - flash: 0x3e3546ff
+  - color: 0x3e3546ff
     texture_id: game_item_removeme
-  - flash: 0x0b5e65ff
+  - color: 0x0b5e65ff
     texture_id: game_item_removeme
-  - flash: 0x0b8a8fff
+  - color: 0x0b8a8fff
     texture_id: game_item_removeme
-  - flash: 0x1ebc73ff
+  - color: 0x1ebc73ff
     texture_id: game_item_removeme
-  - flash: 0x91db69ff
+  - color: 0x91db69ff
     texture_id: game_item_removeme
-  - flash: 0xfbff86ff
+  - color: 0xfbff86ff
     texture_id: game_item_removeme
-  - flash: 0xfbb954ff
+  - color: 0xfbb954ff
     texture_id: game_item_removeme
-  - flash: 0xcd683dff
+  - color: 0xcd683dff
     texture_id: game_item_removeme
-  - flash: 0x9e4539ff
+  - color: 0x9e4539ff
     texture_id: game_item_removeme
-  - flash: 0x7a3045ff
+  - color: 0x7a3045ff
     texture_id: game_item_removeme
-  - flash: 0x6b3e75ff
+  - color: 0x6b3e75ff
     texture_id: game_item_removeme
-  - flash: 0x905ea9ff
+  - color: 0x905ea9ff
     texture_id: game_item_removeme
-  - flash: 0xa884f3ff
+  - color: 0xa884f3ff
     texture_id: game_item_removeme
-  - flash: 0xeaadedff
+  - color: 0xeaadedff
     texture_id: game_item_removeme
-  - flash: 0x8fd3ffff
+  - color: 0x8fd3ffff
     texture_id: game_item_removeme
-  - flash: 0x4d9be6ff
+  - color: 0x4d9be6ff
     texture_id: game_item_removeme
-  - flash: 0x4d65b4ff
+  - color: 0x4d65b4ff
     texture_id: game_item_removeme
-  - flash: 0x484a77ff
+  - color: 0x484a77ff
     texture_id: game_item_removeme
-  - flash: 0x30e1b9ff
+  - color: 0x30e1b9ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
-  - flash: 0x8ff8e2ff
+  - color: 0x8ff8e2ff
     texture_id: game_item_removeme
 
 ###

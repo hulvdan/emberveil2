@@ -1451,17 +1451,28 @@ void GameDraw() {
   }
 
   LAMBDA (
-    void, drawItem, (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, Color color)
+    void, drawItem, (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, f32 depth)
   )
   {  ///
-    const auto fb = glib->items()->Get(p.color);
+    const f32 dm = glib->item_draw_depth_max();
+    if (depth > dm)
+      return;
+
+    const f32  depthFactor = depth / dm;
+    const auto fb          = glib->items()->Get(p.color);
     DrawGroup_CommandTexture({
       .texID    = fb->texture_id(),
       .rotation = rotation,
       .pos      = pos,
       .anchor{0.5f, 0},
       .scale = scale,
-      .flash = ColorFromRGBA(fb->flash()),
+      .color = Fade(
+        Darken(
+          ColorFromRGBA(fb->color()),
+          Lerp(1, glib->item_draw_depth_darken_min(), depthFactor)
+        ),
+        Lerp(1, glib->item_draw_depth_fade_min(), depthFactor)
+      ),
     });
   };
 
@@ -1518,67 +1529,74 @@ void GameDraw() {
         + Vector2Rotate({0, glib->item_inside_player_offset_y()}, playerRotation);
   }
 
+  DrawGroup_Begin(DrawZ_DEFAULT);
+  DrawGroup_SetSortY(0);
+
   // Drawing shelves.
   if (gdebug.drawShelves) {  ///
-    DrawGroup_Begin(DrawZ_SHELVES);
-    DrawGroup_SetSortY(0);
 
-    int shelf = -1;
-    for (const auto& s : g.run.shelves) {
-      shelf++;
+    FOR_RANGE (int, mode, 2) {  // 0 - drawing shelves, 1 - drawing items.
+      int shelf = -1;
+      for (const auto& s : g.run.shelves) {
+        shelf++;
 
-      Vector2 scale{1, 1};
-      if (s.IsLocked()) {
-        const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
-        const auto p   = s.updatedAt.Elapsed().Progress(dur);
-        scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
-      }
+        const auto r = s.Rect();
 
-      const auto r = s.Rect();
-
-      DrawGroup_CommandRect({
-        .pos   = r.pos,
-        .size  = r.size,
-        .color = Fade(CYAN, 0.5f),
-      });
-
-      FOR_RANGE (int, itemIndex, 3) {
-        auto& p   = s.rows[0][itemIndex];
-        auto  pos = GetItemBottomPos(shelf, itemIndex);
-        if (p) {
-          Vector2 actionOffset{};
-          if ((pl.action == PlayerAction_PICKUP) || (pl.action == PlayerAction_EXCHANGE))
-          {
-            if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
-              f32 p        = GetPlayerActionWithoutFlyingProgress();
-              actionOffset = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
-            }
+        if (!mode) {
+          DrawGroup_CommandRect({
+            .pos   = r.pos,
+            .size  = r.size,
+            .color = Fade(CYAN, 0.5f),
+          });
+        }
+        else {
+          Vector2 scale{1, 1};
+          if (s.IsLocked()) {
+            const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
+            const auto p   = s.updatedAt.Elapsed().Progress(dur);
+            scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
           }
 
-          drawItem(pos + actionOffset, p, 0, scale, WHITE);
-        }
+          for (int depth = s.rows.count - 1; depth >= 0; depth--) {
+            FOR_RANGE (int, itemIndex, 3) {
+              auto& p   = s.rows[depth][itemIndex];
+              auto  pos = GetItemBottomPos(shelf, itemIndex);
+              if (p) {
+                Vector2 actionOffset{};
+                if (!depth) {
+                  if ((pl.action == PlayerAction_PICKUP)
+                      || (pl.action == PlayerAction_EXCHANGE))
+                  {
+                    if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
+                      f32 p = GetPlayerActionWithoutFlyingProgress();
+                      actionOffset
+                        = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
+                    }
+                  }
+                }
 
-        if (gdebug.gizmos) {
-          const auto r = GetItemRect(shelf, itemIndex);
-          DrawGroup_CommandRectLines({
-            .pos    = r.pos,
-            .size   = r.size,
-            .anchor = {},
-            .color  = YELLOW,
-          });
+                drawItem(pos + actionOffset, p, 0, scale, (f32)depth);
+              }
+
+              if (gdebug.gizmos && !depth) {
+                const auto r = GetItemRect(shelf, itemIndex);
+                DrawGroup_CommandRectLines({
+                  .pos    = r.pos,
+                  .size   = r.size,
+                  .anchor = {},
+                  .color  = YELLOW,
+                });
+              }
+            }
+          }
         }
       }
     }
-
-    DrawGroup_End();
   }
 
   // Drawing player.
   {  ///
     auto color = WHITE;
-
-    DrawGroup_Begin(DrawZ_PLAYER);
-    DrawGroup_SetSortY(0);
 
     if (pl.item) {
       Vector2 actionOffset{};
@@ -1588,7 +1606,7 @@ void GameDraw() {
         actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
       }
 
-      drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, WHITE);
+      drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0);
     }
 
     DrawGroup_CommandTexture({
@@ -1597,9 +1615,9 @@ void GameDraw() {
       .pos      = playerPos,
       .color    = color,
     });
-
-    DrawGroup_End();
   }
+
+  DrawGroup_End();
 
   // Gizmos. Colliders.
   if (gdebug.gizmos) {  ///
@@ -1652,17 +1670,14 @@ void GameDraw() {
     const auto transitionDur
       = lframe::FromSeconds(glib->level_advance_transition_seconds());
 
-    // f32 transitionP = 0;
     if (g.run.levelStartedAfterTransitionAt.IsSet()) {
       ge.settings.screenFade = MAX(
         0, 1 - g.run.levelStartedAfterTransitionAt.Elapsed().Progress(transitionDur)
       );
-      // transitionP = ge.settings.screenFade;
     }
     if (g.run.levelControlPressed.IsSet()) {
       ge.settings.screenFade
         = MIN(1, g.run.levelControlPressed.Elapsed().Progress(transitionDur));
-      // transitionP = ge.settings.screenFade;
     }
   }
 

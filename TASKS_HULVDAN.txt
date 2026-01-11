@@ -7,16 +7,10 @@ sort by colors
 
 НЛО Сортировка: По Полочкам
 
-x placement alg
-x lost conditions
-x lost screen
-x assert colors (shelves * 3)
-x player can skip level
-x vertical orientation
-x ufo hovers - infinity symbol
-
-* shelf test sprite
 * background items darken + fade
+* better infinity
+*
+* shelf test sprite
 *
 * more items sprites
 *
