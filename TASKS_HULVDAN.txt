@@ -7,13 +7,16 @@ sort by colors
 
 НЛО Сортировка: По Полочкам
 
-* nvim highlight colors
-* codegen colors python (fetch names from web)
+x nvim highlight colors
+x codegen colors
+x HOW MANY ITEMS? 45
+
+* draw items
+*
+* gather shelf stylized references
+* draw shelf
 *
 * hardcode 1/2 levels
-* gather shelf stylized references
-* draw items
-* draw shelf
 *
 * polish: popping rows to front depth easing
 * polish: can drag (press picks up -> release puts down / exchanges)
