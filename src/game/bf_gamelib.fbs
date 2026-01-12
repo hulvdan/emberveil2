@@ -113,6 +113,11 @@ table Particle {
     variations: [ParticleVariation];
 }
 
+table Color {
+    type: string (required);
+    color: uint;
+}
+
 // GAME STUFF
 table Shelf {
     pos: Pos;
@@ -197,6 +202,7 @@ table GameLibrary {
     // TABLE_GEN_START
     placeholders: [Placeholder] (required);
     particles: [Particle] (required);
+    colors: [Color] (required);
     // TABLE_GEN_END
     world_size: Pos;
     levels: [Level] (required);

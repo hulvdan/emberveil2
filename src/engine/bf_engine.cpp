@@ -104,6 +104,16 @@ struct lframe {  ///
 };
 
 #include "hands/bf_codegen.cpp"
+
+#define X(hex_, value_, name_) constexpr auto PAL_##name_ = ColorFromRGBA(value_);
+PAL_COLORS_TABLE;
+#undef X
+
+#define X(hex_, value_, name_) \
+  const auto PAL_TEXT_##name_ = TextifyColor(ColorFromRGBA(value_));
+PAL_COLORS_TABLE;
+#undef X
+
 #include "flatbuffers/bf_save_generated.h"
 
 void BF_IM_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line);

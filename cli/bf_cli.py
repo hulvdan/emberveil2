@@ -7,6 +7,9 @@ from collections import Counter
 from pathlib import Path
 
 import bf_lib
+import bf_lib as bf
+import bf_swatch
+import colornames
 import websockets
 from bf_game import *  # noqa
 from bf_gamelib import (
@@ -14,30 +17,38 @@ from bf_gamelib import (
     get_sounds_that_reaper_would_export,
     regenerate_shaders,
 )
-from bf_lib import (
-    ALLOWED_BUILDS,
-    BUTLER_PATH,
-    CLANG_TIDY_PATH,
-    CMAKE_TESTS_PATH,
-    CPPCHECK_PATH,
-    MSBUILD_PATH,
-    PROJECT_DIR,
-    SRC_DIR,
-    TEMP_DIR,
-    BuildPlatform,
-    BuildTarget,
-    BuildType,
-    bannerify,
-    game_settings,
-    git_bump_tag,
-    git_check_no_unstashed,
-    git_stash,
-    hash32,
-    run_command,
-)
 from bf_typer import app, command, global_timing_manager_instance, timing
 
 # }
+
+
+def enrich_game_settings_colors() -> None:
+    # {  ###
+    palette_colors_with_darkened_ones = ["#ffffff", "#000000"]
+    bf.game_settings.computed_color_names.append("WHITE")
+    bf.game_settings.computed_color_names.append("BLACK")
+
+    for i in range(len(bf.game_settings.colors)):
+        color = bf.game_settings.colors[i]
+        if color in ("#000000", "#ffffff"):
+            continue
+        darkened_color = bf.rgb_floats_to_hex(
+            bf.transform_color(
+                bf.hex_to_rgb_floats(color), saturation_scale=1.3, value_scale=0.52
+            )
+        )
+        palette_colors_with_darkened_ones.append(color)
+        palette_colors_with_darkened_ones.append(darkened_color)
+        name = colornames.find(color)
+        bf.game_settings.computed_color_names.append(name)
+        bf.game_settings.computed_color_names.append(f"{name} Dark")
+        bf.game_settings.colors.append(darkened_color)
+
+    bf.game_settings.colors = palette_colors_with_darkened_ones
+    # }
+
+
+enrich_game_settings_colors()
 
 
 @timing
@@ -51,14 +62,14 @@ def make_web_build_archive(zip_path: Path, cmake_build_out_path: Path) -> None:
             "index.wasm",
         ):
             archive.write(cmake_build_out_path / filepath, filepath)
-        RESOURCES_POSTLOAD_DIR = PROJECT_DIR / "resp"
+        RESOURCES_POSTLOAD_DIR = bf.PROJECT_DIR / "resp"
         for f in RESOURCES_POSTLOAD_DIR.glob("*"):
             archive.write(f, "{}/{}".format(RESOURCES_POSTLOAD_DIR.name, f.name))
     # }
 
 
 @timing
-def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
+def do_cmake(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
     # {  ###
     command = [
         "cmake",
@@ -69,7 +80,7 @@ def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
     ]
 
     match platform:
-        case BuildPlatform.Win:
+        case bf.BuildPlatform.Win:
             # TODO: ASAN
             # if build_type != BuildType.Release:
             #     command.append("-A x64")
@@ -85,23 +96,25 @@ def do_cmake(platform: BuildPlatform, build_type: BuildType) -> None:
             else:
                 assert False, f"Not supported platform: {platform}"
 
-    run_command(" ".join(command))
+    bf.run_command(" ".join(command))
     # }
 
 
 @timing
-def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType):
+def do_build(
+    target: bf.BuildTarget, platform: bf.BuildPlatform, build_type: bf.BuildType
+):
     # {  ###
     build_id = (target, platform, build_type)
-    assert build_id in ALLOWED_BUILDS, "{} is not allowed!".format(build_id)
+    assert build_id in bf.ALLOWED_BUILDS, "{} is not allowed!".format(build_id)
 
     match platform:
-        case BuildPlatform.Win:
-            compiler = MSBUILD_PATH
+        case bf.BuildPlatform.Win:
+            compiler = bf.MSBUILD_PATH
             # if build_type != BuildType.Release:
             #     compiler = CLANG_CL_PATH
 
-            run_command(
+            bf.run_command(
                 rf"""
                 "{compiler}" .cmake/vs17/game.sln
                 -v:minimal
@@ -112,11 +125,14 @@ def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType
 
         case _:
             if platform.lower().startswith("web"):
-                run_command(rf"cmake --build .cmake/{platform}_{build_type} -t {target}")
+                bf.run_command(
+                    rf"cmake --build .cmake/{platform}_{build_type} -t {target}"
+                )
 
-                if platform == BuildPlatform.WebYandex:
+                if platform == bf.BuildPlatform.WebYandex:
                     make_web_build_archive(
-                        TEMP_DIR / "yandex.zip", Path(f".cmake/{platform}_{build_type}")
+                        bf.TEMP_DIR / "yandex.zip",
+                        Path(f".cmake/{platform}_{build_type}"),
                     )
 
             else:
@@ -126,17 +142,17 @@ def do_build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType
 
 @timing
 def do_test() -> None:
-    run_command(str(CMAKE_TESTS_PATH), timeout_seconds=5)
+    bf.run_command(str(bf.CMAKE_TESTS_PATH), timeout_seconds=5)
 
 
 @timing
 def do_lint() -> None:
     # {  ###
     files_to_lint = [
-        *SRC_DIR.rglob("*.cpp"),
-        *SRC_DIR.rglob("*.h"),
+        *bf.SRC_DIR.rglob("*.cpp"),
+        *bf.SRC_DIR.rglob("*.h"),
     ]
-    run_command(["poetry", "run", "cpplint", "--quiet", *files_to_lint])
+    bf.run_command(["poetry", "run", "cpplint", "--quiet", *files_to_lint])
 
     (Path(".cmake") / "cppcheck").mkdir(exist_ok=True)
     defines = (
@@ -144,9 +160,9 @@ def do_lint() -> None:
         "BF_PLATFORM_Win=1",
         "TESTS=1",
     )
-    run_command(
+    bf.run_command(
         [
-            CPPCHECK_PATH,
+            bf.CPPCHECK_PATH,
             "-j 4",
             "--cppcheck-build-dir=.cmake/cppcheck",
             "--project=compile_commands.json",
@@ -187,15 +203,15 @@ def do_lint() -> None:
         ]
     )
 
-    run_command(
+    bf.run_command(
         rf"""
-            "{CLANG_TIDY_PATH}"
+            "{bf.CLANG_TIDY_PATH}"
             src/engine/bf_engine.cpp
         """
         # Убираем абсолютный путь к проекту из выдачи линтинга.
         # Тут куча экранирования происходит, поэтому нужно дублировать обратные слеши.
         + r'| sed "s/{}//"'.format(
-            str(PROJECT_DIR).replace(os.path.sep, os.path.sep * 3) + os.path.sep * 3
+            str(bf.PROJECT_DIR).replace(os.path.sep, os.path.sep * 3) + os.path.sep * 3
         )
     )
     # }
@@ -204,15 +220,15 @@ def do_lint() -> None:
 @timing
 def do_cmake_ninja_files() -> None:
     # {  ###
-    run_command(
+    bf.run_command(
         rf"""
             cmake
             -G Ninja
             -B .cmake/ninja
             -D CMAKE_CXX_COMPILER=cl
             -D CMAKE_C_COMPILER=cl
-            -D PLATFORM={BuildPlatform.Win}
-            -DCMAKE_CONFIGURATION_TYPES={BuildType.Debug}
+            -D PLATFORM={bf.BuildPlatform.Win}
+            -DCMAKE_CONFIGURATION_TYPES={bf.BuildType.Debug}
         """
     )
     # }
@@ -221,7 +237,7 @@ def do_cmake_ninja_files() -> None:
 @timing
 def do_compile_commands_json() -> None:
     # {  ###
-    run_command(
+    bf.run_command(
         r"""
             ninja
             -C .cmake/ninja
@@ -235,14 +251,14 @@ def do_compile_commands_json() -> None:
 
 @timing
 def do_stop_debugger_ahk() -> None:
-    run_command(r"autohotkey .nvim-personal\cli.ahk stop_debugger")
+    bf.run_command(r"autohotkey .nvim-personal\cli.ahk stop_debugger")
 
 
 @timing
-def do_run_in_debugger_ahk(target: BuildTarget, build_type: BuildType) -> None:
+def do_run_in_debugger_ahk(target: bf.BuildTarget, build_type: bf.BuildType) -> None:
     # {  ###
     exe_path = f".cmake/vs17/{build_type}/{target}.exe"
-    run_command(rf"autohotkey .nvim-personal\cli.ahk run_in_debugger {exe_path}")
+    bf.run_command(rf"autohotkey .nvim-personal\cli.ahk run_in_debugger {exe_path}")
     # }
 
 
@@ -300,11 +316,11 @@ def do_run_in_debugger_ahk(target: BuildTarget, build_type: BuildType) -> None:
 
 @timing
 def do_activate_game_ahk() -> None:
-    run_command(r"autohotkey .nvim-personal\cli.ahk activate_game")
+    bf.run_command(r"autohotkey .nvim-personal\cli.ahk activate_game")
 
 
 @command
-def codegen(platform: BuildPlatform, build_type: BuildType):
+def codegen(platform: bf.BuildPlatform, build_type: bf.BuildType):
     # {  ###
     do_cmake(platform, build_type)
     do_generate(platform, build_type)
@@ -313,7 +329,7 @@ def codegen(platform: BuildPlatform, build_type: BuildType):
 
 
 @command
-def build(target: BuildTarget, platform: BuildPlatform, build_type: BuildType):
+def build(target: bf.BuildTarget, platform: bf.BuildPlatform, build_type: bf.BuildType):
     # {  ###
     do_cmake(platform, build_type)
     do_generate(platform, build_type)
@@ -326,19 +342,19 @@ def build_all_and_test():
     # {  ###
 
     test()
-    for target, platform, build_type in ALLOWED_BUILDS:
-        if target != BuildTarget.game:
+    for target, platform, build_type in bf.ALLOWED_BUILDS:
+        if target != bf.BuildTarget.game:
             continue
         do_generate(platform, build_type)
-        build(BuildTarget.game, platform, build_type)
+        build(bf.BuildTarget.game, platform, build_type)
         bf_lib._gamelib = None  # noqa: SLF001
     # }
 
 
 @command
-def run_in_debugger(target: BuildTarget, build_type: BuildType):
+def run_in_debugger(target: bf.BuildTarget, build_type: bf.BuildType):
     # {  ###
-    platform = BuildPlatform.Win
+    platform = bf.BuildPlatform.Win
 
     do_stop_debugger_ahk()
 
@@ -353,23 +369,23 @@ def run_in_debugger(target: BuildTarget, build_type: BuildType):
 @command
 def update_template():
     # {  ###
-    run_command("git fetch template")
+    bf.run_command("git fetch template")
 
-    with git_stash():
-        run_command("git merge template/template")
-        run_command("poetry install")
+    with bf.git_stash():
+        bf.run_command("git merge template/template")
+        bf.run_command("poetry install")
     # }
 
 
 @command
 def test():
     # {  ###
-    platform = BuildPlatform.Win
-    build_type = BuildType.Debug
+    platform = bf.BuildPlatform.Win
+    build_type = bf.BuildType.Debug
 
     do_cmake(platform, build_type)
     do_generate(platform, build_type)
-    do_build(BuildTarget.tests, platform, build_type)
+    do_build(bf.BuildTarget.tests, platform, build_type)
     do_test()
     # }
 
@@ -377,30 +393,30 @@ def test():
 @command
 def deploy_itch():
     # {  ###
-    git_check_no_unstashed()
+    bf.git_check_no_unstashed()
 
-    git_bump_tag()
+    bf.git_bump_tag()
 
-    with git_stash():
-        build(BuildTarget.game, BuildPlatform.WebItch, BuildType.Release)
+    with bf.git_stash():
+        build(bf.BuildTarget.game, bf.BuildPlatform.WebItch, bf.BuildType.Release)
 
-    zip_path = TEMP_DIR / "itch.zip"
+    zip_path = bf.TEMP_DIR / "itch.zip"
     make_web_build_archive(zip_path, Path(".cmake/WebItch_Release"))
 
-    target = "{}:html".format(game_settings.itch_target)
-    run_command([BUTLER_PATH, "push", zip_path, target])
+    target = "{}:html".format(bf.game_settings.itch_target)
+    bf.run_command([bf.BUTLER_PATH, "push", zip_path, target])
     # }
 
 
 @command
 def deploy_yandex():
     # {  ###
-    git_check_no_unstashed()
+    bf.git_check_no_unstashed()
 
-    git_bump_tag()
+    bf.git_bump_tag()
 
-    with git_stash():
-        build(BuildTarget.game, BuildPlatform.WebYandex, BuildType.Release)
+    with bf.git_stash():
+        build(bf.BuildTarget.game, bf.BuildPlatform.WebYandex, bf.BuildType.Release)
     # }
 
 
@@ -476,7 +492,7 @@ def shaders() -> None:
 def banner(filepath: Path) -> None:
     # {  ###
     filepath.write_text(
-        bannerify([x.rstrip() for x in filepath.read_text("utf-8").splitlines()]),
+        bf.bannerify([x.rstrip() for x in filepath.read_text("utf-8").splitlines()]),
         "utf-8",
     )
     # }
@@ -489,15 +505,72 @@ def list_sounds() -> None:
     print(a)
 
 
+@command
+def make_swatch():
+    # {  ###
+    colors = bf.game_settings.colors
+
+    def process_color(color: str) -> dict:
+        return {
+            "name": color,
+            "type": "Global",
+            "data": {
+                "mode": "RGB",
+                "values": bf.hex_to_rgb_floats(color),
+            },
+        }
+
+    # swatch_data = [process_color(c) for c in colors]
+    # bf_swatch.write(swatch_data, "aboba.ase")
+
+    def process_color2(color: str) -> bf_swatch.RawColor:
+        r, g, b = bf.hex_to_rgb_ints(color)
+        r = int(r * 65535 / 255)
+        g = int(g * 65535 / 255)
+        b = int(b * 65535 / 255)
+        assert r < 65536, r
+        assert g < 65536, g
+        assert b < 65536, b
+        assert r >= 0, r
+        assert g >= 0, g
+        assert b >= 0, b
+
+        return bf_swatch.RawColor(
+            name=color,
+            color_space=bf_swatch.ColorSpace.RGB,
+            component_1=r,
+            component_2=g,
+            component_3=b,
+            component_4=65535,
+        )
+
+    with open("aboba.aco", "wb") as out_file:
+        bf_swatch.save_aco_file([process_color2(c) for c in colors], out_file)
+
+    with open("aboba.pal", "w") as out_file_2:
+        out_file_2.write(
+            "JASC-PAL\n0100\n{}\n".format(
+                len(colors),
+            )
+        )
+        color_lines = []
+        for color in colors:
+            r, g, b = bf.hex_to_rgb_ints(color)
+            color_lines.append(f"{r} {g} {b}")
+        color_lines = color_lines[2:] + color_lines[:2]
+        out_file_2.write("\n".join(color_lines))
+    # }
+
+
 def main() -> None:
     # {  ###
-    test_value = hash32("test")
+    test_value = bf.hash32("test")
     assert test_value == 0xAFD071E5, test_value
-    test_value = hash32("test")  # Checking that it's stable.
+    test_value = bf.hash32("test")  # Checking that it's stable.
     assert test_value == 0xAFD071E5, test_value
 
     # Исполняем файл относительно корня проекта.
-    os.chdir(PROJECT_DIR)
+    os.chdir(bf.PROJECT_DIR)
 
     caught_exc = None
     with global_timing_manager_instance:

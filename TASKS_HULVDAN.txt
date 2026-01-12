@@ -7,13 +7,10 @@ sort by colors
 
 НЛО Сортировка: По Полочкам
 
-x background items darken + fade
-x better infinity
-x shelf test sprite
-x polish: matching animation + particles
-x colored particles
-x background color
-
+* nvim highlight colors
+* codegen colors python (fetch names from web)
+*
+* hardcode 1/2 levels
 * gather shelf stylized references
 * draw items
 * draw shelf

@@ -13,39 +13,10 @@ from math import radians
 from pathlib import Path
 from typing import Any, TypeAlias
 
+import bf_lib as bf
 import pytest
 import rpp
 from bf_game import *  # noqa
-from bf_lib import (
-    ART_DIR,
-    ART_TEXTURES_DIR,
-    ASSETS_DIR,
-    FLATBUFFERS_GENERATED_DIR,
-    FLATC_PATH,
-    GAME_DIR,
-    HANDS_GENERATED_DIR,
-    PROJECT_DIR,
-    RES_DIR,
-    SHADERC_PATH,
-    SRC_DIR,
-    TEMP_ART_DIR,
-    TEMP_DIR,
-    VENDOR_DIR,
-    BuildPlatform,
-    BuildType,
-    game_settings,
-    gamelib_processing_functions,
-    genenum,
-    get_local_ip,
-    load_gamelib_cached,
-    log,
-    read_localization_csv,
-    recursive_mkdir,
-    recursive_replace_transform,
-    replace_double_spaces,
-    run_command,
-    stable_hash,
-)
 from bf_typer import timing, timing_mark
 from PIL import Image
 
@@ -169,7 +140,7 @@ def process_group(string: str) -> StringGroup:
 
 def process_string(string: str) -> list[StringLine]:
     # {  ###
-    string = replace_double_spaces(string.strip().replace("\t", " ").replace("\r", ""))
+    string = bf.replace_double_spaces(string.strip().replace("\t", " ").replace("\r", ""))
 
     result: list[StringLine] = []
 
@@ -429,7 +400,7 @@ def test_process_string(string: str, result: list[StringLine]) -> None:
 
 def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
     # {  ###
-    _result = read_localization_csv()
+    _result = bf.read_localization_csv()
     loc_ids = _result.loc_ids
     loc_by_languages = _result.loc_by_languages
 
@@ -444,7 +415,7 @@ def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
             loc_ids.append("{}__CAPS".format(loc))
 
     genline("constexpr int LOCALE_CAPS_OFFSET = {};\n".format(locale_caps_offset))
-    genenum(genline, "Loc", ["INVALID", *loc_ids], add_count=True)
+    bf.genenum(genline, "Loc", ["INVALID", *loc_ids], add_count=True)
 
     for strings in loc_by_languages.values():
         l = len(strings)
@@ -474,7 +445,9 @@ def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
 
     # Making `broken_lines`.
     if 1:
-        genenum(genline, "BrokenStringDatumType", [x.name for x in BrokenStringDatumType])
+        bf.genenum(
+            genline, "BrokenStringDatumType", [x.name for x in BrokenStringDatumType]
+        )
         all_russian_placeholders: list[tuple[int, str]] = []
 
         for loc_index, loc in enumerate(gamelib["localizations"]):
@@ -524,7 +497,7 @@ def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
                     )
                     assert string_placeholders_to_verify == russian_placeholders, (
                         "Translated string differs in placeholders",
-                        game_settings.languages[loc_index],
+                        bf.game_settings.languages[loc_index],
                         index_to_locale[string_index],
                     )
 
@@ -533,15 +506,15 @@ def _do_localization(genline, gamelib) -> tuple[set[int], dict[str, int]]:
 
 
 @timing
-def do_audio(platform: BuildPlatform) -> None:
+def do_audio(platform: bf.BuildPlatform) -> None:
     # {  ###
-    AUDIO_SRC_DIR = ASSETS_DIR / "sfx"
-    AUDIO_DST_DIR = RES_DIR
-    AUDIO_POST_DST_DIR = RES_DIR
+    AUDIO_SRC_DIR = bf.ASSETS_DIR / "sfx"
+    AUDIO_DST_DIR = bf.RES_DIR
+    AUDIO_POST_DST_DIR = bf.RES_DIR
     if platform.is_web():
-        AUDIO_POST_DST_DIR = PROJECT_DIR / "resp"
-    recursive_mkdir(AUDIO_DST_DIR)
-    recursive_mkdir(AUDIO_POST_DST_DIR)
+        AUDIO_POST_DST_DIR = bf.PROJECT_DIR / "resp"
+    bf.recursive_mkdir(AUDIO_DST_DIR)
+    bf.recursive_mkdir(AUDIO_POST_DST_DIR)
     for folder in {AUDIO_DST_DIR, AUDIO_POST_DST_DIR}:
         for f in folder.glob("*.ogg"):
             f.unlink()
@@ -569,7 +542,7 @@ def do_audio(platform: BuildPlatform) -> None:
         dst_file = dst_folder / (src_file.stem + ".ogg")
         dst_file.symlink_to(src_file)
 
-    log.info(f"Make symlinks for {len(src_files)} audio files")
+    bf.log.info(f"Make symlinks for {len(src_files)} audio files")
 
     # Removing orphan audio files from `res` dir.
     orphans = []
@@ -580,7 +553,7 @@ def do_audio(platform: BuildPlatform) -> None:
                 orphans.append(dst_file)
                 dst_file.unlink()
     if orphans:
-        log.info(
+        bf.log.info(
             "Removed {} orphan audio files:\n{}".format(
                 len(orphans), "\n".join(x for x in orphans)
             )
@@ -590,18 +563,18 @@ def do_audio(platform: BuildPlatform) -> None:
 
 @timing
 def convert_gamelib_json_to_binary(
-    platform: BuildPlatform,
+    platform: bf.BuildPlatform,
     texture_name_2_id: dict[str, int],
     genline,
     atlas_data,
     original_texture_sizes,
 ) -> None:
-    # {  ###
-    gamelib = load_gamelib_cached()
+    gamelib = bf.load_gamelib_cached()
 
     gamelib["original_texture_sizes"] = original_texture_sizes
 
     # Imgui debug variables.
+    # {  ###
     if 1:
         debug_variables = gamelib.pop("debug_variables", [])
         genline("struct BFDebug {")
@@ -656,24 +629,26 @@ def convert_gamelib_json_to_binary(
                 case _:
                     raise NotImplementedError
         genline("}\n")
+    # }
 
+    # Sounds.
+    # {  ###
     postload_files = []
 
     def next_postload_file_index(path: Path) -> int:
         postload_files.append(path.as_posix())
         return len(postload_files)
 
-    # Enriching gamelib with sounds.
     if 1:
         do_audio(platform)
 
-        sound_paths = [*RES_DIR.glob("*.ogg")]
+        sound_paths = [*bf.RES_DIR.glob("*.ogg")]
         if platform.is_web():
-            sound_paths.extend((PROJECT_DIR / "resp").glob("*.ogg"))
+            sound_paths.extend((bf.PROJECT_DIR / "resp").glob("*.ogg"))
 
         m = 2**32
         sound_types_ = [
-            (t, (stable_hash(t) % m))
+            (t, (bf.stable_hash(t) % m))
             for t in {
                 sound_path.stem.split("__", 1)[0].upper() for sound_path in sound_paths
             }
@@ -682,7 +657,7 @@ def convert_gamelib_json_to_binary(
         sound_types_.sort(key=lambda x: x[1])
         sound_types_sorted_by_enum_value: list[str] = [x[0] for x in sound_types_]
         sound_enum_values = [x[1] for x in sound_types_]
-        genenum(
+        bf.genenum(
             genline,
             "Sound",
             sound_types_for_humans,
@@ -700,7 +675,7 @@ def convert_gamelib_json_to_binary(
         sound_variations_per_type: dict[str, list[Any]] = defaultdict(list)
 
         for sound_path in sound_paths:
-            filepath = sound_path.relative_to(PROJECT_DIR)
+            filepath = sound_path.relative_to(bf.PROJECT_DIR)
 
             postload_index = 0
             if (sound_path.parent.name == "resp") and platform.is_web():
@@ -737,14 +712,15 @@ def convert_gamelib_json_to_binary(
             sounds.append(x)
 
         if existing_sounds_by_type:
-            log.warning(
+            bf.log.warning(
                 "gamelib.yml `sounds` contain those that aren't bound to any exported sounds: {}".format(
                     ", ".join(existing_sounds_by_type)
                 )
             )
+    # }
 
     gamelib |= atlas_data
-    genenum(genline, "DrawZ", gamelib.pop("draw_z"), add_count=True)
+    bf.genenum(genline, "DrawZ", gamelib.pop("draw_z"), add_count=True)
 
     localization_codepoints, locale_to_index = _do_localization(genline, gamelib)
 
@@ -753,14 +729,45 @@ def convert_gamelib_json_to_binary(
     def warning(*args, **kwargs) -> None:
         nonlocal warnings
         warnings += 1
-        log.warning(*args, **kwargs)
+        bf.log.warning(*args, **kwargs)
 
-    for gamelib_processing_function in gamelib_processing_functions:
+    for gamelib_processing_function in bf.gamelib_processing_functions:
         gamelib_processing_function(genline, gamelib, localization_codepoints, warning)
+
+    # Colors.
+    # ============================================================
+    # {  ###
+    if 1:
+        used_color_names = set()
+        genline("// Usage: PAL_ORANGE, PAL_TEXT_ORANGE.")
+        genline("#define PAL_COLORS_TABLE \\")
+        for i, hex_color_ in enumerate(bf.game_settings.colors):
+            hex_color = hex_color_[1:].lower()
+
+            color_name = bf.game_settings.computed_color_names[i]
+            assert color_name not in used_color_names, color_name
+            used_color_names.add(color_name)
+
+            color_type = color_name.upper().replace(" ", "_")
+
+            gamelib["colors"].append({"type": color_type, "color": f"0x{hex_color}ff"})
+
+            genline(
+                '  X("{}", 0x{}ff, {}){}'.format(
+                    hex_color_.lower(),
+                    hex_color,
+                    color_type,
+                    "   \\" if i < len(bf.game_settings.colors) - 1 else "\n",
+                )
+            )
+
+    # }
 
     genline(f"constexpr bool BUILD_WARNINGS = {warnings};\n")
 
-    # Asserting on not found textures.
+    # Checking textures.
+    # ============================================================
+    # {  ###
     if 1:
         not_found_textures: set[str] = set()
         transform_texture_id = lambda data, key: transform_to_texture_index(
@@ -782,11 +789,14 @@ def convert_gamelib_json_to_binary(
             assert False, "Couldn't find textures:\n{}".format(
                 "\n".join(sorted(f"- {x}" for x in not_found_textures))
             )
+    # }
 
     degrees_to_radians_recursive_transform(gamelib)
 
-    recursive_replace_transform(gamelib, "locale", "locales", locale_to_index)
-    recursive_replace_transform(gamelib, "sound_hash", "sound_hashes", dict(sound_types_))
+    bf.recursive_replace_transform(gamelib, "locale", "locales", locale_to_index)
+    bf.recursive_replace_transform(
+        gamelib, "sound_hash", "sound_hashes", dict(sound_types_)
+    )
 
     genline(
         f"constexpr int BF_TOTAL_POSTLOAD_FILES_PLUS_ONE = {len(postload_files) + 1};\n"
@@ -794,37 +804,38 @@ def convert_gamelib_json_to_binary(
     gamelib["postload_files"] = postload_files
 
     # Creation of `gamelib.bin`.
-    intermediate_path = TEMP_DIR / "gamelib.intermediate.jsonc"
+    # {  ###
+    intermediate_path = bf.TEMP_DIR / "gamelib.intermediate.jsonc"
     intermediate_path.write_text(json.dumps(gamelib, indent=4))
-    run_command(
+    bf.run_command(
         [
-            FLATC_PATH,
+            bf.FLATC_PATH,
             "-o",
-            TEMP_DIR,
+            bf.TEMP_DIR,
             "-b",
-            GAME_DIR / "bf_gamelib.fbs",
+            bf.GAME_DIR / "bf_gamelib.fbs",
             intermediate_path,
         ]
     )
 
     intermediate_binary_path = Path(str(intermediate_path).rsplit(".", 1)[0] + ".bin")
-    shutil.move(intermediate_binary_path, RES_DIR / "gamelib.bin")
-    # }}
+    shutil.move(intermediate_binary_path, bf.RES_DIR / "gamelib.bin")
+    # }
 
 
 def downscale_images(downscale_factors: list[int]) -> None:
     # {  ###
     assert downscale_factors, downscale_factors
 
-    images_to_downscale = list(ART_TEXTURES_DIR.glob("*.png"))
+    images_to_downscale = list(bf.ART_TEXTURES_DIR.glob("*.png"))
 
     for factor in downscale_factors:
         assert factor >= 1, factor
 
-        log.info("Downscaling by {}".format(factor))
+        bf.log.info("Downscaling by {}".format(factor))
 
-        export_dir = TEMP_ART_DIR / f"d{factor}"
-        recursive_mkdir(export_dir)
+        export_dir = bf.TEMP_ART_DIR / f"d{factor}"
+        bf.recursive_mkdir(export_dir)
 
         for image_path in images_to_downscale:
             s1 = image_path.stat()
@@ -858,39 +869,39 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
     atlases_data = []
 
     for factor in downscale_factors:
-        path = ART_DIR / f"atlas_d{factor}.ftpp"
+        path = bf.ART_DIR / f"atlas_d{factor}.ftpp"
 
-        cache_filepath = TEMP_DIR / f".atlas_d{factor}.cache"
+        cache_filepath = bf.TEMP_DIR / f".atlas_d{factor}.cache"
 
         old_cache_value = -1
         if cache_filepath.exists():
             old_cache_value = int(cache_filepath.read_text())
 
         cache_value = 0
-        for filepath in Path(TEMP_ART_DIR / f"d{factor}").rglob("*.png"):
-            cache_value = stable_hash(
+        for filepath in Path(bf.TEMP_ART_DIR / f"d{factor}").rglob("*.png"):
+            cache_value = bf.stable_hash(
                 cache_value
-                + stable_hash(filepath.stat().st_mtime_ns)
-                + stable_hash(filepath.name)
+                + bf.stable_hash(filepath.stat().st_mtime_ns)
+                + bf.stable_hash(filepath.name)
             )
 
         should_regenerate_atlas = False
-        temp_atlas_path = TEMP_DIR / (path.stem + ".png")
+        temp_atlas_path = bf.TEMP_DIR / (path.stem + ".png")
 
         if (cache_value == old_cache_value) and temp_atlas_path.exists():
-            log.info("Skipped atlas generation - no images changed")
+            bf.log.info("Skipped atlas generation - no images changed")
             timing_mark("skipped png generation")
         else:
             # Генерируем атлас из .ftpp файла. Создаются .json спецификация и .png текстура.
-            log.info("Generating atlas...")
-            run_command("free-tex-packer-cli --project {}".format(path))
+            bf.log.info("Generating atlas...")
+            bf.run_command("free-tex-packer-cli --project {}".format(path))
 
             cache_filepath.write_text(str(cache_value), newline="\n")
 
             should_regenerate_atlas = True
 
         # Подгоняем спецификацию под наш формат.
-        json_path = TEMP_DIR / (path.stem + ".json")
+        json_path = bf.TEMP_DIR / (path.stem + ".json")
         with open(json_path) as json_file:
             json_data = json.load(json_file)
 
@@ -924,13 +935,13 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
                 name = texture["debug_name"].removeprefix(f"d{factor}/")
                 texture_name_2_id[name] = i
 
-        recursive_mkdir(RES_DIR)
+        bf.recursive_mkdir(bf.RES_DIR)
 
-        out_atlas_path = RES_DIR / (path.stem + ".basis")
+        out_atlas_path = bf.RES_DIR / (path.stem + ".basis")
         if not out_atlas_path.exists() or should_regenerate_atlas:
-            run_command(
+            bf.run_command(
                 [
-                    PROJECT_DIR / "cli" / "basisu.exe",
+                    bf.PROJECT_DIR / "cli" / "basisu.exe",
                     "-uastc",
                     "-slower",
                     "-file",
@@ -938,17 +949,17 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
                     "-output_file",
                     out_atlas_path,
                 ],
-                cwd=TEMP_DIR,
+                cwd=bf.TEMP_DIR,
             )
 
-            run_command(
+            bf.run_command(
                 [
-                    PROJECT_DIR / "cli" / "basisu.exe",
+                    bf.PROJECT_DIR / "cli" / "basisu.exe",
                     "-validate",
                     "-file",
                     out_atlas_path,
                 ],
-                cwd=TEMP_DIR,
+                cwd=bf.TEMP_DIR,
             )
 
         else:
@@ -987,7 +998,7 @@ def remove_excessive_files_by_pattern(
             excessive_files.append(str(p))
 
     if excessive_files:
-        log.info("Removed excessive files: {}".format(", ".join(excessive_files)))
+        bf.log.info("Removed excessive files: {}".format(", ".join(excessive_files)))
     # }
 
 
@@ -995,16 +1006,16 @@ def remove_excessive_files_by_pattern(
 def remove_excessive_images_in_temp_art_dir(downscale_factors: list[int]) -> None:
     # {  ###
     for factor in downscale_factors:
-        TEMP_ART_DOWNSCALED_DIR = TEMP_ART_DIR / f"d{factor}"
+        TEMP_ART_DOWNSCALED_DIR = bf.TEMP_ART_DIR / f"d{factor}"
         remove_excessive_files_by_pattern(
-            ART_TEXTURES_DIR, TEMP_ART_DOWNSCALED_DIR, "*.png"
+            bf.ART_TEXTURES_DIR, TEMP_ART_DOWNSCALED_DIR, "*.png"
         )
     # }
 
 
 @timing
 def remove_intermediate_generation_files() -> None:
-    for filepath in TEMP_DIR.rglob("*.intermediate*"):
+    for filepath in bf.TEMP_DIR.rglob("*.intermediate*"):
         filepath.unlink()
 
 
@@ -1067,18 +1078,18 @@ def listfiles_with_hashes_in_dir(path: str | Path) -> dict[str, int]:
 @timing
 def generate_flatbuffer_files():
     # {  ###
-    recursive_mkdir(FLATBUFFERS_GENERATED_DIR)
+    bf.recursive_mkdir(bf.FLATBUFFERS_GENERATED_DIR)
 
-    hashes_for_msbuild = listfiles_with_hashes_in_dir(FLATBUFFERS_GENERATED_DIR)
+    hashes_for_msbuild = listfiles_with_hashes_in_dir(bf.FLATBUFFERS_GENERATED_DIR)
 
     # Генерируем cpp файлы из FlatBuffer (.fbs) файлов.
-    flatbuffer_files = list(SRC_DIR.rglob("*.fbs"))
+    flatbuffer_files = list(bf.SRC_DIR.rglob("*.fbs"))
 
     with tempfile.TemporaryDirectory() as td:
 
         def gen(filepaths, *args):
             command = [
-                FLATC_PATH,
+                bf.FLATC_PATH,
                 *args,
                 "-o",
                 td,
@@ -1086,13 +1097,13 @@ def generate_flatbuffer_files():
                 *list(filepaths),
             ]
 
-            run_command(command)
+            bf.run_command(command)
 
         gen(
             (
                 i
                 for i in flatbuffer_files
-                if i.name in game_settings.generate_flatbuffers_api_for
+                if i.name in bf.game_settings.generate_flatbuffers_api_for
             ),
             "--gen-object-api",
             "--reflect-names",
@@ -1100,21 +1111,23 @@ def generate_flatbuffer_files():
         gen(
             i
             for i in flatbuffer_files
-            if i.name not in game_settings.generate_flatbuffers_api_for
+            if i.name not in bf.game_settings.generate_flatbuffers_api_for
         )
 
         for file, file_hash in listfiles_with_hashes_in_dir(td).items():
             # Костыль, чтобы MSBuild не ребилдился каждый раз.
             if file_hash != hashes_for_msbuild.get(file):
-                shutil.copyfile(Path(td) / file, FLATBUFFERS_GENERATED_DIR / file)
+                shutil.copyfile(Path(td) / file, bf.FLATBUFFERS_GENERATED_DIR / file)
     # }
 
 
 @timing
-def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType) -> None:
+def remove_orphan_resources_files(
+    platform: bf.BuildPlatform, build_type: bf.BuildType
+) -> None:
     # {  ###
     match platform:
-        case BuildPlatform.Win:
+        case bf.BuildPlatform.Win:
             target_dir_ = f".cmake/vs17/{build_type}/res"
 
         case _:
@@ -1123,7 +1136,7 @@ def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType
             else:
                 assert False, f"Not supported platform: {platform}"
 
-    src_files = {f.name for f in RES_DIR.iterdir() if f.is_file()}
+    src_files = {f.name for f in bf.RES_DIR.iterdir() if f.is_file()}
 
     target_dir = Path(target_dir_)
 
@@ -1133,7 +1146,7 @@ def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType
     for file in target_dir.iterdir():
         if file.is_file() and file.name not in src_files:
             file.unlink()
-            log.info(f"Removed orphan res/ file '{file}'")
+            bf.log.info(f"Removed orphan res/ file '{file}'")
     # }
 
 
@@ -1141,12 +1154,14 @@ def remove_orphan_resources_files(platform: BuildPlatform, build_type: BuildType
 def get_sounds_that_reaper_would_export() -> set[str]:
     sounds: set[str] = set()
 
-    project = rpp.loads((ASSETS_DIR / "sfx" / "src" / "sfx.rpp").read_text())
+    project = rpp.loads((bf.ASSETS_DIR / "sfx" / "src" / "sfx.rpp").read_text())
     for t in project.findall(".//TRACK"):
         for f in t.findall(".//FILE"):
             subproject_path = Path(f[1])
             subproject = rpp.loads(
-                (ASSETS_DIR / "sfx" / "src" / "_sfx" / subproject_path.name).read_text()
+                (
+                    bf.ASSETS_DIR / "sfx" / "src" / "_sfx" / subproject_path.name
+                ).read_text()
             )
 
             for marker in subproject.findall(".//MARKER"):
@@ -1163,15 +1178,15 @@ def get_sounds_that_reaper_would_export() -> set[str]:
 @timing
 def cfy_fonts() -> None:
     allowed_chars = string.ascii_lowercase + string.digits + "_"
-    for filepath in (SRC_DIR / "engine" / "fonts").glob("*"):
+    for filepath in (bf.SRC_DIR / "engine" / "fonts").glob("*"):
         out_name = (
-            replace_double_spaces(
+            bf.replace_double_spaces(
                 "".join(c if c in allowed_chars else " " for c in filepath.name.lower())
             )
             .replace(" ", "_")
             .strip("_")
         )
-        run_command(
+        bf.run_command(
             [
                 r".\cli\binary_to_compressed_c.exe",
                 filepath,
@@ -1187,9 +1202,9 @@ def regenerate_shaders(building_for_release: bool) -> None:
     # {  ###
     output_directory = CODEGEN_DIR / "shaders"
     if output_directory.exists():
-        run_command(["del", "/f/s/q", output_directory])
+        bf.run_command(["del", "/f/s/q", output_directory])
         output_directory.mkdir(exist_ok=True)
-    recursive_mkdir(output_directory)
+    bf.recursive_mkdir(output_directory)
 
     with open(
         output_directory / "include_all.h", "w", encoding="utf-8"
@@ -1211,8 +1226,8 @@ def regenerate_shaders(building_for_release: bool) -> None:
         incorrect_shaders = []
 
         for base in (
-            SRC_DIR / "engine" / "shaders",
-            SRC_DIR / "game" / "shaders",
+            bf.SRC_DIR / "engine" / "shaders",
+            bf.SRC_DIR / "game" / "shaders",
         ):
             for shader in base.glob("*"):
                 shader_type = None
@@ -1262,15 +1277,15 @@ def regenerate_shaders(building_for_release: bool) -> None:
                     )
                     include_all_file.write(f'#include "shaders/{out_file.name}"\n')
 
-                    run_command(
-                        replace_double_spaces(
+                    bf.run_command(
+                        bf.replace_double_spaces(
                             f"""
-                            {SHADERC_PATH}
+                            {bf.SHADERC_PATH}
                             --type {shader_type}
                             -f {shader}
                             -o {out_file}
                             {additional_args}
-                            -i {PROJECT_DIR / "vendor" / "bgfx" / "src"}
+                            -i {bf.PROJECT_DIR / "vendor" / "bgfx" / "src"}
                             --varyingdef {varyingdef}
                             --Werror
                             --bin2c
@@ -1281,7 +1296,7 @@ def regenerate_shaders(building_for_release: bool) -> None:
 
 
 @timing
-def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
+def do_generate(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
     # {  ###
     remove_orphan_resources_files(platform, build_type)
 
@@ -1289,14 +1304,14 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
     for folder in ("flatbuffers", "fonts", "hands"):
         target_folder = CODEGEN_DIR / folder
         if target_folder.exists():
-            run_command(["del", "/f/s/q", target_folder])
+            bf.run_command(["del", "/f/s/q", target_folder])
             target_folder.mkdir(exist_ok=True)
 
     cfy_fonts()
 
     # Generating shell.
-    if build_type == BuildType.Release and platform.is_web():
-        shell_file = VENDOR_DIR / "shell_release.html"
+    if build_type == bf.BuildType.Release and platform.is_web():
+        shell_file = bf.VENDOR_DIR / "shell_release.html"
         shell_contents = shell_file.read_text(encoding="utf-8")
 
         NOT_YANDEX_WEB_POST_RUN = """
@@ -1310,7 +1325,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         """
 
         variables = {
-            BuildPlatform.Web: {
+            bf.BuildPlatform.Web: {
                 "EXTEND_BODY_START": "",
                 "EXTEND_BEFORE_WASM": """
                     performance.mark("jsBeforeWASM");
@@ -1367,7 +1382,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
                         });
 
                     },
-                """.replace("THIS_PC_LOCAL_IP", get_local_ip()),
+                """.replace("THIS_PC_LOCAL_IP", bf.get_local_ip()),
                 "EXTEND_POST_RUN": NOT_YANDEX_WEB_POST_RUN,
                 "EXTEND_MAIN_SCRIPT": """
                     const moduleReady = new Promise(resolve => {
@@ -1384,7 +1399,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
                 """,
                 "EXTEND_HTML_END": "",
             },
-            BuildPlatform.WebItch: {
+            bf.BuildPlatform.WebItch: {
                 "EXTEND_BODY_START": "",
                 "EXTEND_BEFORE_WASM": "",
                 "EXTEND_PRE_RUN": "",
@@ -1392,7 +1407,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
                 "EXTEND_MAIN_SCRIPT": "",
                 "EXTEND_HTML_END": "",
             },
-            BuildPlatform.WebYandex: {
+            bf.BuildPlatform.WebYandex: {
                 "EXTEND_BODY_START": """
                     <script src="/sdk.js"></script>
                     <!-- Yandex.Metrika counter -->
@@ -1411,7 +1426,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
                     <!-- /Yandex.Metrika counter -->
                 """.replace(
                     "YANDEX_METRIC_COUNTER_ID",
-                    str(game_settings.yandex_metrica_counter_id),
+                    str(bf.game_settings.yandex_metrica_counter_id),
                 ),
                 "EXTEND_BEFORE_WASM": "",
                 "EXTEND_PRE_RUN": "",
@@ -1466,21 +1481,21 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         name = "shell_release"
         if suffix := platform.lower().removeprefix("web"):
             name += "_" + suffix
-        (TEMP_DIR / f"{name}.html").write_text(shell_contents, encoding="utf-8")
+        (bf.TEMP_DIR / f"{name}.html").write_text(shell_contents, encoding="utf-8")
 
     # Shaders.
     # regenerate_shaders(build_type != BuildType.Debug)
 
-    recursive_mkdir(HANDS_GENERATED_DIR)
+    bf.recursive_mkdir(bf.HANDS_GENERATED_DIR)
 
     if platform.is_web():
         bind_function_names: set[str] = set()
-        for f in (SRC_DIR / "engine" / "bf_engine.cpp",):
+        for f in (bf.SRC_DIR / "engine" / "bf_engine.cpp",):
             m = re.findall(r"\s+(fromJS_\w+)", f.read_text(encoding="utf-8"))
             if m:
                 bind_function_names |= set(m)
 
-        (HANDS_GENERATED_DIR / "bf_emscripten_binds.cpp").write_text(
+        (bf.HANDS_GENERATED_DIR / "bf_emscripten_binds.cpp").write_text(
             """{}EMSCRIPTEN_BINDINGS(callbacks) {{
 {}}}""".format(
                 CODEGEN_DISCLAIMER,
@@ -1493,7 +1508,7 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         )
 
     with open(
-        HANDS_GENERATED_DIR / "bf_codegen.cpp", "w", encoding="utf-8"
+        bf.HANDS_GENERATED_DIR / "bf_codegen.cpp", "w", encoding="utf-8"
     ) as codegen_file:
         codegen_file.write(CODEGEN_DISCLAIMER)
 
@@ -1515,9 +1530,9 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         textures = [
             {
                 "debug_name": f"d1/{filepath.stem}",
-                "size": Image.open(TEMP_ART_DIR / "d1" / filepath).size,
+                "size": Image.open(bf.TEMP_ART_DIR / "d1" / filepath).size,
             }
-            for filepath in Path(TEMP_ART_DIR / "d1").glob("*.png")
+            for filepath in Path(bf.TEMP_ART_DIR / "d1").glob("*.png")
         ]
         textures.sort(key=partial(texture_cmp_key, factor=1))
         original_texture_sizes = [x["size"] for x in textures]
@@ -1531,25 +1546,28 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         genline("///")
 
     symlink_resources_for = (
-        (BuildPlatform.Win, BuildType.Debug),
-        (BuildPlatform.Win, BuildType.RelWithDebInfo),
-        (BuildPlatform.Win, BuildType.Release),
-        (BuildPlatform.Web, BuildType.Debug),
-        (BuildPlatform.Web, BuildType.Release),
-        (BuildPlatform.WebItch, BuildType.Release),
-        (BuildPlatform.WebYandex, BuildType.Release),
+        (bf.BuildPlatform.Win, bf.BuildType.Debug),
+        (bf.BuildPlatform.Win, bf.BuildType.RelWithDebInfo),
+        (bf.BuildPlatform.Win, bf.BuildType.Release),
+        (bf.BuildPlatform.Web, bf.BuildType.Debug),
+        (bf.BuildPlatform.Web, bf.BuildType.Release),
+        (bf.BuildPlatform.WebItch, bf.BuildType.Release),
+        (bf.BuildPlatform.WebYandex, bf.BuildType.Release),
     )
     dist_dir = {
-        (BuildPlatform.Win, BuildType.Debug): ".cmake/vs17/Debug/",
-        (BuildPlatform.Win, BuildType.RelWithDebInfo): ".cmake/vs17/RelWithDebugInfo/",
-        (BuildPlatform.Win, BuildType.Release): ".cmake/vs17/Release/",
-        (BuildPlatform.Web, BuildType.Debug): ".cmake/Web_Debug/",
-        (BuildPlatform.Web, BuildType.Release): ".cmake/Web_Release/",
-        (BuildPlatform.WebItch, BuildType.Release): ".cmake/WebItch_Release/",
-        (BuildPlatform.WebYandex, BuildType.Release): ".cmake/WebYandex_Release/",
+        (bf.BuildPlatform.Win, bf.BuildType.Debug): ".cmake/vs17/Debug/",
+        (
+            bf.BuildPlatform.Win,
+            bf.BuildType.RelWithDebInfo,
+        ): ".cmake/vs17/RelWithDebugInfo/",
+        (bf.BuildPlatform.Win, bf.BuildType.Release): ".cmake/vs17/Release/",
+        (bf.BuildPlatform.Web, bf.BuildType.Debug): ".cmake/Web_Debug/",
+        (bf.BuildPlatform.Web, bf.BuildType.Release): ".cmake/Web_Release/",
+        (bf.BuildPlatform.WebItch, bf.BuildType.Release): ".cmake/WebItch_Release/",
+        (bf.BuildPlatform.WebYandex, bf.BuildType.Release): ".cmake/WebYandex_Release/",
     }[(platform, build_type)]
 
-    recursive_mkdir(dist_dir)
+    bf.recursive_mkdir(dist_dir)
 
     resources_folders = ["res"]
     if platform.is_web():
@@ -1559,11 +1577,11 @@ def do_generate(platform: BuildPlatform, build_type: BuildType) -> None:
         for folder in resources_folders:
             p = Path(dist_dir + folder)
             if not p.exists():
-                p.symlink_to(PROJECT_DIR / folder, target_is_directory=True)
+                p.symlink_to(bf.PROJECT_DIR / folder, target_is_directory=True)
     else:
         dst_resources = dist_dir + "res/"
-        remove_excessive_files_by_pattern(RES_DIR, dst_resources, "*")
-        shutil.copytree(RES_DIR, dst_resources, dirs_exist_ok=True)
+        remove_excessive_files_by_pattern(bf.RES_DIR, dst_resources, "*")
+        shutil.copytree(bf.RES_DIR, dst_resources, dirs_exist_ok=True)
     # }
 
 

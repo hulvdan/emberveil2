@@ -57,6 +57,8 @@ particles: # {  ###
           - game_feedback_circle
 # }
 
+colors:
+  - type: INVALID
 debug_variables: # {  ###
   # Engine stuff:
   - name: gizmos

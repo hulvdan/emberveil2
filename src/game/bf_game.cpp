@@ -772,7 +772,7 @@ void RunReset() {  ///
 void GamePreInit(GamePreInitOpts opts) {  ///
   ZoneScoped;
 
-  ge.settings.backgroundColor = ColorFromRGBA(0xdad0f4ff);
+  ge.settings.backgroundColor = TextifyColor(PAL_MAUVE);
 
   *opts.baseFont = &g.meta.fontUI;
 }
@@ -1850,12 +1850,11 @@ void GameDraw() {
 }
 
 Color particleColors[]{
-  ColorFromRGBA(0xe83b3bff),
-  // ColorFromRGBA(0xfb6b1dff),
-  ColorFromRGBA(0xfbb954ff),
-  ColorFromRGBA(0xfbff86ff),
-  ColorFromRGBA(0xfbb954ff),
-  ColorFromRGBA(0xeaadedff),
+  PAL_ALIZARIN_CRIMSON,
+  PAL_CASABLANCA,
+  PAL_DOLLY,
+  PAL_CASABLANCA,
+  PAL_MAUVE,
 };
 
 void ParticleRender_COMMON(f32 p, lframe e, ParticleRenderData data) {  ///

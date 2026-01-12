@@ -33,6 +33,9 @@ class _GameSettings:
     languages: list[str] = field(default_factory=lambda: ["russian", "english"])
     generate_flatbuffers_api_for: list[str] = field(default_factory=list)
     yandex_metrica_counter_id: int | None = None
+    colors: list[str] = field(default_factory=lambda: ["#ffffff", "#000000"])
+
+    computed_color_names: list[str] = field(default_factory=list)
     # }
 
 

@@ -19,7 +19,6 @@ from itertools import groupby
 
 import bf_image
 import bf_lib as bf
-import bf_swatch
 from bf_typer import command, timing
 from PIL import Image
 
@@ -29,6 +28,41 @@ bf.game_settings.itch_target = "hulvdan/emberveil2"
 bf.game_settings.languages = ["russian", "english"]
 bf.game_settings.generate_flatbuffers_api_for = ["bf_save.fbs"]
 bf.game_settings.yandex_metrica_counter_id = 105874717
+bf.game_settings.colors = [  ###
+    "#ffffff",
+    "#fb6b1d",
+    "#e83b3b",
+    "#831c5d",
+    "#c32454",
+    "#f04f78",
+    "#f68181",
+    "#fca790",
+    "#e3c896",
+    "#ab947a",
+    "#966c6c",
+    "#625565",
+    "#3e3546",
+    "#0b5e65",
+    "#0b8a8f",
+    "#1ebc73",
+    "#91db69",
+    "#fbff86",
+    "#fbb954",
+    "#cd683d",
+    "#9e4539",
+    "#7a3045",
+    "#6b3e75",
+    "#905ea9",
+    "#a884f3",
+    "#eaaded",
+    "#8fd3ff",
+    "#4d9be6",
+    "#4d65b4",
+    "#484a77",
+    "#30e1b9",
+    "#8ff8e2",
+    "#000000",
+]
 
 
 scoped_processing_args = ["None", "None"]
@@ -340,114 +374,6 @@ def process_images():
         out_dir=bf.ART_TEXTURES_DIR,
         out_filename_prefix="processed__game_item_",
     )
-    # }
-
-
-@command
-def make_swatch():
-    # {  ###
-    colors = [
-        "#ffffff",
-        "#fb6b1d",
-        "#e83b3b",
-        "#831c5d",
-        "#c32454",
-        "#f04f78",
-        "#f68181",
-        "#fca790",
-        "#e3c896",
-        "#ab947a",
-        "#966c6c",
-        "#625565",
-        "#3e3546",
-        "#0b5e65",
-        "#0b8a8f",
-        "#1ebc73",
-        "#91db69",
-        "#fbff86",
-        "#fbb954",
-        "#cd683d",
-        "#9e4539",
-        "#7a3045",
-        "#6b3e75",
-        "#905ea9",
-        "#a884f3",
-        "#eaaded",
-        "#8fd3ff",
-        "#4d9be6",
-        "#4d65b4",
-        "#484a77",
-        "#30e1b9",
-        "#8ff8e2",
-        "#000000",
-    ]
-
-    new_colors = ["#ffffff", "#000000"]
-
-    for i in range(len(colors)):
-        color = colors[i]
-        if color in ("#000000", "#ffffff"):
-            continue
-        c = bf.rgb_floats_to_hex(
-            bf.transform_color(
-                bf.hex_to_rgb_floats(color),
-                saturation_scale=1.2,
-                value_scale=0.52,
-            )
-        )
-        new_colors.append(color)
-        new_colors.append(c)
-        colors.append(c)
-
-    def process_color(color: str) -> dict:
-        return {
-            "name": color,
-            "type": "Global",
-            "data": {
-                "mode": "RGB",
-                "values": bf.hex_to_rgb_floats(color),
-            },
-        }
-
-    swatch_data = [process_color(c) for c in colors]
-    bf_swatch.write(swatch_data, "aboba.ase")
-
-    def process_color2(color: str) -> bf_swatch.RawColor:
-        r, g, b = bf.hex_to_rgb_ints(color)
-        r = int(r * 65535 / 255)
-        g = int(g * 65535 / 255)
-        b = int(b * 65535 / 255)
-        assert r < 65536, r
-        assert g < 65536, g
-        assert b < 65536, b
-        assert r >= 0, r
-        assert g >= 0, g
-        assert b >= 0, b
-
-        return bf_swatch.RawColor(
-            name=color,
-            color_space=bf_swatch.ColorSpace.RGB,
-            component_1=r,
-            component_2=g,
-            component_3=b,
-            component_4=65535,
-        )
-
-    with open("aboba.aco", "wb") as out_file:
-        bf_swatch.save_aco_file([process_color2(c) for c in new_colors], out_file)
-
-    with open("aboba.pal", "w") as out_file_2:
-        out_file_2.write(
-            "JASC-PAL\n0100\n{}\n".format(
-                len(new_colors),
-            )
-        )
-        color_lines = []
-        for color in new_colors:
-            r, g, b = bf.hex_to_rgb_ints(color)
-            color_lines.append(f"{r} {g} {b}")
-        color_lines = color_lines[2:] + color_lines[:2]
-        out_file_2.write("\n".join(color_lines))
     # }
 
 
