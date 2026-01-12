@@ -326,7 +326,8 @@ struct GameData {
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
 
-    PushableArray<Shelf, 15> shelves = {};
+    Array<int, TOTAL_ITEMS>  colorIndexToItemIndex = {};
+    PushableArray<Shelf, 15> shelves               = {};
 
 #define VECTORS_TABLE X(BodyShape, bodyShapes)
 
@@ -657,6 +658,10 @@ bool PushSpotBack(int shelfIndex, int itemIndex) {  ///
 
 void RunInit() {
   ZoneScoped;
+
+  FOR_RANGE (int, i, TOTAL_ITEMS)
+    g.run.colorIndexToItemIndex[i] = i;
+  GRAND.Shuffle(g.run.colorIndexToItemIndex.base, TOTAL_ITEMS);
 
   const auto fb_level = GetFBLevel(g.save.level);
 
@@ -1532,7 +1537,7 @@ void GameDraw() {
       return;
 
     const f32  depthFactor = depth / dm;
-    const auto fb          = glib->items()->Get(p.color);
+    const auto fb          = glib->items()->Get(g.run.colorIndexToItemIndex[p.color]);
     DrawGroup_CommandTexture({
       .texID    = fb->texture_id(),
       .rotation = rotation,

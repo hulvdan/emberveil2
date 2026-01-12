@@ -16,16 +16,15 @@ x nvim highlight colors
 x codegen colors
 x HOW MANY ITEMS? 45
 x art: 1st pass items
+x choose items in level randomly
 
-* metrika levels 1 2 3 5 7 9 11 13 15 20
-  progression pow(1.7)
-*
-* choose items in level randomly
-*
 * art: gather shelf stylized references
 * art: draw shelf
 *
 * progress on top (sortirovka po polochkam-like)
+*
+* metrika levels 1 2 3 5 7 9 11 13 15 20
+  progression pow(1.7)
 *
 * hardcode 1/2 levels
 *

@@ -105,6 +105,8 @@ def _process_gamelib(
     gamelib["items"] = items
     # }
 
+    genline(f"constexpr int TOTAL_ITEMS = {len(gamelib['items'])};\n")
+
     # Levels.
     # ============================================================
     # {  ###
