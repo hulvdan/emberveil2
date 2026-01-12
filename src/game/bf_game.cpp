@@ -659,10 +659,6 @@ bool PushSpotBack(int shelfIndex, int itemIndex) {  ///
 void RunInit() {
   ZoneScoped;
 
-  FOR_RANGE (int, i, TOTAL_ITEMS)
-    g.run.colorIndexToItemIndex[i] = i;
-  GRAND.Shuffle(g.run.colorIndexToItemIndex.base, TOTAL_ITEMS);
-
   const auto fb_level = GetFBLevel(g.save.level);
 
   g.run.randomSeedForLevelHotReload = fb_level->random_seed();
@@ -742,6 +738,10 @@ void RunInit() {
       }
     }
   }
+
+  FOR_RANGE (int, i, TOTAL_ITEMS)
+    g.run.colorIndexToItemIndex[i] = i;
+  GRAND.Shuffle(g.run.colorIndexToItemIndex.base, TOTAL_ITEMS);
 }
 
 void RunReset() {  ///
@@ -1271,7 +1271,9 @@ void GameFixedUpdate() {
     MarkGameplay();
 
     // Buffering player actions.
-    if (IsTouchPressed(ge.meta._latestActiveTouchID)) {  ///
+    if (!g.run.gameplayEnded.IsSet()  //
+        && IsTouchPressed(ge.meta._latestActiveTouchID))
+    {  ///
       const auto td = GetTouchData(ge.meta._latestActiveTouchID);
       const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.meta.camera);
       if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount)
@@ -1528,26 +1530,32 @@ void GameDraw() {
     }
   }
 
+  const auto depthItemColor
+    = Fade(ColorFromRGBA(glib->item_draw_depth_color()), glib->item_draw_depth_fade());
+
   LAMBDA (
-    void, drawItem, (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, f32 depth)
+    void, drawItem, (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, int depth)
   )
   {  ///
-    const f32 dm = glib->item_draw_depth_show_total_rows();
-    if (depth > dm)
+    if (depth > 1)
       return;
 
-    const f32  depthFactor = depth / dm;
-    const auto fb          = glib->items()->Get(g.run.colorIndexToItemIndex[p.color]);
+    const auto fb = glib->items()->Get(g.run.colorIndexToItemIndex[p.color]);
+
+    auto tex   = fb->texture_id();
+    auto color = WHITE;
+    if (depth) {
+      tex   = fb->dark_texture_id();
+      color = depthItemColor;
+    }
+
     DrawGroup_CommandTexture({
-      .texID    = fb->texture_id(),
+      .texID    = tex,
       .rotation = rotation,
       .pos      = pos,
       .anchor{0.5f, 0},
       .scale = scale,
-      .color = Fade(
-        Darken(WHITE, Lerp(1, glib->item_draw_depth_darken_min(), depthFactor)),
-        Lerp(1, glib->item_draw_depth_fade_min(), depthFactor)
-      ),
+      .color = color,
     });
   };
 
@@ -1654,7 +1662,7 @@ void GameDraw() {
                 }
               }
 
-              drawItem(pos + actionOffset, p, 0, scale, (f32)depth);
+              drawItem(pos + actionOffset, p, 0, scale, depth);
             }
 
             if (gdebug.gizmos && !depth) {

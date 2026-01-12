@@ -125,6 +125,7 @@ table Shelf {
 
 table Item {
     texture_id: int;
+    dark_texture_id: int;
 }
 
 table Level {
@@ -164,9 +165,8 @@ table GameLibrary {
     matching_particles_offset_y: float;
     matching_particles_big_rotation: float;
     matching_particles_parts_seconds: [float];
-    item_draw_depth_show_total_rows: int;
-    item_draw_depth_darken_min: float;
-    item_draw_depth_fade_min: float;
+    item_draw_depth_fade: float;
+    item_draw_depth_color: uint;
     default_depth: int;
     default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;

@@ -82,9 +82,9 @@ matching_particles_parts_seconds:
   - 0.2
   - 0.3
   - 0.45
-item_draw_depth_show_total_rows: 1
-item_draw_depth_darken_min: 0.4
-item_draw_depth_fade_min: 0.6
+# item_draw_depth_fade: 0.6
+item_draw_depth_fade: 1
+item_draw_depth_color: 0x625565ff
 player_infinity_duration_seconds: 3
 player_infinity_symbol_offset:
   x: 0.3

@@ -101,7 +101,9 @@ def _process_gamelib(
     # {  ###
     items = []
     for f in list(bf.ART_TEXTURES_DIR.glob("processed__game_item_*.png")):
-        items.append({"texture_id": f.stem})
+        if str(f).endswith("__dark.png"):
+            continue
+        items.append({"texture_id": f.stem, "dark_texture_id": f.stem + "__dark"})
     gamelib["items"] = items
     # }
 
@@ -376,6 +378,9 @@ def process_images():
         out_dir=bf.ART_TEXTURES_DIR,
         out_filename_prefix="processed__game_item_",
     )
+    for f in list(bf.ART_TEXTURES_DIR.glob("processed__game_item_*.png")):
+        img = Image.open(f)
+        img = bf_image.white(img).save(bf.ART_TEXTURES_DIR / (f.stem + "__dark.png"))
     # }
 
 

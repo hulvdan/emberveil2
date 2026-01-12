@@ -18,6 +18,7 @@ x HOW MANY ITEMS? 45
 x art: 1st pass items
 x choose items in level randomly
 
+* dark textures
 * art: gather shelf stylized references
 * art: draw shelf
 *
