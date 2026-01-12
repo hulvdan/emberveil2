@@ -1540,10 +1540,7 @@ void GameDraw() {
       .anchor{0.5f, 0},
       .scale = scale,
       .color = Fade(
-        Darken(
-          ColorFromRGBA(fb->color()),
-          Lerp(1, glib->item_draw_depth_darken_min(), depthFactor)
-        ),
+        Darken(WHITE, Lerp(1, glib->item_draw_depth_darken_min(), depthFactor)),
         Lerp(1, glib->item_draw_depth_fade_min(), depthFactor)
       ),
     });

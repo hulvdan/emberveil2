@@ -96,6 +96,15 @@ def _process_gamelib(
 
     transforms: list[tuple[str, str, str, dict[str, int]]] = []
 
+    # Items.
+    # ============================================================
+    # {  ###
+    items = []
+    for f in list(bf.ART_TEXTURES_DIR.glob("processed__game_item_*.png")):
+        items.append({"texture_id": f.stem})
+    gamelib["items"] = items
+    # }
+
     # Levels.
     # ============================================================
     # {  ###
@@ -153,15 +162,6 @@ def _process_gamelib(
         gamelib["world_size"] = s
         gamelib["levels"] = levels
         gamelib["cycleable_levels_indices"] = cycleable_levels_indices
-    # }
-
-    # Items.
-    # ============================================================
-    # {  ###
-    items = []
-    for f in list(bf.ART_TEXTURES_DIR.glob("processed__game_item_*.png")):
-        items.append({"texture_id": f.stem})
-    gamelib["items"] = items
     # }
 
     # Particles.
