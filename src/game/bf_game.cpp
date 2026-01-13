@@ -1184,7 +1184,6 @@ void DoUI() {
       struct ComponentButtonData {  ///
         ButtonID id    = {};
         int      texID = {};
-        Loc      loc   = {};
       };
 
       LAMBDA (bool, componentButton, (ComponentButtonData data)) {  ///
@@ -1202,18 +1201,10 @@ void DoUI() {
 
         CLAY({
           .layout{BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL)},
-          // BF_CLAY_CUSTOM_BEGIN{
-          //   BF_CLAY_CUSTOM_NINE_SLICE(
-          //     glib->ui_button_nine_slice(), color, TRANSPARENT_BLACK, true
-          //   ),
-          // } BF_CLAY_CUSTOM_END,
         }) {
           BF_CLAY_IMAGE(
             {.texID = glib->ui_button_texture_id()},
-            [&]() BF_FORCE_INLINE_LAMBDA {
-              BF_CLAY_IMAGE({.texID = data.texID});
-              // BF_CLAY_TEXT_LOCALIZED(data.loc);
-            }
+            [&]() BF_FORCE_INLINE_LAMBDA { BF_CLAY_IMAGE({.texID = data.texID}); }
           );
 
           result = clickedOrTouchedThisComponent();
@@ -1252,7 +1243,6 @@ void DoUI() {
           if (componentButton({
                 .id    = ButtonID_NEXT,
                 .texID = glib->ui_icon_next_texture_id(),
-                .loc   = Loc_UI_LEVEL_NEXT__CAPS,
               }))
             g.run.levelControlPressed.SetNow();
         }
@@ -1260,14 +1250,12 @@ void DoUI() {
           if (componentButton({
                 .id    = ButtonID_RESTART,
                 .texID = glib->ui_icon_restart_texture_id(),
-                .loc   = Loc_UI_LEVEL_RESTART__CAPS,
               }))
             g.run.levelControlPressed.SetNow();
 
           if (componentButton({
                 .id    = ButtonID_SKIP,
                 .texID = glib->ui_icon_skip_texture_id(),
-                .loc   = Loc_UI_LEVEL_SKIP__CAPS,
               }))
           {
             g.run.levelControlPressed.SetNow();
