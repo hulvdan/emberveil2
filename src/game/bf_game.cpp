@@ -1187,11 +1187,11 @@ void DoUI() {
       };
 
       LAMBDA (bool, componentButton, (ComponentButtonData data)) {  ///
-        ASSERT(data.loc);
         ASSERT(data.id);
+        ASSERT(data.texID);
 
         bool result = false;
-        auto color  = PAL_CONIFER;
+        auto color  = WHITE;
 
         auto& pressedAt = buttonPressedAt[data.id];
         if (pressedAt.IsSet()
@@ -1199,12 +1199,16 @@ void DoUI() {
                  <= lframe::FromSeconds(glib->button_press_duration_seconds()))
           color = Darken(color, glib->button_press_darken());
 
-        CLAY({
-          .layout{BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL)},
-        }) {
+        CLAY({}) {
           BF_CLAY_IMAGE(
-            {.texID = glib->ui_button_texture_id()},
-            [&]() BF_FORCE_INLINE_LAMBDA { BF_CLAY_IMAGE({.texID = data.texID}); }
+            {.texID = glib->ui_button_texture_id(), .color = color},
+            [&]() BF_FORCE_INLINE_LAMBDA {
+              CLAY({.layout{
+                BF_CLAY_SIZING_GROW_XY,
+                BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+              }})
+              BF_CLAY_IMAGE({.texID = data.texID, .color = color});
+            }
           );
 
           result = clickedOrTouchedThisComponent();
@@ -1239,27 +1243,29 @@ void DoUI() {
         const bool won = (g.run.won || gdebug.drawWin);
         BF_CLAY_TEXT_LOCALIZED(won ? Loc_UI_WON : Loc_UI_LOST);
 
-        if (won) {
-          if (componentButton({
-                .id    = ButtonID_NEXT,
-                .texID = glib->ui_icon_next_texture_id(),
-              }))
-            g.run.levelControlPressed.SetNow();
-        }
-        else {
-          if (componentButton({
-                .id    = ButtonID_RESTART,
-                .texID = glib->ui_icon_restart_texture_id(),
-              }))
-            g.run.levelControlPressed.SetNow();
+        CLAY({.layout{.childGap = GAP_BIG * 4}}) {
+          if (won) {
+            if (componentButton({
+                  .id    = ButtonID_NEXT,
+                  .texID = glib->ui_icon_next_texture_id(),
+                }))
+              g.run.levelControlPressed.SetNow();
+          }
+          else {
+            if (componentButton({
+                  .id    = ButtonID_RESTART,
+                  .texID = glib->ui_icon_restart_texture_id(),
+                }))
+              g.run.levelControlPressed.SetNow();
 
-          if (componentButton({
-                .id    = ButtonID_SKIP,
-                .texID = glib->ui_icon_skip_texture_id(),
-              }))
-          {
-            g.run.levelControlPressed.SetNow();
-            g.run.levelControlPressedSkip = true;
+            if (componentButton({
+                  .id    = ButtonID_SKIP,
+                  .texID = glib->ui_icon_skip_texture_id(),
+                }))
+            {
+              g.run.levelControlPressed.SetNow();
+              g.run.levelControlPressedSkip = true;
+            }
           }
         }
       }

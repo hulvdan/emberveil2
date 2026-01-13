@@ -561,6 +561,49 @@ def do_audio(platform: bf.BuildPlatform) -> None:
     # }
 
 
+def _transform_to_texture_index(
+    data: dict[str, Any],
+    key: str,
+    texture_name_2_index: dict[str, int],
+    not_found_textures: set[str],
+) -> None:
+    # {  ###
+    texture_name = data[key].removeprefix("_")
+    assert isinstance(texture_name, str)
+
+    if texture_name.lower() == "undefined":
+        data[key] = -1
+        return
+
+    if texture_name in texture_name_2_index:
+        data[key] = texture_name_2_index[texture_name]
+    else:
+        not_found_textures.add(texture_name)
+    # }
+
+
+def _transform_to_texture_indices_list(
+    data: dict[str, Any],
+    key: str,
+    texture_name_2_index: dict[str, int],
+    not_found_textures: set[str],
+) -> None:
+    # {  ###
+    textures = data[key]
+    assert isinstance(textures, list)
+
+    for i, texture_name_ in enumerate(textures):
+        texture_name = texture_name_.removeprefix("_")
+        if texture_name.lower() == "undefined":
+            textures[i] = -1
+        else:
+            if texture_name in texture_name_2_index:
+                textures[i] = texture_name_2_index[texture_name]
+            else:
+                not_found_textures.add(texture_name)
+    # }
+
+
 @timing
 def convert_gamelib_json_to_binary(
     platform: bf.BuildPlatform,
@@ -770,13 +813,13 @@ def convert_gamelib_json_to_binary(
     # {  ###
     if 1:
         not_found_textures: set[str] = set()
-        transform_texture_id = lambda data, key: transform_to_texture_index(
+        transform_texture_id = lambda data, key: _transform_to_texture_index(
             data,
             key,
             texture_name_2_index=texture_name_2_id,
             not_found_textures=not_found_textures,
         )
-        transform_texture_ids_list = lambda data, key: transform_to_texture_indexes_list(
+        transform_texture_ids_list = lambda data, key: _transform_to_texture_indices_list(
             data,
             key,
             texture_name_2_index=texture_name_2_id,
@@ -932,7 +975,7 @@ def make_atlases(downscale_factors: list[int]) -> tuple[dict[str, int], list[dic
 
             for i, texture in enumerate(textures):
                 texture["id"] = i
-                name = texture["debug_name"].removeprefix(f"d{factor}/")
+                name = texture["debug_name"].removeprefix(f"d{factor}/").removeprefix("_")
                 texture_name_2_id[name] = i
 
         bf.recursive_mkdir(bf.RES_DIR)
@@ -1017,48 +1060,6 @@ def remove_excessive_images_in_temp_art_dir(downscale_factors: list[int]) -> Non
 def remove_intermediate_generation_files() -> None:
     for filepath in bf.TEMP_DIR.rglob("*.intermediate*"):
         filepath.unlink()
-
-
-def transform_to_texture_indexes_list(
-    data: dict[str, Any],
-    key: str,
-    texture_name_2_index: dict[str, int],
-    not_found_textures: set[str],
-) -> None:
-    # {  ###
-    textures = data[key]
-    assert isinstance(textures, list)
-
-    for i, texture_name in enumerate(textures):
-        if texture_name.lower() == "undefined":
-            textures[i] = -1
-        else:
-            if texture_name in texture_name_2_index:
-                textures[i] = texture_name_2_index[texture_name]
-            else:
-                not_found_textures.add(texture_name)
-    # }
-
-
-def transform_to_texture_index(
-    data: dict[str, Any],
-    key: str,
-    texture_name_2_index: dict[str, int],
-    not_found_textures: set[str],
-) -> None:
-    # {  ###
-    texture_name = data[key]
-    assert isinstance(texture_name, str)
-
-    if texture_name.lower() == "undefined":
-        data[key] = -1
-        return
-
-    if texture_name in texture_name_2_index:
-        data[key] = texture_name_2_index[texture_name]
-    else:
-        not_found_textures.add(texture_name)
-    # }
 
 
 def listfiles_with_hashes_in_dir(path: str | Path) -> dict[str, int]:

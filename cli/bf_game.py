@@ -79,11 +79,6 @@ def process_gamelib(*args, **kwargs) -> None:
     # }
 
 
-OUTLINE_WIDTH = 10
-BUTTON_RADIUS = 20
-BUTTON_SIZE = 112
-
-
 def _process_gamelib(
     genline, gamelib, localization_codepoints: set[int], _warning
 ) -> None:
@@ -100,16 +95,6 @@ def _process_gamelib(
         # }
 
     transforms: list[tuple[str, str, str, dict[str, int]]] = []
-
-    # UI.
-    # ============================================================
-    gamelib["ui_button_nine_slice"] = {
-        "texture_id": "_ui_button",
-        "left": BUTTON_RADIUS + OUTLINE_WIDTH,
-        "right": BUTTON_RADIUS + OUTLINE_WIDTH,
-        "top": BUTTON_RADIUS + OUTLINE_WIDTH,
-        "bottom": BUTTON_RADIUS + OUTLINE_WIDTH,
-    }
 
     # Items.
     # ============================================================
@@ -342,20 +327,22 @@ def process_images():
     for f in list(bf.ART_TEXTURES_DIR.rglob("_*.png")):
         f.unlink()
 
+    OUTLINE_WIDTH = 10
+
     # _ui_star_small
     star_image = Image.open(bf.ART_TEXTURES_DIR / "ui_star.png")
     star_image_scale = 0.1
     bf_image.outline(
         star_image.resize(
             (
-                int(star_image.size[0] * star_image_scale),
-                int(star_image.size[1] * star_image_scale),
+                round(star_image.size[0] * star_image_scale),
+                round(star_image.size[1] * star_image_scale),
             )
         ),
         radius=2,
     ).save(bf.ART_TEXTURES_DIR / "_ui_star_small.png")
 
-    # _button
+    # _ui_button
     bf_image.outline(
         bf_image.remap(
             Image.open(bf.ART_TEXTURES_DIR / "other" / "ui_button.png"),
@@ -390,6 +377,7 @@ def process_images():
         )
     bf_image.extract_white(rh).save(bf.ART_TEXTURES_DIR / "_game_particle_diamond.png")
 
+    # Spritesheetifying items.
     bf_image.spritesheetify(
         bf.ART_DIR / "src" / "main_001.png",
         cell_size=480,
@@ -407,7 +395,7 @@ def process_images():
         "icons",
         "Icons",
         bf_image.conveyor_prefix(""),
-        bf_image.conveyor_scale(0.5),
+        bf_image.conveyor_scale(0.55),
         bf_image.conveyor_outline(radius=OUTLINE_WIDTH),
     )
     # }
