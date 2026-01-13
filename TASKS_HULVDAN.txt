@@ -10,15 +10,26 @@ sort by colors
 * work: open CV
 * work: send 5 times
 
-Занебесная НЛО Сортировка
+Заоблачная НЛО Сортировка
 
 x nvim highlight colors
 x codegen colors
 x HOW MANY ITEMS? 45
 x art: 1st pass items
 x choose items in level randomly
+x dark textures
 
-* dark textures
+* что считается клоном на яндекс
+* touch unpress
+* ref casual star sky background + clear sky + облака
+* assets casual ui
+* ref WIN / LOST screen angry birds / bad piggies / other PUPULAR games
+*
+* chatgpt
+  на что заменить полки в игре сортировка по полочкам, если у меня персонаж - НЛО
+* art: sprite: cloud / shelf
+* art: sprite: ufo
+*
 * art: gather shelf stylized references
 * art: draw shelf
 *
@@ -41,8 +52,12 @@ x choose items in level randomly
 *
 * polish: ufo animation: slight rotation when moving
 *
+* найти, где задать вопрос
+  задать вопрос, как делать воронки для АБ тестов по прохождению уровней
+*
 FEELING
 * упругость
+* feeling
 BEFORE RELEASE
 * 2nd level shows табличку death
 * change yandex metrika
