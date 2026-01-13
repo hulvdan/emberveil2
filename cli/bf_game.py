@@ -79,6 +79,11 @@ def process_gamelib(*args, **kwargs) -> None:
     # }
 
 
+OUTLINE_WIDTH = 10
+BUTTON_RADIUS = 20
+BUTTON_SIZE = 112
+
+
 def _process_gamelib(
     genline, gamelib, localization_codepoints: set[int], _warning
 ) -> None:
@@ -95,6 +100,16 @@ def _process_gamelib(
         # }
 
     transforms: list[tuple[str, str, str, dict[str, int]]] = []
+
+    # UI.
+    # ============================================================
+    gamelib["ui_button_nine_slice"] = {
+        "texture_id": "_ui_button",
+        "left": BUTTON_RADIUS + OUTLINE_WIDTH,
+        "right": BUTTON_RADIUS + OUTLINE_WIDTH,
+        "top": BUTTON_RADIUS + OUTLINE_WIDTH,
+        "bottom": BUTTON_RADIUS + OUTLINE_WIDTH,
+    }
 
     # Items.
     # ============================================================
@@ -326,6 +341,24 @@ def process_images():
     # {  ###
     for f in list(bf.ART_TEXTURES_DIR.rglob("_*.png")):
         f.unlink()
+
+    # _ui_star_small
+    star_image = Image.open(bf.ART_TEXTURES_DIR / "ui_star.png")
+    star_image_scale = 0.1
+    bf_image.outline(
+        star_image.resize(
+            (
+                int(star_image.size[0] * star_image_scale),
+                int(star_image.size[1] * star_image_scale),
+            )
+        ),
+        radius=2,
+    ).save(bf.ART_TEXTURES_DIR / "_ui_star_small.png")
+
+    # _button
+    bf_image.rectangle(
+        BUTTON_SIZE, radius=BUTTON_RADIUS + OUTLINE_WIDTH, width=OUTLINE_WIDTH
+    ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
 
     UI_FRAME_RADIUS = 30
 

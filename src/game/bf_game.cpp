@@ -1101,6 +1101,10 @@ void GameInitAfterLoadingSavedata() {  ///
   };
 }
 
+bool PlayerCanHandleControls() {  ///
+  return !(gdebug.drawWin || gdebug.drawLost || g.run.gameplayEnded.IsSet());
+}
+
 // NOTE: Logic must be executed only when `ge.meta._drawing` (`draw`) is false!
 // e.g. updating mouse position, processing `clicked()`,
 // logically reacting to `Clay_Hovered()`, changing game's state, etc.
@@ -1140,14 +1144,23 @@ void DoUI() {
     }
   }
 
-  if (g.run.gameplayEnded.IsSet()) {
+  enum ButtonID {  ///
+    ButtonID_INVALID,
+    ButtonID_NEXT,
+    ButtonID_RESTART,
+    ButtonID_SKIP,
+    ButtonID_COUNT,
+  };
+
+  static FrameVisual buttonPressedAt_[ButtonID_COUNT]{};
+  VIEW_FROM_ARRAY_DANGER(buttonPressedAt);
+
+  if (gdebug.drawWin || gdebug.drawLost || g.run.gameplayEnded.IsSet()) {
     CLAY(  ///
       {
         .layout{
           BF_CLAY_SIZING_GROW_XY,
-          BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
-            UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
-          ),
+          BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
         },
         .floating{
           .zIndex             = zIndex,
@@ -1155,13 +1168,52 @@ void DoUI() {
           .attachTo           = CLAY_ATTACH_TO_PARENT,
         },
       }
-    ) {
-      LAMBDA (bool, componentButton, (Loc loc)) {  ///
+    )
+    CLAY({
+      .layout{
+        .sizing{
+          .width  = CLAY_SIZING_FIXED(glib->ui_sizing_win_x()),
+          .height = CLAY_SIZING_GROW(0),
+        },
+        BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
+          UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
+        ),
+      },
+      .backgroundColor = ToClayColor(Fade(MODAL_OVERLAY_COLOR, MODAL_OVERLAY_COLOR_FADE)),
+    }) {
+      struct ComponentButtonData {  ///
+        ButtonID id  = {};
+        Loc      loc = {};
+      };
+
+      LAMBDA (bool, componentButton, (ComponentButtonData data)) {  ///
+        ASSERT(data.loc);
+        ASSERT(data.id);
+
         bool result = false;
-        CLAY({}) {
-          BF_CLAY_TEXT_LOCALIZED(loc);
+        auto color  = PAL_CONIFER;
+
+        auto& pressedAt = buttonPressedAt[data.id];
+        if (pressedAt.IsSet()
+            && pressedAt.Elapsed()
+                 <= lframe::FromSeconds(glib->button_press_duration_seconds()))
+          color = Darken(color, glib->button_press_darken());
+
+        CLAY({
+          .layout{BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL)},
+          BF_CLAY_CUSTOM_BEGIN{
+            BF_CLAY_CUSTOM_NINE_SLICE(
+              glib->ui_button_nine_slice(), color, TRANSPARENT_BLACK, true
+            ),
+          } BF_CLAY_CUSTOM_END,
+        }) {
+          BF_CLAY_TEXT_LOCALIZED(data.loc);
 
           result = clickedOrTouchedThisComponent();
+          if (result) {
+            pressedAt = {};
+            pressedAt.SetNow();
+          }
         };
         return result;
       };
@@ -1186,15 +1238,16 @@ void DoUI() {
           },
         }
       ) {
-        if (g.run.won) {
-          if (componentButton(Loc_UI_LEVEL_NEXT__CAPS))
+        if (g.run.won || gdebug.drawWin) {
+          if (componentButton({.id = ButtonID_NEXT, .loc = Loc_UI_LEVEL_NEXT__CAPS}))
             g.run.levelControlPressed.SetNow();
         }
         else {
-          if (componentButton(Loc_UI_LEVEL_RESTART__CAPS))
+          if (componentButton({.id = ButtonID_RESTART, .loc = Loc_UI_LEVEL_RESTART__CAPS}
+              ))
             g.run.levelControlPressed.SetNow();
 
-          if (componentButton(Loc_UI_LEVEL_SKIP__CAPS)) {
+          if (componentButton({.id = ButtonID_SKIP, .loc = Loc_UI_LEVEL_SKIP__CAPS})) {
             g.run.levelControlPressed.SetNow();
             g.run.levelControlPressedSkip = true;
           }
@@ -1293,7 +1346,7 @@ void GameFixedUpdate() {
     MarkGameplay();
 
     // Buffering player actions.
-    if (!g.run.gameplayEnded.IsSet()) {  ///
+    if (PlayerCanHandleControls()) {  ///
       bool handle = false;
       bool press  = false;
 
@@ -1868,6 +1921,8 @@ void GameDraw() {
 
         IM::Checkbox("Draw Tiled Background", &gdebug.drawTiledBackground);
         IM::Checkbox("Draw Matching Particles", &gdebug.matchingParticles);
+        IM::Checkbox("Draw Win", &gdebug.drawWin);
+        IM::Checkbox("Draw Lost", &gdebug.drawLost);
 
         if (IM::Button("Win") && !g.run.gameplayEnded.IsSet()) {
           EndGameplay();
@@ -1897,7 +1952,8 @@ void GameDraw() {
         IM::Text("Actual level index %d", actualLevelIndex);
 
         // if (IM::Button(
-        //       TextFormat("Level Seed (%d) ++", (int)g.run.randomSeedForLevelHotReload)
+        //       TextFormat("Level Seed (%d) ++",
+        //       (int)g.run.randomSeedForLevelHotReload)
         //     ))
         //   g.run.randomSeedForLevelHotReload++;
 

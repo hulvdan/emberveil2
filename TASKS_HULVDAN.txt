@@ -5,18 +5,25 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 casual
 sort by colors
 
-* work: friendlier photo
-* work: reformat, actualize
-* work: open CV
-* work: send 5 times
+- work: friendlier photo
+- work: reformat, actualize
+x hh настроить норм поиск
+
+* hh delete old searches
+* hh open CV
+* hh send 5 times
 
 Заоблачная НЛО Сортировка
 
 x touch unpress
 x что считается клоном на яндекс
 x assets casual ui
+x ref WIN / LOST screen angry birds / bad piggies / other PUPULAR games
 
-* ref WIN / LOST screen angry birds / bad piggies / other PUPULAR games
+* better button
+* find font
+* draw win / lost,
+*'
 * ref casual star sky background + clear sky + облака
 *
 * chatgpt

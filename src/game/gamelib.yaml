@@ -72,8 +72,15 @@ debug_variables: # {  ###
     type: bool
   - name: matchingParticles
     type: bool
+  - name: drawWin
+    type: bool
+  - name: drawLost
+    type: bool
 # }
 
+button_press_duration_seconds: 0.2
+button_press_darken: 0.5
+ui_sizing_win_x: 540
 world_mat_x_scale: 1.0
 world_mat_y_scale: 0.7
 matching_particles_offset_y: -0.3

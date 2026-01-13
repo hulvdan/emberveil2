@@ -155,11 +155,17 @@ table GameLibrary {
     ui_frame_color: uint32;
     ui_frame_nine_slice: NineSlice;
     ui_frame_shadow_small_nine_slice: NineSlice;
+    ui_button_nine_slice: NineSlice;
 
     // AUTOMATIC_TEXTURE_BIND_START
     vignette_texture_id: int;
     game_shelf_texture_id: int;
+    ui_star_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
+
+    button_press_duration_seconds: float;
+    button_press_darken: float;
+    ui_sizing_win_x: float;
 
     world_mat_x_scale: float;
     world_mat_y_scale: float;
