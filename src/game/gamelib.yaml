@@ -80,6 +80,7 @@ debug_variables: # {  ###
 
 ui_icon_skip_texture_id: ui_icon_next
 button_press_duration_seconds: 0.22
+ui_stars_child_gap: 10
 button_press_darken: 0.5
 ui_sizing_win_x: 540
 world_mat_x_scale: 1.0

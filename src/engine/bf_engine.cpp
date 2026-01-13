@@ -380,6 +380,7 @@ struct ClayImageData {
   Vector2 offset        = {};
   Vector2 scale         = {1, 1};
   Vector2 anchor        = {0.5f, 0.5f};
+  f32     rotation      = {};
   Margins sourceMargins = {0, 0};
   Color   color         = WHITE;
   Color   flash         = TRANSPARENT_BLACK;

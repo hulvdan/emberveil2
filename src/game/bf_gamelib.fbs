@@ -155,7 +155,10 @@ table GameLibrary {
     // AUTOMATIC_TEXTURE_BIND_START
     vignette_texture_id: int;
     game_shelf_texture_id: int;
-    ui_star_texture_id: int;
+    ui_star_gold_texture_id: int;
+    ui_star_gray_texture_id: int;
+    ui_star_small_gold_texture_id: int;
+    ui_star_small_gray_texture_id: int;
     ui_button_texture_id: int;
     ui_icon_next_texture_id: int;
     ui_icon_restart_texture_id: int;
@@ -164,6 +167,7 @@ table GameLibrary {
     ui_icon_skip_texture_id: int;
 
     button_press_duration_seconds: float;
+    ui_stars_child_gap: uint16;
     button_press_darken: float;
     ui_sizing_win_x: float;
 

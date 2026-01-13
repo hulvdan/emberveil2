@@ -329,19 +329,6 @@ def process_images():
 
     OUTLINE_WIDTH = 10
 
-    # _ui_star_small
-    star_image = Image.open(bf.ART_TEXTURES_DIR / "ui_star.png")
-    star_image_scale = 0.1
-    bf_image.outline(
-        star_image.resize(
-            (
-                round(star_image.size[0] * star_image_scale),
-                round(star_image.size[1] * star_image_scale),
-            )
-        ),
-        radius=2,
-    ).save(bf.ART_TEXTURES_DIR / "_ui_star_small.png")
-
     # _ui_button
     bf_image.outline(
         bf_image.remap(
@@ -351,6 +338,32 @@ def process_images():
         ),
         radius=OUTLINE_WIDTH,
     ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
+
+    image_star = Image.open(bf.ART_TEXTURES_DIR / "other" / "ui_star.png")
+
+    # _ui_star_gold, _ui_star_gray, _ui_star_gold_small, _ui_star_gray_small
+    for suf, c1, c2 in (
+        ("gold", "ORANGE", "CASABLANCA"),
+        ("gray", "SCORPION", "SCORPION"),
+    ):
+        image_star_processed = bf_image.outline(
+            bf_image.remap(
+                image_star, bf.palette_color_tuple3(c1), bf.palette_color_tuple3(c2)
+            ),
+            radius=OUTLINE_WIDTH,
+        )
+        image_star_processed.save(bf.ART_TEXTURES_DIR / f"_ui_star_{suf}.png")
+
+        small_star_scale = 0.1
+        bf_image.outline(
+            image_star_processed.resize(
+                (
+                    round(image_star_processed.size[0] * small_star_scale),
+                    round(image_star_processed.size[1] * small_star_scale),
+                )
+            ),
+            radius=2,
+        ).save(bf.ART_TEXTURES_DIR / f"_ui_star_small_{suf}.png")
 
     # _game_particle_star
     bf_image.outline(bf_image.star(320), radius=20, color=(255, 255, 255, 255)).save(

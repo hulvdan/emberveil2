@@ -1240,9 +1240,24 @@ void DoUI() {
           },
         }
       ) {
+        // Progress.
+
+        // Stars.
+        CLAY({.layout{.childGap = glib->ui_stars_child_gap()}})
+        FOR_RANGE (int, i, 3) {
+          BF_CLAY_IMAGE({
+            .texID
+            = (g.run.won ? glib->ui_star_gold_texture_id() : glib->ui_star_gray_texture_id()),
+            .offset   = {0, (i - 1 ? 0 : 40)},
+            .rotation = -(i - 1) * PI32 / 8,
+          });
+        }
+
+        // Label.
         const bool won = (g.run.won || gdebug.drawWin);
         BF_CLAY_TEXT_LOCALIZED(won ? Loc_UI_WON : Loc_UI_LOST);
 
+        // Buttons.
         CLAY({.layout{.childGap = GAP_BIG * 4}}) {
           if (won) {
             if (componentButton({

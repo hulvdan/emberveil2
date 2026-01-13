@@ -496,7 +496,8 @@ if (draw) {  ///
           const auto& d    = cmd.renderData.image;
           const auto& data = *(ClayImageData*)d.imageData;
           DrawGroup_CommandTexture({
-            .texID = data.texID,
+            .texID    = data.texID,
+            .rotation = data.rotation,
             .pos{
               bb.x + bb.width / 2 + data.offset.x,
               bb.y + bb.height / 2 + data.offset.y,
