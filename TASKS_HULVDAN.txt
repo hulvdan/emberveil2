@@ -21,9 +21,19 @@ x assets casual ui
 x ref WIN / LOST screen angry birds / bad piggies / other PUPULAR games
 x find better button
 x TEXTURE BIND IGNORE PREFIX _
+x downloads fonts
+x draw stars
 
-* draw stars
-* find font
+* stars colors
+* stars pop easings
+*
+* progress bar on top: draw progress rects
+* progress bar on top: draw outline
+* progress bar on top: sprite circle generate it
+* progress bar on top: stars quarters
+* progress bar on top: animate stars
+*
+* use fonts - DOWNLOADS FONTS
 * draw win / lost
 *
 * ref merge bf_image -> bf_lib.py
