@@ -78,6 +78,7 @@ debug_variables: # {  ###
     type: bool
 # }
 
+ui_icon_skip_texture_id: ui_icon_next
 button_press_duration_seconds: 0.2
 button_press_darken: 0.5
 ui_sizing_win_x: 540
@@ -123,23 +124,6 @@ item_pos_lerp_factor: 0.05
 shelf_size:
   x: 2
   y: 1.6
-ui_frame_color: 0xe3c896ff
-ui_frame_nine_slice:
-  texture_id: _ui_frame
-  left: 48
-  right: 48
-  top: 48
-  bottom: 48
-ui_frame_shadow_small_nine_slice:
-  texture_id: _ui_frame_shadow_small
-  left: 90
-  right: 90
-  top: 90
-  bottom: 90
-  outer_left: 30
-  outer_right: 30
-  outer_top: 30
-  outer_bottom: 30
 item_inside_player_offset_y: -0.3
 player_texture_id: game_player_removeme
 

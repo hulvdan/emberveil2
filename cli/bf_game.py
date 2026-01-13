@@ -356,32 +356,17 @@ def process_images():
     ).save(bf.ART_TEXTURES_DIR / "_ui_star_small.png")
 
     # _button
-    bf_image.rectangle(
-        BUTTON_SIZE, radius=BUTTON_RADIUS + OUTLINE_WIDTH, width=OUTLINE_WIDTH
-    ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
-
-    UI_FRAME_RADIUS = 30
-
-    # _ui_frame
-    frame_image = bf_image.rectangle(
-        112,
-        radius=UI_FRAME_RADIUS,
-        width=10,
-        # outline=bf.hex_to_rgb_ints("000000"),
-        fill=bf.hex_to_rgb_ints("ffffff"),
-    )
-    frame_image.save(bf.ART_TEXTURES_DIR / "_ui_frame.png")
-
-    DEBUG_SHADOWS = 0
-
-    # _ui_frame_shadow_small
     bf_image.outline(
-        image=bf_image.red(frame_image),
-        radius=60,
-        color=(0, 0, 0, 255),
-        is_shadow=True,
-        blend_image_on_top=DEBUG_SHADOWS,
-    ).save(bf.ART_TEXTURES_DIR / "_ui_frame_shadow_small.png")
+        bf_image.remap(
+            Image.open(bf.ART_TEXTURES_DIR / "other" / "ui_button.png"),
+            bf.palette_color_tuple3("CONIFER_DARK"),
+            bf.palette_color_tuple3("CONIFER"),
+        ),
+        radius=OUTLINE_WIDTH,
+    ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
+    # bf_image.rectangle(
+    #     BUTTON_SIZE, radius=BUTTON_RADIUS + OUTLINE_WIDTH, width=OUTLINE_WIDTH
+    # ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
 
     # _game_particle_star
     bf_image.outline(bf_image.star(320), radius=20, color=(255, 255, 255, 255)).save(
@@ -423,6 +408,14 @@ def process_images():
         # bf_image.extract_white(
         #     bf_image.outline(bf_image.black(img), radius=20, color=(255, 255, 255))
         # ).save(bf.ART_TEXTURES_DIR / (f.stem + "_outline.png"))
+
+    bf_image.conveyor(
+        "icons",
+        "Icons",
+        bf_image.conveyor_prefix(""),
+        bf_image.conveyor_scale(0.5),
+        bf_image.conveyor_outline(radius=OUTLINE_WIDTH),
+    )
     # }
 
 

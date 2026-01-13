@@ -696,6 +696,15 @@ def transform_color(
     # }
 
 
+def palette_color_tuple3(name: str) -> tuple[int, int, int]:
+    # {  ###
+    for i, c in enumerate(game_settings.computed_color_names):
+        if c.upper().replace(" ", "_") == name:
+            return hex_to_rgb_ints(game_settings.colors[i])
+    assert False
+    # }
+
+
 # !banner: hashing
 # ██╗  ██╗ █████╗ ███████╗██╗  ██╗██╗███╗   ██╗ ██████╗
 # ██║  ██║██╔══██╗██╔════╝██║  ██║██║████╗  ██║██╔════╝

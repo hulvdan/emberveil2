@@ -1182,8 +1182,9 @@ void DoUI() {
       .backgroundColor = ToClayColor(Fade(MODAL_OVERLAY_COLOR, MODAL_OVERLAY_COLOR_FADE)),
     }) {
       struct ComponentButtonData {  ///
-        ButtonID id  = {};
-        Loc      loc = {};
+        ButtonID id    = {};
+        int      texID = {};
+        Loc      loc   = {};
       };
 
       LAMBDA (bool, componentButton, (ComponentButtonData data)) {  ///
@@ -1201,13 +1202,19 @@ void DoUI() {
 
         CLAY({
           .layout{BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL)},
-          BF_CLAY_CUSTOM_BEGIN{
-            BF_CLAY_CUSTOM_NINE_SLICE(
-              glib->ui_button_nine_slice(), color, TRANSPARENT_BLACK, true
-            ),
-          } BF_CLAY_CUSTOM_END,
+          // BF_CLAY_CUSTOM_BEGIN{
+          //   BF_CLAY_CUSTOM_NINE_SLICE(
+          //     glib->ui_button_nine_slice(), color, TRANSPARENT_BLACK, true
+          //   ),
+          // } BF_CLAY_CUSTOM_END,
         }) {
-          BF_CLAY_TEXT_LOCALIZED(data.loc);
+          BF_CLAY_IMAGE(
+            {.texID = glib->ui_button_texture_id()},
+            [&]() BF_FORCE_INLINE_LAMBDA {
+              BF_CLAY_IMAGE({.texID = data.texID});
+              // BF_CLAY_TEXT_LOCALIZED(data.loc);
+            }
+          );
 
           result = clickedOrTouchedThisComponent();
           if (result) {
@@ -1238,16 +1245,31 @@ void DoUI() {
           },
         }
       ) {
-        if (g.run.won || gdebug.drawWin) {
-          if (componentButton({.id = ButtonID_NEXT, .loc = Loc_UI_LEVEL_NEXT__CAPS}))
+        const bool won = (g.run.won || gdebug.drawWin);
+        BF_CLAY_TEXT_LOCALIZED(won ? Loc_UI_WON : Loc_UI_LOST);
+
+        if (won) {
+          if (componentButton({
+                .id    = ButtonID_NEXT,
+                .texID = glib->ui_icon_next_texture_id(),
+                .loc   = Loc_UI_LEVEL_NEXT__CAPS,
+              }))
             g.run.levelControlPressed.SetNow();
         }
         else {
-          if (componentButton({.id = ButtonID_RESTART, .loc = Loc_UI_LEVEL_RESTART__CAPS}
-              ))
+          if (componentButton({
+                .id    = ButtonID_RESTART,
+                .texID = glib->ui_icon_restart_texture_id(),
+                .loc   = Loc_UI_LEVEL_RESTART__CAPS,
+              }))
             g.run.levelControlPressed.SetNow();
 
-          if (componentButton({.id = ButtonID_SKIP, .loc = Loc_UI_LEVEL_SKIP__CAPS})) {
+          if (componentButton({
+                .id    = ButtonID_SKIP,
+                .texID = glib->ui_icon_skip_texture_id(),
+                .loc   = Loc_UI_LEVEL_SKIP__CAPS,
+              }))
+          {
             g.run.levelControlPressed.SetNow();
             g.run.levelControlPressedSkip = true;
           }

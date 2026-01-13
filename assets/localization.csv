@@ -3,3 +3,5 @@ UI_LEVEL_TOP_LEVEL;Ур.;Lvl.;
 UI_LEVEL_NEXT;Продолжить;Keep Going;
 UI_LEVEL_RESTART;Заново;Restart;
 UI_LEVEL_SKIP;Пропустить;Skip;
+UI_WON;Победа!;Victory!;
+UI_LOST;Поражение!;Porazhenie! TODO;

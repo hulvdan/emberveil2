@@ -19,11 +19,14 @@ x touch unpress
 x что считается клоном на яндекс
 x assets casual ui
 x ref WIN / LOST screen angry birds / bad piggies / other PUPULAR games
+x find better button
 
-* better button
+* TEXTURE BIND IGNORE PREFIX _
+* ref merge bf_image -> bf_lib.py
+* draw stars
 * find font
-* draw win / lost,
-*'
+* draw win / lost
+*
 * ref casual star sky background + clear sky + облака
 *
 * chatgpt

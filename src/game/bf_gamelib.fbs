@@ -152,16 +152,16 @@ table GameLibrary {
     sounds: [Sound];
 
     // GAME STUFF
-    ui_frame_color: uint32;
-    ui_frame_nine_slice: NineSlice;
-    ui_frame_shadow_small_nine_slice: NineSlice;
-    ui_button_nine_slice: NineSlice;
-
     // AUTOMATIC_TEXTURE_BIND_START
     vignette_texture_id: int;
     game_shelf_texture_id: int;
     ui_star_texture_id: int;
+    ui_button_texture_id: int;
+    ui_icon_next_texture_id: int;
+    ui_icon_restart_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
+
+    ui_icon_skip_texture_id: int;
 
     button_press_duration_seconds: float;
     button_press_darken: float;
