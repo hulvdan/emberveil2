@@ -364,9 +364,6 @@ def process_images():
         ),
         radius=OUTLINE_WIDTH,
     ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
-    # bf_image.rectangle(
-    #     BUTTON_SIZE, radius=BUTTON_RADIUS + OUTLINE_WIDTH, width=OUTLINE_WIDTH
-    # ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
 
     # _game_particle_star
     bf_image.outline(bf_image.star(320), radius=20, color=(255, 255, 255, 255)).save(
@@ -405,9 +402,6 @@ def process_images():
         img = Image.open(f)
         img.save(bf.ART_TEXTURES_DIR / f.name)
         bf_image.white(img).save(bf.ART_TEXTURES_DIR / (f.stem + "_dark.png"))
-        # bf_image.extract_white(
-        #     bf_image.outline(bf_image.black(img), radius=20, color=(255, 255, 255))
-        # ).save(bf.ART_TEXTURES_DIR / (f.stem + "_outline.png"))
 
     bf_image.conveyor(
         "icons",
