@@ -100,10 +100,14 @@ def _process_gamelib(
     # ============================================================
     # {  ###
     items = []
-    for f in list(bf.ART_TEXTURES_DIR.glob("processed__game_item_*.png")):
-        if str(f).endswith("__dark.png"):
-            continue
-        items.append({"texture_id": f.stem, "dark_texture_id": f.stem + "__dark"})
+    for f in list((bf.ART_TEXTURES_DIR / "items").glob("*.png")):
+        items.append(
+            {
+                "texture_id": f.stem,
+                "dark_texture_id": f.stem + "_dark",
+                # "outline_texture_id": f.stem + "_outline",
+            }
+        )
     gamelib["items"] = items
     # }
 
@@ -320,9 +324,12 @@ def _process_gamelib(
 @timing
 def process_images():
     # {  ###
+    for f in list(bf.ART_TEXTURES_DIR.rglob("_*.png")):
+        f.unlink()
+
     UI_FRAME_RADIUS = 30
 
-    # ui_frame
+    # _ui_frame
     frame_image = bf_image.rectangle(
         112,
         radius=UI_FRAME_RADIUS,
@@ -330,30 +337,30 @@ def process_images():
         # outline=bf.hex_to_rgb_ints("000000"),
         fill=bf.hex_to_rgb_ints("ffffff"),
     )
-    frame_image.save(bf.ART_TEXTURES_DIR / "ui_frame.png")
+    frame_image.save(bf.ART_TEXTURES_DIR / "_ui_frame.png")
 
     DEBUG_SHADOWS = 0
 
-    # ui_frame_shadow_small
+    # _ui_frame_shadow_small
     bf_image.outline(
         image=bf_image.red(frame_image),
         radius=60,
         color=(0, 0, 0, 255),
         is_shadow=True,
         blend_image_on_top=DEBUG_SHADOWS,
-    ).save(bf.ART_TEXTURES_DIR / "ui_frame_shadow_small.png")
+    ).save(bf.ART_TEXTURES_DIR / "_ui_frame_shadow_small.png")
 
-    # game_particle_star
+    # _game_particle_star
     bf_image.outline(bf_image.star(320), radius=20, color=(255, 255, 255, 255)).save(
-        bf.ART_TEXTURES_DIR / "game_particle_star.png"
+        bf.ART_TEXTURES_DIR / "_game_particle_star.png"
     )
 
-    # game_feedback_circle
+    # _game_feedback_circle
     bf_image.outline(
         bf_image.ellipse(60), radius=100, is_shadow=True, color=(255, 255, 255, 255)
-    ).save(bf.ART_TEXTURES_DIR / "game_feedback_circle.png")
+    ).save(bf.ART_TEXTURES_DIR / "_game_feedback_circle.png")
 
-    # game_particle_diamond
+    # _game_particle_diamond
     diamond_size = 320
     rh = Image.new("RGBA", (diamond_size, diamond_size), (255, 255, 255, 255))
     ell = bf_image.ellipse(diamond_size, fill=(0, 0, 0, 255))
@@ -366,21 +373,23 @@ def process_images():
             ),
             ell,
         )
-    bf_image.extract_white(rh).save(bf.ART_TEXTURES_DIR / "game_particle_diamond.png")
+    bf_image.extract_white(rh).save(bf.ART_TEXTURES_DIR / "_game_particle_diamond.png")
 
-    for f in list(bf.ART_TEXTURES_DIR.glob("processed__*.png")):
-        f.unlink()
     bf_image.spritesheetify(
         bf.ART_DIR / "src" / "main_001.png",
         cell_size=480,
         size=(7, 8),
         gap=10,
-        out_dir=bf.ART_TEXTURES_DIR,
-        out_filename_prefix="processed__game_item_",
+        out_dir=bf.ART_TEXTURES_DIR / "items",
+        out_filename_prefix="_game_item_",
     )
-    for f in list(bf.ART_TEXTURES_DIR.glob("processed__game_item_*.png")):
+    for f in (bf.ART_TEXTURES_DIR / "items").glob("*.png"):
         img = Image.open(f)
-        img = bf_image.white(img).save(bf.ART_TEXTURES_DIR / (f.stem + "__dark.png"))
+        img.save(bf.ART_TEXTURES_DIR / f.name)
+        bf_image.white(img).save(bf.ART_TEXTURES_DIR / (f.stem + "_dark.png"))
+        # bf_image.extract_white(
+        #     bf_image.outline(bf_image.black(img), radius=20, color=(255, 255, 255))
+        # ).save(bf.ART_TEXTURES_DIR / (f.stem + "_outline.png"))
     # }
 
 

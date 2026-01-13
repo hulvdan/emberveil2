@@ -28,7 +28,7 @@ particles: # {  ###
     fades_in: true
     variations:
       - texture_ids:
-          - game_particle_star
+          - _game_particle_star
     render_function_name: COMMON
   - type: STAR
     duration_seconds: 0.5
@@ -39,7 +39,7 @@ particles: # {  ###
     fades_in: true
     variations:
       - texture_ids:
-          - game_particle_star
+          - _game_particle_star
     render_function_name: COMMON
   - type: CIRCLE
     duration_seconds: 0.8
@@ -54,7 +54,7 @@ particles: # {  ###
     color: 0xfbff867f
     variations:
       - texture_ids:
-          - game_feedback_circle
+          - _game_feedback_circle
 # }
 
 colors:
@@ -118,13 +118,13 @@ shelf_size:
   y: 1.6
 ui_frame_color: 0xe3c896ff
 ui_frame_nine_slice:
-  texture_id: ui_frame
+  texture_id: _ui_frame
   left: 48
   right: 48
   top: 48
   bottom: 48
 ui_frame_shadow_small_nine_slice:
-  texture_id: ui_frame_shadow_small
+  texture_id: _ui_frame_shadow_small
   left: 90
   right: 90
   top: 90

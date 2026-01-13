@@ -18,12 +18,16 @@ x HOW MANY ITEMS? 45
 x art: 1st pass items
 x choose items in level randomly
 x dark textures
+x touch unpress
 
-* что считается клоном на яндекс
-* touch unpress
-* ref casual star sky background + clear sky + облака
+* drag outline item images
+* drag outline
 * assets casual ui
+*
+* ref casual star sky background + clear sky + облака
 * ref WIN / LOST screen angry birds / bad piggies / other PUPULAR games
+*
+* что считается клоном на яндекс
 *
 * chatgpt
   на что заменить полки в игре сортировка по полочкам, если у меня персонаж - НЛО

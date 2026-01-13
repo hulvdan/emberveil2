@@ -126,6 +126,7 @@ table Shelf {
 table Item {
     texture_id: int;
     dark_texture_id: int;
+    outline_texture_id: int;
 }
 
 table Level {

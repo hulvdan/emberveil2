@@ -270,6 +270,26 @@ struct PlayerPos : public Equatable<PlayerPos> {  ///
   }
 };
 
+struct PlayerBufferedAction {  ///
+  Vector2 pos     = {};
+  TouchID touchID = {};
+  bool    press   = {};
+};
+
+struct PlayerLastAction : public Equatable<PlayerLastAction> {  ///
+  TouchID touchID = {};
+  int     shelf   = -1;
+  int     item    = -1;
+
+  [[nodiscard]] bool EqualTo(const PlayerLastAction& other) const {
+    return (
+      (touchID == other.touchID)  //
+      && (shelf == other.shelf)   //
+      && (item == other.item)
+    );
+  }
+};
+
 struct GameData {
   struct Meta {
     Font            fontUI      = {};
@@ -308,7 +328,7 @@ struct GameData {
     bool        levelControlPressedSkip       = false;
     FrameVisual levelStartedAfterTransitionAt = {};
 
-    PushableArray<Vector2, 12> bufferedActions = {};
+    PushableArray<PlayerBufferedAction, 12> bufferedActions = {};
 
     struct Player {
       PlayerPos posFrom = {};
@@ -321,6 +341,8 @@ struct GameData {
 
       FrameGame infinityAt      = {};
       bool      infinityReverse = false;
+
+      PlayerLastAction lastAction = {};
     } player;
 
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
@@ -1271,13 +1293,28 @@ void GameFixedUpdate() {
     MarkGameplay();
 
     // Buffering player actions.
-    if (!g.run.gameplayEnded.IsSet()  //
-        && IsTouchPressed(ge.meta._latestActiveTouchID))
-    {  ///
-      const auto td = GetTouchData(ge.meta._latestActiveTouchID);
-      const auto wp = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.meta.camera);
-      if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount)
-        *g.run.bufferedActions.Add() = wp;
+    if (!g.run.gameplayEnded.IsSet()) {  ///
+      bool handle = false;
+      bool press  = false;
+
+      if (IsTouchPressed(ge.meta._latestActiveTouchID)) {
+        handle = true;
+        press  = true;
+      }
+      else if (IsTouchReleased(ge.meta._latestActiveTouchID))
+        handle = true;
+
+      if (handle) {
+        const auto td = GetTouchData(ge.meta._latestActiveTouchID);
+        const auto wp
+          = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.meta.camera);
+        if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount)
+          *g.run.bufferedActions.Add() = {
+            .pos     = wp,
+            .touchID = ge.meta._latestActiveTouchID,
+            .press   = press,
+          };
+      }
     }
 
     // Setting player action.
@@ -1285,7 +1322,7 @@ void GameFixedUpdate() {
       bool actionWasConsumed = false;
 
       while (g.run.bufferedActions.count) {
-        const auto wp = g.run.bufferedActions[0];
+        const auto ba = g.run.bufferedActions[0];
 
         bool skip              = false;
         bool anyItemWasClicked = false;
@@ -1298,19 +1335,29 @@ void GameFixedUpdate() {
             auto& p = s.rows[0][itemIndex];
 
             const auto r = GetItemRect(shelf, itemIndex);
-            if (!r.ContainsInside(wp))
+            if (!r.ContainsInside(ba.pos))
               continue;
 
             anyItemWasClicked = true;
 
+            const PlayerLastAction currentAction{
+              .touchID = ba.touchID, .shelf = shelf, .item = itemIndex
+            };
+
             PlayerAction actionToSet{};
 
-            if (p && pl.item && (p.color != pl.item.color))
-              actionToSet = PlayerAction_EXCHANGE;
-            else if (!pl.item && p)
-              actionToSet = PlayerAction_PICKUP;
-            else if (pl.item && !p)
-              actionToSet = PlayerAction_PUT;
+            if (p && pl.item && (p.color != pl.item.color)) {
+              if (ba.press || (!ba.press && (pl.lastAction != currentAction)))
+                actionToSet = PlayerAction_EXCHANGE;
+            }
+            else if (!pl.item && p) {
+              if (ba.press)
+                actionToSet = PlayerAction_PICKUP;
+            }
+            else if (pl.item && !p) {
+              if (ba.press || (!ba.press && (pl.lastAction != currentAction)))
+                actionToSet = PlayerAction_PUT;
+            }
 
             if (actionToSet) {
               if (s.IsLocked())
@@ -1322,6 +1369,11 @@ void GameFixedUpdate() {
                 pl.actionItemIndex = itemIndex;
                 pl.posFrom         = pl.pos;
                 pl.pos             = {.shelf = shelf, .itemIndex = itemIndex};
+                pl.lastAction      = {
+                       .touchID = ba.touchID,
+                       .shelf   = shelf,
+                       .item    = itemIndex,
+                };
                 goto playerActionWasSet;
               }
             }
