@@ -2258,7 +2258,7 @@ void fromJS_setDeviceType(int type) {  ///
 
 #endif
 
-void ShowInterAd() {  ///
+void ShowAdInter() {  ///
 #ifdef BF_PLATFORM_WebYandex
   // TODO: Мб тут заранее (до вызова ysdk-ем callback-а onOpen)
   // проставить `adIsPlaying = true`?
@@ -2273,6 +2273,23 @@ void ShowInterAd() {  ///
       },
     });
   });
+// clang-format on
+#endif
+}
+
+void ShowAdReward(bool* asyncResult) {  ///
+#ifdef BF_PLATFORM_WebYandex
+  // clang-format off
+  EM_ASM({
+    ysdk.adv.showRewardedVideo({
+      callbacks: {
+        onOpen: () => { Module.fromJS_setAdIsPlaying(1); },
+        onRewarded: () => { HEAPU8[$0] = 1; },
+        onClose: () => { Module.fromJS_setAdIsPlaying(0); },
+        onError: (e) => { Module.fromJS_setAdIsPlaying(0); },
+      },
+    });
+  }, asyncResult);
 // clang-format on
 #endif
 }

@@ -23,7 +23,9 @@ x win: ease enwiding of background rect
 x win: ease translate alpha appear of labels and buttons
 x win: ease stars pop
 x win font НА РУССКОМ БУКВА У
+x win: rewarded ad skip
 
+* win: rewarded ad skip VIDEO ICON
 * win: ease ufo pos scale
 * win: ease
 * win: ease

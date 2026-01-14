@@ -1363,14 +1363,13 @@ void DoUI() {
                   }))
                 g.run.levelControlPressed.SetNow();
 
+#ifdef BF_PLATFORM_WebYandex
               if (componentButton({
                     .id    = ButtonID_SKIP,
                     .texID = glib->ui_icon_skip_texture_id(),
                   }))
-              {
-                g.run.levelControlPressed.SetNow();
-                g.run.levelControlPressedSkip = true;
-              }
+                ShowAdReward(&g.run.levelControlPressedSkip);
+#endif
             }
           }
 
@@ -1380,6 +1379,11 @@ void DoUI() {
         componentVerticalBlackStrip();
       }
     }
+  }
+
+  if (g.run.levelControlPressedSkip && !g.run.levelControlPressed.IsSet()) {
+    g.run.levelControlPressed = {};
+    g.run.levelControlPressed.SetNow();
   }
 
 #undef GAP_SMALL
@@ -1741,7 +1745,8 @@ void GameFixedUpdate() {
       if (g.run.won || g.run.levelControlPressedSkip)
         g.save.level++;
       g.meta.reload = true;
-      ShowInterAd();
+      if (!g.run.levelControlPressedSkip)
+        ShowAdInter();
     }
   }
 
