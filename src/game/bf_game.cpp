@@ -228,8 +228,8 @@ struct Shelf {  ///
   Vector2Int                        posi = {};
   PushableArray<ItemRow, MAX_DEPTH> rows = {};
 
-  FrameGame updatedAt     = {};
-  FrameGame lastMatchedAt = {};
+  FrameVisual updatedVisualAt     = {};
+  FrameVisual lastMatchedVisualAt = {};
 
   Vector2 pos() const;
 
@@ -1620,11 +1620,11 @@ void GameFixedUpdate() {
       pl.action          = {};
       pl.actionStartedAt = {};
 
-      s.updatedAt = {};
-      s.updatedAt.SetNow();
+      s.updatedVisualAt = {};
+      s.updatedVisualAt.SetNow();
 
       if (s.IsLocked())
-        s.lastMatchedAt = s.updatedAt;
+        s.lastMatchedVisualAt = s.updatedVisualAt;
     }
 
     auto parts = glib->matching_particles_parts_seconds();
@@ -1675,8 +1675,8 @@ void GameFixedUpdate() {
       }
 
       lframe e{};
-      if (s.lastMatchedAt.IsSet()) {
-        e = s.lastMatchedAt.Elapsed();
+      if (s.lastMatchedVisualAt.IsSet()) {
+        e = s.lastMatchedVisualAt.Elapsed();
         makeMatchingParticles(s.pos(), e);
       }
 
@@ -1878,7 +1878,7 @@ void GameDraw() {
           Vector2 scale{1, 1};
           if (s.IsLocked() && !depth) {
             const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
-            const auto p   = s.updatedAt.Elapsed().Progress(dur);
+            const auto p   = s.updatedVisualAt.Elapsed().Progress(dur);
             scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
           }
 
