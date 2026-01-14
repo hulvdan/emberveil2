@@ -322,10 +322,10 @@ struct GameData {
 
     b2WorldId world = {};
 
-    uint        remainingRows = 0;
-    FrameVisual gameplayEnded = {};
-    bool        won           = false;
-    int         wonLabelIndex = -1;
+    uint        remainingRows       = 0;
+    FrameVisual gameplayEnded       = {};
+    bool        won                 = false;
+    int         wonOrLostLabelIndex = -1;
 
     FrameVisual levelControlPressed           = {};
     bool        levelControlPressedSkip       = false;
@@ -841,7 +841,7 @@ void ReloadFontsIfNeeded() {  ///
     return;
   }
 
-  static auto fontpath = "res/arialnb.ttf";
+  static auto fontpath = "res/lapsuspro.otf";
   // static int  numberCodepoints[]{
   //   ' ', '+', '-', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x'
   // };
@@ -851,37 +851,31 @@ void ReloadFontsIfNeeded() {  ///
     {
       .filepath        = fontpath,
       .size            = 18,
-      .FIXME_sizeScale = 45.0f / 30.0f,
+      .FIXME_sizeScale = 43.0f / 30.0f,
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
+      .outlineWidth    = 3,
+      .outlineAdvance  = 1,
     },
     // fontWinLabel.
     {
-      // .filepath        = "res/arialnb.ttf",
-      // .filepath = "res/foo.otf",
-      .filepath = "res/lapsuspro.otf",
-      // .filepath = "res/arco.ttf",
-      // .filepath        = "res/boncegro.ttf",
-      .size            = 60,
-      .FIXME_sizeScale = 45.0f / 30.0f,
+      .filepath        = fontpath,
+      .size            = 70,
+      .FIXME_sizeScale = 43.0f / 30.0f,
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
-      .outlineWidth    = 4,
-      .outlineAdvance  = 1,
+      .outlineWidth    = 5,
+      .outlineAdvance  = 5,
     },
     // fontWinDescription.
     {
-      // .filepath        = "res/arialnb.ttf",
-      // .filepath = "res/foo.otf",
-      // .filepath = "res/lapsuspro.otf",
-      .filepath = "res/arco.ttf",
-      // .filepath        = "res/boncegro.ttf",
-      .size            = 30,
-      .FIXME_sizeScale = 60.0f / 30.0f,
+      .filepath        = fontpath,
+      .size            = 40,
+      .FIXME_sizeScale = 43.0f / 30.0f,
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
       .outlineWidth    = 4,
-      .outlineAdvance  = 1,
+      .outlineAdvance  = 3,
     },
   };
   VIEW_FROM_ARRAY_DANGER(loadFontData);
@@ -1199,6 +1193,7 @@ void DoUI() {
 
         CLAY(  ///
           {.layout{
+            BF_CLAY_SIZING_GROW_XY,
             BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL),
             .childGap = GAP_BIG,
             BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
@@ -1210,8 +1205,21 @@ void DoUI() {
           // Progress.
 
           // Stars.
-          {  ///
-            CLAY({.layout{.childGap = glib->ui_stars_child_gap()}})
+          CLAY({.layout{
+            .sizing{.height = CLAY_SIZING_FIXED(glib->ui_stars_element_height())}
+          }}) {  ///
+            CLAY({
+              .layout{.childGap = glib->ui_stars_child_gap()},
+              .floating{
+                .zIndex = zIndex,
+                .attachPoints{
+                  .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+                  .parent  = CLAY_ATTACH_POINT_CENTER_CENTER,
+                },
+                .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+                .attachTo           = CLAY_ATTACH_TO_PARENT,
+              },
+            })
             FOR_RANGE (int, i, 3) {
               BF_CLAY_IMAGE({
                 .texID
@@ -1223,29 +1231,50 @@ void DoUI() {
           }
 
           // Label.
-          CLAY({.layout{
-            BF_CLAY_SIZING_GROW_X,
-            .childGap = GAP_BIG,
-            BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
-            .layoutDirection = CLAY_TOP_TO_BOTTOM,
-          }}) {  ///
-            FontBegin(&g.meta.fontWinLabel);
-
-            BF_CLAY_TEXT_LOCALIZED(
-              won ? (Loc)((int)Loc_UI_WON_1__CAPS + g.run.wonLabelIndex)
-                  : Loc_UI_LOST__CAPS
-            );
-            FontEnd();
-
-            if (!won) {
-              FontBegin(&g.meta.fontWinDescription);
-              BF_CLAY_TEXT_LOCALIZED(Loc_UI_LOST_DESCRIPTION);
+          CLAY(  ///
+            {.layout{
+              BF_CLAY_SIZING_GROW_X,
+              .childGap = GAP_BIG,
+              BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+              .layoutDirection = CLAY_TOP_TO_BOTTOM,
+            }}
+          )  //
+          {  ///
+            CLAY({.layout{
+              .sizing{.height = CLAY_SIZING_FIXED(glib->ui_label_element_height())}
+            }})
+            CLAY({
+              .floating{
+                .zIndex = zIndex,
+                .attachPoints{
+                  .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+                  .parent  = CLAY_ATTACH_POINT_CENTER_CENTER,
+                },
+                .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+                .attachTo           = CLAY_ATTACH_TO_PARENT,
+              },
+            }) {
+              FontBegin(&g.meta.fontWinLabel);
+              BF_CLAY_TEXT_LOCALIZED(
+                (Loc)((int)(won ? Loc_UI_WON_1__CAPS : Loc_UI_LOST_1__CAPS)
+                      + g.run.wonOrLostLabelIndex),
+                {.wrapMode = CLAY_TEXT_WRAP_NONE}
+              );
               FontEnd();
             }
+
+            FontBegin(&g.meta.fontWinDescription);
+            BF_CLAY_TEXT_LOCALIZED(
+              (won ? Loc_UI_WON_DESCRIPTION : Loc_UI_LOST_DESCRIPTION),
+              {.textAlignment = CLAY_TEXT_ALIGN_CENTER}
+            );
+            FontEnd();
           }
 
+          BF_CLAY_SPACER_VERTICAL;
+
           // Buttons.
-          CLAY({.layout{.childGap = GAP_BIG * 4}}) {
+          CLAY({.layout{.childGap = GAP_BIG * 4}}) {  ///
             if (won) {
               if (componentButton({
                     .id    = ButtonID_NEXT,
@@ -1270,6 +1299,8 @@ void DoUI() {
               }
             }
           }
+
+          BF_CLAY_SPACER_VERTICAL;
         }
 
         componentVerticalBlackStrip();
@@ -1324,6 +1355,14 @@ Rect GetItemRect(int shelf, int itemIndex) {  ///
 void EndGameplay() {  ///
   g.run.gameplayEnded.SetNow();
   g.run.bufferedActions.Reset();
+
+  while (1) {
+    const int v = VRAND.Rand() % 4;
+    if (g.run.wonOrLostLabelIndex != v) {
+      g.run.wonOrLostLabelIndex = v;
+      break;
+    }
+  }
 }
 
 void GameFixedUpdate() {
@@ -1597,13 +1636,6 @@ void GameFixedUpdate() {
       if (!g.run.remainingRows) {  ///
         EndGameplay();
         g.run.won = true;
-        while (1) {
-          const int v = GRAND.Rand() % 4;
-          if (g.run.wonLabelIndex != v) {
-            g.run.wonLabelIndex = v;
-            break;
-          }
-        }
         Save();
       }
 

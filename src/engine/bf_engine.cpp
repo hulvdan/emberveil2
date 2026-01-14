@@ -1557,7 +1557,8 @@ struct ClayTextOptions {  ///
   Color color = WHITE;
 
   // Others: CLAY_TEXT_WRAP_NEWLINES, CLAY_TEXT_WRAP_NONE.
-  Clay_TextElementConfigWrapMode wrapMode = CLAY_TEXT_WRAP_WORDS;
+  Clay_TextElementConfigWrapMode wrapMode      = CLAY_TEXT_WRAP_WORDS;
+  Clay_TextAlignment             textAlignment = CLAY_TEXT_ALIGN_LEFT;
 };
 
 // NOTE: This overload DOESN'T SAVE string to trash arena.
@@ -1575,8 +1576,9 @@ void BF_CLAY_TEXT(Clay_String string, ClayTextOptions opts = {}) {  ///
       .baseChars = string.chars,
     };
     Clay_TextElementConfig cfg{
-      .fontId   = fontID,
-      .wrapMode = opts.wrapMode,
+      .fontId        = fontID,
+      .wrapMode      = opts.wrapMode,
+      .textAlignment = opts.textAlignment,
     };
     auto dim = MeasureText(s, &cfg, nullptr);
 
@@ -1596,8 +1598,9 @@ void BF_CLAY_TEXT(Clay_String string, ClayTextOptions opts = {}) {  ///
       .textColor = ToClayColor(opts.color),
       .fontId    = fontID,
       // fontSize fixes clay's incorrect MeasureText cache
-      .fontSize = (u16)Hash32((u8*)&fontID, sizeof(fontID)),
-      .wrapMode = opts.wrapMode,
+      .fontSize      = (u16)Hash32((u8*)&fontID, sizeof(fontID)),
+      .wrapMode      = opts.wrapMode,
+      .textAlignment = opts.textAlignment,
     })
   );
 }
@@ -4537,7 +4540,7 @@ struct LoadFontData {  ///
   const char* filepath = {};
 
   int size            = {};
-  f32 FIXME_sizeScale = {};
+  f32 FIXME_sizeScale = 1;
 
   // `codepoints` must be in the same memory spot throughout the lifetime of their font.
   int* codepoints      = {};
