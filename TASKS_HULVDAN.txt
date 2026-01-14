@@ -22,8 +22,8 @@ x win: ease overlay
 x win: ease enwiding of background rect
 x win: ease translate alpha appear of labels and buttons
 x win: ease stars pop
+x win font НА РУССКОМ БУКВА У
 
-* win font НА РУССКОМ БУКВА У
 * win: ease
 * win: ease
 * win: ease

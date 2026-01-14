@@ -874,7 +874,7 @@ void ReloadFontsIfNeeded() {  ///
     {
       .filepath        = fontpath,
       .size            = 40,
-      .FIXME_sizeScale = 43.0f / 30.0f,
+      .FIXME_sizeScale = 30.0f / 30.0f,
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
       .outlineWidth    = 4,
@@ -1324,7 +1324,8 @@ void DoUI() {
               BF_CLAY_TEXT_LOCALIZED(
                 (Loc)((int)(won ? Loc_UI_WON_1__CAPS : Loc_UI_LOST_1__CAPS)
                       + g.run.wonOrLostLabelIndex),
-                {.color = Fade(WHITE, stripP), .wrapMode = CLAY_TEXT_WRAP_NONE}
+                {.color    = Fade(won ? PAL_CASABLANCA : PAL_ALIZARIN_CRIMSON, stripP),
+                 .wrapMode = CLAY_TEXT_WRAP_NONE}
               );
               FontEnd();
             }
@@ -1425,13 +1426,14 @@ void EndGameplay() {  ///
   g.run.gameplayEnded.SetNow();
   g.run.bufferedActions.Reset();
 
-  while (1) {
-    const int v = VRAND.Rand() % 4;
-    if (g.run.wonOrLostLabelIndex != v) {
-      g.run.wonOrLostLabelIndex = v;
-      break;
-    }
-  }
+  // while (1) {
+  //   const int v = VRAND.Rand() % 4;
+  //   if (g.run.wonOrLostLabelIndex != v) {
+  //     g.run.wonOrLostLabelIndex = v;
+  //     break;
+  //   }
+  // }
+  g.run.wonOrLostLabelIndex = 0;
 }
 
 void GameFixedUpdate() {
