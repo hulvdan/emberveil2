@@ -15,8 +15,11 @@ x hh настроить норм поиск
 
 Заоблачная НЛО Сортировка
 
-* use fonts for labels - DOWNLOADS FONTS
-* stars colors
+x use fonts for labels - DOWNLOADS FONTS
+x win screen looks good
+
+* win:
+* win: stars colors
 * stars pop easings
 *
 * progress bar on top: draw progress rects

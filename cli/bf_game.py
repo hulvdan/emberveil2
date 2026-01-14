@@ -333,8 +333,8 @@ def process_images():
     bf_image.outline(
         bf_image.remap(
             Image.open(bf.ART_TEXTURES_DIR / "other" / "ui_button.png"),
-            bf.palette_color_tuple3("CONIFER_DARK"),
-            bf.palette_color_tuple3("CONIFER"),
+            bf.palette_color_tuple3("ORANGE"),
+            bf.palette_color_tuple3("CASABLANCA"),
         ),
         radius=OUTLINE_WIDTH,
     ).save(bf.ART_TEXTURES_DIR / "_ui_button.png")
@@ -350,7 +350,7 @@ def process_images():
             bf_image.remap(
                 image_star, bf.palette_color_tuple3(c1), bf.palette_color_tuple3(c2)
             ),
-            radius=OUTLINE_WIDTH,
+            radius=int(OUTLINE_WIDTH * 1.4),
         )
         image_star_processed.save(bf.ART_TEXTURES_DIR / f"_ui_star_{suf}.png")
 

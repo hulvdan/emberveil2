@@ -841,7 +841,10 @@ void ReloadFontsIfNeeded() {  ///
     return;
   }
 
+  // static auto fontpath = "res/arco.ttf";
+  // static auto fontpath = "res/foo.otf";
   static auto fontpath = "res/lapsuspro.otf";
+
   // static int  numberCodepoints[]{
   //   ' ', '+', '-', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x'
   // };
@@ -860,7 +863,7 @@ void ReloadFontsIfNeeded() {  ///
     // fontWinLabel.
     {
       .filepath        = fontpath,
-      .size            = 70,
+      .size            = 65,
       .FIXME_sizeScale = 43.0f / 30.0f,
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
@@ -1105,6 +1108,8 @@ void DoUI() {
   VIEW_FROM_ARRAY_DANGER(buttonPressedAt);
 
   if (gdebug.drawWin || gdebug.drawLost || g.run.gameplayEnded.IsSet()) {
+    componentOverlay([]() {});
+
     CLAY(  ///
       {
         .layout{
@@ -1176,8 +1181,7 @@ void DoUI() {
               .height = CLAY_SIZING_GROW(0),
             },
           },
-          .backgroundColor
-          = ToClayColor(Fade(MODAL_OVERLAY_COLOR, MODAL_OVERLAY_COLOR_FADE)),
+          .backgroundColor = ToClayColor(PAL_COPPER_ROSE),
           .floating{
             .zIndex = zIndex,
             .attachPoints{
@@ -1189,6 +1193,15 @@ void DoUI() {
           },
         }
       ) {
+        const bool won = (g.run.won || gdebug.drawWin);
+
+        // Assert.
+        if (g.run.wonOrLostLabelIndex < 0) {  ///
+          g.run.wonOrLostLabelIndex = 0;
+          auto allowed              = gdebug.drawWin || gdebug.drawLost;
+          ASSERT(allowed);
+        }
+
         componentVerticalBlackStrip();
 
         CLAY(  ///
@@ -1200,8 +1213,6 @@ void DoUI() {
             .layoutDirection = CLAY_TOP_TO_BOTTOM,
           }}
         ) {
-          const bool won = (g.run.won || gdebug.drawWin);
-
           // Progress.
 
           // Stars.
@@ -1223,7 +1234,7 @@ void DoUI() {
             FOR_RANGE (int, i, 3) {
               BF_CLAY_IMAGE({
                 .texID
-                = (g.run.won ? glib->ui_star_gold_texture_id() : glib->ui_star_gray_texture_id()),
+                = (won ? glib->ui_star_gold_texture_id() : glib->ui_star_gray_texture_id()),
                 .offset   = {0, (i - 1 ? 0 : 40)},
                 .rotation = -(i - 1) * PI32 / 8,
               });
