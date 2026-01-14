@@ -1156,7 +1156,7 @@ void DoUI() {
         int      texID = {};
       };
 
-      LAMBDA (bool, componentButton, (ComponentButtonData data)) {  ///
+      LAMBDA (bool, componentButton, (ComponentButtonData data, auto innerLambda)) {  ///
         ASSERT(data.id);
         ASSERT(data.texID);
 
@@ -1180,6 +1180,8 @@ void DoUI() {
               BF_CLAY_IMAGE({.texID = data.texID, .color = color});
             }
           );
+
+          innerLambda();
 
           result = clickedOrTouchedThisComponent();
           if (result) {
@@ -1348,24 +1350,39 @@ void DoUI() {
             BEAUTIFY(b);
 
             if (won) {
-              if (componentButton({
-                    .id    = ButtonID_NEXT,
-                    .texID = glib->ui_icon_next_texture_id(),
-                  }))
+              if (componentButton(
+                    {.id = ButtonID_NEXT, .texID = glib->ui_icon_next_texture_id()},
+                    []() {}
+                  ))
                 g.run.levelControlPressed.SetNow();
             }
             else {
-              if (componentButton({
-                    .id    = ButtonID_RESTART,
-                    .texID = glib->ui_icon_restart_texture_id(),
-                  }))
+              if (componentButton(
+                    {.id = ButtonID_RESTART, .texID = glib->ui_icon_restart_texture_id()},
+                    []() {}
+                  ))
                 g.run.levelControlPressed.SetNow();
 
-#ifdef BF_PLATFORM_WebYandex
-              if (componentButton({
-                    .id    = ButtonID_SKIP,
-                    .texID = glib->ui_icon_skip_texture_id(),
-                  }))
+#if BF_DEBUG || defined(BF_PLATFORM_WebYandex)
+              if (componentButton(
+                    {.id = ButtonID_SKIP, .texID = glib->ui_icon_skip_texture_id()},
+                    [&]() BF_FORCE_INLINE_LAMBDA {
+                      CLAY({.floating{
+                        .zIndex = zIndex,
+                        .attachPoints{
+                          .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+                          .parent  = CLAY_ATTACH_POINT_RIGHT_TOP,
+                        },
+                        .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+                        .attachTo           = CLAY_ATTACH_TO_PARENT,
+                      }}) {
+                        BF_CLAY_IMAGE({
+                          .texID = glib->ui_icon_ad_small_texture_id(),
+                          .color = PAL_CASABLANCA,
+                        });
+                      }
+                    }
+                  ))
                 ShowAdReward(&g.run.levelControlPressedSkip);
 #endif
             }

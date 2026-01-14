@@ -268,6 +268,14 @@ def conveyor_suffix(suffix: str) -> ConveyorCallable:
     # }
 
 
+def scale(image: Image.Image, scale: float, scale2: float = float("inf")) -> Image.Image:
+    # {  ###
+    if scale2 == float("inf"):
+        scale2 = scale
+    return image.resize((round(image.size[0] * scale), round(image.size[1] * scale2)))
+    # }
+
+
 def conveyor_scale(factor: float) -> ConveyorCallable:
     # {  ###
     def inner(image_: Image.Image, path_: Path) -> ConveyorDatum:

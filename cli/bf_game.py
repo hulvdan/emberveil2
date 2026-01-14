@@ -356,13 +356,7 @@ def process_images():
 
         small_star_scale = 0.1
         bf_image.outline(
-            image_star_processed.resize(
-                (
-                    round(image_star_processed.size[0] * small_star_scale),
-                    round(image_star_processed.size[1] * small_star_scale),
-                )
-            ),
-            radius=2,
+            bf_image.scale(image_star_processed, small_star_scale), radius=2
         ).save(bf.ART_TEXTURES_DIR / f"_ui_star_small_{suf}.png")
 
     # _game_particle_star
@@ -389,6 +383,14 @@ def process_images():
             ell,
         )
     bf_image.extract_white(rh).save(bf.ART_TEXTURES_DIR / "_game_particle_diamond.png")
+
+    # _ui_icon_ad_small
+    bf_image.outline(
+        bf_image.scale(
+            Image.open(bf.ART_DIR / "src" / "icons" / "ic_video_fill.png"), 0.25
+        ),
+        radius=OUTLINE_WIDTH,
+    ).save(bf.ART_TEXTURES_DIR / "_ui_icon_ad_small.png")
 
     # Spritesheetifying items.
     bf_image.spritesheetify(

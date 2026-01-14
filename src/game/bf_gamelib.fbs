@@ -162,6 +162,7 @@ table GameLibrary {
     ui_button_texture_id: int;
     ui_icon_next_texture_id: int;
     ui_icon_restart_texture_id: int;
+    ui_icon_ad_small_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
     ui_icon_skip_texture_id: int;
