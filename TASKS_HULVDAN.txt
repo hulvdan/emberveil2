@@ -15,15 +15,7 @@ x hh настроить норм поиск
 
 Заоблачная НЛО Сортировка
 
-x touch unpress
-x что считается клоном на яндекс
-x assets casual ui
-x ref WIN / LOST screen angry birds / bad piggies / other PUPULAR games
-x find better button
-x TEXTURE BIND IGNORE PREFIX _
-x downloads fonts
-x draw stars
-
+* use fonts for labels - DOWNLOADS FONTS
 * stars colors
 * stars pop easings
 *
@@ -33,7 +25,6 @@ x draw stars
 * progress bar on top: stars quarters
 * progress bar on top: animate stars
 *
-* use fonts - DOWNLOADS FONTS
 * draw win / lost
 *
 * ref merge bf_image -> bf_lib.py

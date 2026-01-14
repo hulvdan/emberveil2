@@ -292,8 +292,10 @@ struct PlayerLastAction : public Equatable<PlayerLastAction> {  ///
 
 struct GameData {
   struct Meta {
-    Font            fontUI      = {};
-    LoadFontsResult loadedFonts = {};
+    Font            fontUI             = {};
+    Font            fontWinLabel       = {};
+    Font            fontWinDescription = {};
+    LoadFontsResult loadedFonts        = {};
 
     Vector2 screenSizeUI       = {};
     Vector2 screenSizeUIMargin = {};
@@ -323,6 +325,7 @@ struct GameData {
     uint        remainingRows = 0;
     FrameVisual gameplayEnded = {};
     bool        won           = false;
+    int         wonLabelIndex = -1;
 
     FrameVisual levelControlPressed           = {};
     bool        levelControlPressedSkip       = false;
@@ -852,82 +855,34 @@ void ReloadFontsIfNeeded() {  ///
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
     },
-    // // fontUIOutlined.
-    // {
-    //   .filepath        = fontpath,
-    //   .size            = 18,
-    //   .FIXME_sizeScale = 45.0f / 30.0f,
-    //   .codepoints      = g_codepoints,
-    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
-    //   .outlineWidth    = 3,
-    //   .outlineAdvance  = 1,
-    // },
-    // // fontUIBig.
-    // {
-    //   .filepath        = fontpath,
-    //   .size            = 22,
-    //   .FIXME_sizeScale = 45.0f / 30.0f,
-    //   .codepoints      = g_codepoints,
-    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
-    // },
-    // // fontUIBigOutlined.
-    // {
-    //   .filepath        = fontpath,
-    //   .size            = 26,
-    //   .FIXME_sizeScale = 45.0f / 30.0f,
-    //   .codepoints      = g_codepoints,
-    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
-    //   .outlineWidth    = 3,
-    //   .outlineAdvance  = 1,
-    // },
-    // // fontStats.
-    // {
-    //   .filepath        = fontpath,
-    //   .size            = 15,
-    //   .FIXME_sizeScale = 45.0f / 30.0f,
-    //   .codepoints      = g_codepoints,
-    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
-    // },
-    // // // fontPricesOutlined.
-    // // {
-    // //   .filepath        = fontpath,
-    // //   .size            = 20,
-    // //   .FIXME_sizeScale = 45.0f / 30.0f,
-    // //   .codepoints      = numberCodepoints,
-    // //   .codepointsCount = ARRAY_COUNT(numberCodepoints),
-    // //   .outlineWidth    = 3,
-    // //   .outlineAdvance  = 1,
-    // // },
-    // // fontItemCountsOutlined.
-    // {
-    //   .filepath        = fontpath,
-    //   .size            = 20,
-    //   .FIXME_sizeScale = 45.0f / 30.0f,
-    //   .codepoints      = numberCodepoints,
-    //   .codepointsCount = ARRAY_COUNT(numberCodepoints),
-    //   .outlineWidth    = 3,
-    //   .outlineAdvance  = 1,
-    // },
-    // // fontUIGiganticOutlined.
-    // {
-    //   .filepath        = fontpath,
-    //   .size            = 40 * 5 / 4,
-    //   .FIXME_sizeScale = 45.0f / 30.0f,
-    //   .codepoints      = g_codepoints,
-    //   .codepointsCount = ARRAY_COUNT(g_codepoints),
-    //   .outlineWidth    = 4,
-    //   .outlineAdvance  = 0,
-    // },
-    // // fontUINextWave.
-    // {
-    //   .filepath        = fontpath,
-    //   .size            = 40,
-    //   .FIXME_sizeScale = 45.0f / 30.0f,
-    //   .codepoints      = numberCodepoints,
-    //   .codepointsCount = ARRAY_COUNT(numberCodepoints),
-    //   .outlineWidth    = 3,
-    //   .outlineAdvance  = 0,
-    // },
+    // fontWinLabel.
+    {
+      // .filepath        = "res/arialnb.ttf",
+      // .filepath = "res/foo.otf",
+      .filepath = "res/lapsuspro.otf",
+      // .filepath = "res/arco.ttf",
+      // .filepath        = "res/boncegro.ttf",
+      .size            = 60,
+      .FIXME_sizeScale = 45.0f / 30.0f,
+      .codepoints      = g_codepoints,
+      .codepointsCount = ARRAY_COUNT(g_codepoints),
+      .outlineWidth    = 4,
+      .outlineAdvance  = 1,
+    },
+    // fontWinDescription.
+    {
+      // .filepath        = "res/arialnb.ttf",
+      // .filepath = "res/foo.otf",
+      // .filepath = "res/lapsuspro.otf",
+      .filepath = "res/arco.ttf",
+      // .filepath        = "res/boncegro.ttf",
+      .size            = 30,
+      .FIXME_sizeScale = 60.0f / 30.0f,
+      .codepoints      = g_codepoints,
+      .codepointsCount = ARRAY_COUNT(g_codepoints),
+      .outlineWidth    = 4,
+      .outlineAdvance  = 1,
+    },
   };
   VIEW_FROM_ARRAY_DANGER(loadFontData);
 
@@ -1168,19 +1123,17 @@ void DoUI() {
           .attachTo           = CLAY_ATTACH_TO_PARENT,
         },
       }
-    )
-    CLAY({
-      .layout{
-        .sizing{
-          .width  = CLAY_SIZING_FIXED(glib->ui_sizing_win_x()),
-          .height = CLAY_SIZING_GROW(0),
-        },
-        BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
-          UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
-        ),
-      },
-      .backgroundColor = ToClayColor(Fade(MODAL_OVERLAY_COLOR, MODAL_OVERLAY_COLOR_FADE)),
-    }) {
+    ) {
+      LAMBDA (void, componentVerticalBlackStrip, ()) {  ///
+        CLAY({
+          .layout{.sizing{
+            .width  = CLAY_SIZING_FIXED(GAP_SMALL),
+            .height = CLAY_SIZING_GROW(0),
+          }},
+          .backgroundColor = ToClayColor(BLACK),
+        }) {}
+      };
+
       struct ComponentButtonData {  ///
         ButtonID id    = {};
         int      texID = {};
@@ -1224,11 +1177,13 @@ void DoUI() {
       CLAY(  ///
         {
           .layout{
-            BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL),
-            .childGap = GAP_BIG,
-            BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
-            .layoutDirection = CLAY_TOP_TO_BOTTOM,
+            .sizing{
+              .width  = CLAY_SIZING_FIXED(glib->ui_sizing_win_x()),
+              .height = CLAY_SIZING_GROW(0),
+            },
           },
+          .backgroundColor
+          = ToClayColor(Fade(MODAL_OVERLAY_COLOR, MODAL_OVERLAY_COLOR_FADE)),
           .floating{
             .zIndex = zIndex,
             .attachPoints{
@@ -1240,49 +1195,84 @@ void DoUI() {
           },
         }
       ) {
-        // Progress.
+        componentVerticalBlackStrip();
 
-        // Stars.
-        CLAY({.layout{.childGap = glib->ui_stars_child_gap()}})
-        FOR_RANGE (int, i, 3) {
-          BF_CLAY_IMAGE({
-            .texID
-            = (g.run.won ? glib->ui_star_gold_texture_id() : glib->ui_star_gray_texture_id()),
-            .offset   = {0, (i - 1 ? 0 : 40)},
-            .rotation = -(i - 1) * PI32 / 8,
-          });
-        }
+        CLAY(  ///
+          {.layout{
+            BF_CLAY_PADDING_HORIZONTAL_VERTICAL(GAP_BIG, GAP_SMALL),
+            .childGap = GAP_BIG,
+            BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+            .layoutDirection = CLAY_TOP_TO_BOTTOM,
+          }}
+        ) {
+          const bool won = (g.run.won || gdebug.drawWin);
 
-        // Label.
-        const bool won = (g.run.won || gdebug.drawWin);
-        BF_CLAY_TEXT_LOCALIZED(won ? Loc_UI_WON : Loc_UI_LOST);
+          // Progress.
 
-        // Buttons.
-        CLAY({.layout{.childGap = GAP_BIG * 4}}) {
-          if (won) {
-            if (componentButton({
-                  .id    = ButtonID_NEXT,
-                  .texID = glib->ui_icon_next_texture_id(),
-                }))
-              g.run.levelControlPressed.SetNow();
+          // Stars.
+          {  ///
+            CLAY({.layout{.childGap = glib->ui_stars_child_gap()}})
+            FOR_RANGE (int, i, 3) {
+              BF_CLAY_IMAGE({
+                .texID
+                = (g.run.won ? glib->ui_star_gold_texture_id() : glib->ui_star_gray_texture_id()),
+                .offset   = {0, (i - 1 ? 0 : 40)},
+                .rotation = -(i - 1) * PI32 / 8,
+              });
+            }
           }
-          else {
-            if (componentButton({
-                  .id    = ButtonID_RESTART,
-                  .texID = glib->ui_icon_restart_texture_id(),
-                }))
-              g.run.levelControlPressed.SetNow();
 
-            if (componentButton({
-                  .id    = ButtonID_SKIP,
-                  .texID = glib->ui_icon_skip_texture_id(),
-                }))
-            {
-              g.run.levelControlPressed.SetNow();
-              g.run.levelControlPressedSkip = true;
+          // Label.
+          CLAY({.layout{
+            BF_CLAY_SIZING_GROW_X,
+            .childGap = GAP_BIG,
+            BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+            .layoutDirection = CLAY_TOP_TO_BOTTOM,
+          }}) {  ///
+            FontBegin(&g.meta.fontWinLabel);
+
+            BF_CLAY_TEXT_LOCALIZED(
+              won ? (Loc)((int)Loc_UI_WON_1__CAPS + g.run.wonLabelIndex)
+                  : Loc_UI_LOST__CAPS
+            );
+            FontEnd();
+
+            if (!won) {
+              FontBegin(&g.meta.fontWinDescription);
+              BF_CLAY_TEXT_LOCALIZED(Loc_UI_LOST_DESCRIPTION);
+              FontEnd();
+            }
+          }
+
+          // Buttons.
+          CLAY({.layout{.childGap = GAP_BIG * 4}}) {
+            if (won) {
+              if (componentButton({
+                    .id    = ButtonID_NEXT,
+                    .texID = glib->ui_icon_next_texture_id(),
+                  }))
+                g.run.levelControlPressed.SetNow();
+            }
+            else {
+              if (componentButton({
+                    .id    = ButtonID_RESTART,
+                    .texID = glib->ui_icon_restart_texture_id(),
+                  }))
+                g.run.levelControlPressed.SetNow();
+
+              if (componentButton({
+                    .id    = ButtonID_SKIP,
+                    .texID = glib->ui_icon_skip_texture_id(),
+                  }))
+              {
+                g.run.levelControlPressed.SetNow();
+                g.run.levelControlPressedSkip = true;
+              }
             }
           }
         }
+
+        componentVerticalBlackStrip();
       }
     }
   }
@@ -1607,6 +1597,13 @@ void GameFixedUpdate() {
       if (!g.run.remainingRows) {  ///
         EndGameplay();
         g.run.won = true;
+        while (1) {
+          const int v = GRAND.Rand() % 4;
+          if (g.run.wonLabelIndex != v) {
+            g.run.wonLabelIndex = v;
+            break;
+          }
+        }
         Save();
       }
 
