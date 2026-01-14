@@ -24,7 +24,7 @@ x win: ease translate alpha appear of labels and buttons
 x win: ease stars pop
 x win font НА РУССКОМ БУКВА У
 
-* win: ease
+* win: ease ufo pos scale
 * win: ease
 * win: ease
 *

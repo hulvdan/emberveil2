@@ -228,8 +228,8 @@ struct Shelf {  ///
   Vector2Int                        posi = {};
   PushableArray<ItemRow, MAX_DEPTH> rows = {};
 
-  FrameVisual updatedVisualAt     = {};
-  FrameVisual lastMatchedVisualAt = {};
+  FrameGame updatedAt     = {};
+  FrameGame lastMatchedAt = {};
 
   Vector2 pos() const;
 
@@ -1123,6 +1123,10 @@ void DoUI() {
       return result;
     };
 
+    // dummy wait.
+    progressify(ANIMATION_0_FRAMES);
+    progressify(ANIMATION_0_FRAMES);
+
     const auto stripP = progressify(ANIMATION_1_FRAMES);
 
     componentOverlay([]() {}, stripP);
@@ -1473,7 +1477,14 @@ void GameFixedUpdate() {
     RunInit();
   }
 
-  if (!ShouldGameplayStop() && !g.run.gameplayEnded.IsSet()) {
+  bool canGameplay = true;
+  if (ShouldGameplayStop())
+    canGameplay = false;
+  if (g.run.gameplayEnded.IsSet()
+      && (g.run.gameplayEnded.Elapsed() >= ANIMATION_2_FRAMES))
+    canGameplay = false;
+
+  if (canGameplay) {
     MarkGameplay();
 
     // Buffering player actions.
@@ -1620,11 +1631,11 @@ void GameFixedUpdate() {
       pl.action          = {};
       pl.actionStartedAt = {};
 
-      s.updatedVisualAt = {};
-      s.updatedVisualAt.SetNow();
+      s.updatedAt = {};
+      s.updatedAt.SetNow();
 
       if (s.IsLocked())
-        s.lastMatchedVisualAt = s.updatedVisualAt;
+        s.lastMatchedAt = s.updatedAt;
     }
 
     auto parts = glib->matching_particles_parts_seconds();
@@ -1675,8 +1686,8 @@ void GameFixedUpdate() {
       }
 
       lframe e{};
-      if (s.lastMatchedVisualAt.IsSet()) {
-        e = s.lastMatchedVisualAt.Elapsed();
+      if (s.lastMatchedAt.IsSet()) {
+        e = s.lastMatchedAt.Elapsed();
         makeMatchingParticles(s.pos(), e);
       }
 
@@ -1878,7 +1889,7 @@ void GameDraw() {
           Vector2 scale{1, 1};
           if (s.IsLocked() && !depth) {
             const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
-            const auto p   = s.updatedVisualAt.Elapsed().Progress(dur);
+            const auto p   = s.updatedAt.Elapsed().Progress(dur);
             scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
           }
 
