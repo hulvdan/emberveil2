@@ -841,9 +841,9 @@ void ReloadFontsIfNeeded() {  ///
     return;
   }
 
-  // static auto fontpath = "res/arco.ttf";
+  static auto fontpath = "res/arco.ttf";
   // static auto fontpath = "res/foo.otf";
-  static auto fontpath = "res/lapsuspro.otf";
+  // static auto fontpath = "res/lapsuspro.otf";
 
   // static int  numberCodepoints[]{
   //   ' ', '+', '-', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x'
@@ -1085,13 +1085,16 @@ void DoUI() {
         .attachTo           = CLAY_ATTACH_TO_PARENT,
       },
     }
-  )
-  CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
-    // Current level.
-    if (g.save.level) {  ///
-      CLAY({}) {
-        BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
-        BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
+  ) {
+    FLOATING_BEAUTIFY;
+
+    CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
+      // Current level.
+      if (g.save.level) {  ///
+        CLAY({}) {
+          BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
+          BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
+        }
       }
     }
   }
@@ -1108,7 +1111,21 @@ void DoUI() {
   VIEW_FROM_ARRAY_DANGER(buttonPressedAt);
 
   if (gdebug.drawWin || gdebug.drawLost || g.run.gameplayEnded.IsSet()) {
-    componentOverlay([]() {});
+    lframe e{};
+    if (gdebug.drawWin || gdebug.drawLost)
+      e.value = ge.meta.frameVisual % (FIXED_FPS * 6);
+    else
+      e = g.run.gameplayEnded.Elapsed();
+
+    LAMBDA (f32, progressify, (lframe dur)) {  ///
+      auto result = Clamp01(e.Progress(dur));
+      e.value -= dur.value;
+      return result;
+    };
+
+    const auto stripP = progressify(ANIMATION_1_FRAMES);
+
+    componentOverlay([]() {}, stripP);
 
     CLAY(  ///
       {
@@ -1123,13 +1140,12 @@ void DoUI() {
         },
       }
     ) {
+      FLOATING_BEAUTIFY;
+
       LAMBDA (void, componentVerticalBlackStrip, ()) {  ///
         CLAY({
-          .layout{.sizing{
-            .width  = CLAY_SIZING_FIXED(GAP_SMALL),
-            .height = CLAY_SIZING_GROW(0),
-          }},
-          .backgroundColor = ToClayColor(BLACK),
+          .layout{.sizing{.width = CLAY_SIZING_FIXED(6), .height = CLAY_SIZING_GROW(0)}},
+          .backgroundColor = ToClayColor(Fade(BLACK, stripP)),
         }) {}
       };
 
@@ -1181,7 +1197,7 @@ void DoUI() {
               .height = CLAY_SIZING_GROW(0),
             },
           },
-          .backgroundColor = ToClayColor(PAL_COPPER_ROSE),
+          .backgroundColor = ToClayColor(Fade(PAL_COPPER_ROSE, stripP)),
           .floating{
             .zIndex = zIndex,
             .attachPoints{
@@ -1193,6 +1209,8 @@ void DoUI() {
           },
         }
       ) {
+        FLOATING_BEAUTIFY;
+
         const bool won = (g.run.won || gdebug.drawWin);
 
         // Assert.
@@ -1213,6 +1231,10 @@ void DoUI() {
             .layoutDirection = CLAY_TOP_TO_BOTTOM,
           }}
         ) {
+          // dummy wait.
+          progressify(ANIMATION_0_FRAMES);
+          progressify(ANIMATION_0_FRAMES);
+
           // Progress.
 
           // Stars.
@@ -1230,14 +1252,45 @@ void DoUI() {
                 .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
                 .attachTo           = CLAY_ATTACH_TO_PARENT,
               },
-            })
-            FOR_RANGE (int, i, 3) {
-              BF_CLAY_IMAGE({
-                .texID
-                = (won ? glib->ui_star_gold_texture_id() : glib->ui_star_gray_texture_id()),
-                .offset   = {0, (i - 1 ? 0 : 40)},
-                .rotation = -(i - 1) * PI32 / 8,
-              });
+            }) {
+              FLOATING_BEAUTIFY;
+
+              FOR_RANGE (int, i, 3) {
+                const auto rot = -(i - 1) * PI32 / 8;
+                BF_CLAY_IMAGE(
+                  {
+                    .texID = glib->ui_star_gray_texture_id(),
+                    .offset{0, (i - 1 ? 0 : 40)},
+                    .rotation = rot,
+                    .color    = Fade(WHITE, stripP),
+                  },
+                  [&]() BF_FORCE_INLINE_LAMBDA {
+                    if (!won)
+                      return;
+                    CLAY({
+                      .floating{
+                        .zIndex = zIndex,
+                        .attachPoints{
+                          .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+                          .parent  = CLAY_ATTACH_POINT_CENTER_CENTER,
+                        },
+                        .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+                        .attachTo           = CLAY_ATTACH_TO_PARENT,
+                      },
+                    }) {
+                      FLOATING_BEAUTIFY;
+
+                      BF_CLAY_IMAGE({
+                        .texID = glib->ui_star_gold_texture_id(),
+                        .offset{0, (i - 1 ? 0 : 40)},
+                        .scale = Vector2One()
+                                 * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES)),
+                        .rotation = rot,
+                      });
+                    }
+                  }
+                );
+              }
             }
           }
 
@@ -1265,11 +1318,13 @@ void DoUI() {
                 .attachTo           = CLAY_ATTACH_TO_PARENT,
               },
             }) {
+              FLOATING_BEAUTIFY;
+
               FontBegin(&g.meta.fontWinLabel);
               BF_CLAY_TEXT_LOCALIZED(
                 (Loc)((int)(won ? Loc_UI_WON_1__CAPS : Loc_UI_LOST_1__CAPS)
                       + g.run.wonOrLostLabelIndex),
-                {.wrapMode = CLAY_TEXT_WRAP_NONE}
+                {.color = Fade(WHITE, stripP), .wrapMode = CLAY_TEXT_WRAP_NONE}
               );
               FontEnd();
             }
@@ -1277,7 +1332,7 @@ void DoUI() {
             FontBegin(&g.meta.fontWinDescription);
             BF_CLAY_TEXT_LOCALIZED(
               (won ? Loc_UI_WON_DESCRIPTION : Loc_UI_LOST_DESCRIPTION),
-              {.textAlignment = CLAY_TEXT_ALIGN_CENTER}
+              {.color = Fade(WHITE, stripP), .textAlignment = CLAY_TEXT_ALIGN_CENTER}
             );
             FontEnd();
           }
@@ -1286,6 +1341,9 @@ void DoUI() {
 
           // Buttons.
           CLAY({.layout{.childGap = GAP_BIG * 4}}) {  ///
+            Beautify b{.alpha = stripP};
+            BEAUTIFY(b);
+
             if (won) {
               if (componentButton({
                     .id    = ButtonID_NEXT,
