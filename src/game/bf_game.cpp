@@ -1413,7 +1413,7 @@ void GameFixedUpdate() {
     RunInit();
   }
 
-  if (!ShouldGameplayStop()) {
+  if (!ShouldGameplayStop() && !g.run.gameplayEnded.IsSet()) {
     MarkGameplay();
 
     // Buffering player actions.

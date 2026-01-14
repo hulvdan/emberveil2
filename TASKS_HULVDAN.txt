@@ -17,10 +17,15 @@ x hh настроить норм поиск
 
 x use fonts for labels - DOWNLOADS FONTS
 x win screen looks good
+x win: stars colors
 
-* win:
-* win: stars colors
-* stars pop easings
+* win: ease overlay
+* win: ease enwiding of background rect
+* win: ease translate alpha appear of labels and buttons
+* win: ease stars pop
+* win: ease
+* win: ease
+* win: ease
 *
 * progress bar on top: draw progress rects
 * progress bar on top: draw outline
