@@ -527,9 +527,11 @@ if (draw) {  ///
             (u8)d.textColor.b,
             (u8)((f32)d.textColor.a * beautify.alpha),
           };
+          Vector2 anchor{(f32)d.hulvdanTextAlignment / 2.0f, 0};
           DrawGroup_CommandText({
-            .pos{bb.x, bb.y},
-            .anchor{},
+            .pos{bb.x + bb.width * anchor.x, bb.y + bb.height * anchor.y},
+            .scale      = Vector2{d.hulvdanScale.x, d.hulvdanScale.y} + Vector2One(),
+            .anchor     = anchor,
             .font       = font,
             .text       = d.stringContents.chars,
             .bytesCount = d.stringContents.length,

@@ -377,10 +377,10 @@ struct Beautify {
 
 struct ClayImageData {
   int     texID         = {};
+  f32     rotation      = {};
   Vector2 offset        = {};
   Vector2 scale         = {1, 1};
   Vector2 anchor        = {0.5f, 0.5f};
-  f32     rotation      = {};
   Margins sourceMargins = {0, 0};
   Color   color         = WHITE;
   Color   flash         = TRANSPARENT_BLACK;
@@ -1554,7 +1554,8 @@ void BF_CLAY_IMAGE(ClayImageData data, bool _resetPlaceholders = true) {  ///
 }
 
 struct ClayTextOptions {  ///
-  Color color = WHITE;
+  Vector2 scale = {1, 1};
+  Color   color = WHITE;
 
   // Others: CLAY_TEXT_WRAP_NEWLINES, CLAY_TEXT_WRAP_NONE.
   Clay_TextElementConfigWrapMode wrapMode      = CLAY_TEXT_WRAP_WORDS;
@@ -1592,6 +1593,8 @@ void BF_CLAY_TEXT(Clay_String string, ClayTextOptions opts = {}) {  ///
     FlexAddRowForChildIfNeeded(dim.width);
   }
 
+  const auto hulvdanScale = opts.scale - Vector2One();
+
   CLAY_TEXT(
     string,
     CLAY_TEXT_CONFIG({
@@ -1601,6 +1604,7 @@ void BF_CLAY_TEXT(Clay_String string, ClayTextOptions opts = {}) {  ///
       .fontSize      = (u16)Hash32((u8*)&fontID, sizeof(fontID)),
       .wrapMode      = opts.wrapMode,
       .textAlignment = opts.textAlignment,
+      .hulvdanScale{hulvdanScale.x, hulvdanScale.y},
     })
   );
 }

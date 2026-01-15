@@ -1117,7 +1117,7 @@ void DoUI() {
 
     LAMBDA (f32, progressify, (lframe dur)) {  ///
       auto result = Clamp01(e.Progress(dur));
-      e.value -= dur.value;
+      e.value -= dur.value * 2 / 3;
       return result;
     };
 
@@ -1156,6 +1156,11 @@ void DoUI() {
         int      texID = {};
       };
 
+      const auto buttonRotationInterval = lframe::FromSeconds(2);
+      const f32  buttonRotationP
+        = (f32)(ge.meta.frameVisual % buttonRotationInterval.value)
+          / (f32)(buttonRotationInterval.value);
+
       LAMBDA (bool, componentButton, (ComponentButtonData data, auto innerLambda)) {  ///
         ASSERT(data.id);
         ASSERT(data.texID);
@@ -1169,15 +1174,28 @@ void DoUI() {
                  <= lframe::FromSeconds(glib->button_press_duration_seconds()))
           color = Darken(color, glib->button_press_darken());
 
+        const auto p = progressify(ANIMATION_1_FRAMES);
+
         CLAY({}) {
           BF_CLAY_IMAGE(
-            {.texID = glib->ui_button_texture_id(), .color = color},
+            {
+              .texID    = glib->ui_button_texture_id(),
+              .rotation = sinf(buttonRotationP * 2 * PI32),
+              .scale    = Vector2One() * EaseBounceSmallSmooth(p),
+              .color    = color,
+              .dontCareAboutScaleWhenCalculatingSize = true,
+            },
             [&]() BF_FORCE_INLINE_LAMBDA {
               CLAY({.layout{
                 BF_CLAY_SIZING_GROW_XY,
                 BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
               }})
-              BF_CLAY_IMAGE({.texID = data.texID, .color = color});
+              BF_CLAY_IMAGE({
+                .texID = data.texID,
+                .scale = Vector2One() * EaseBounceSmallSmooth(p),
+                .color = color,
+                .dontCareAboutScaleWhenCalculatingSize = true,
+              });
             }
           );
 
@@ -1237,7 +1255,7 @@ void DoUI() {
         ) {
           // dummy wait.
           progressify(ANIMATION_0_FRAMES);
-          progressify(ANIMATION_0_FRAMES);
+          // progressify(ANIMATION_0_FRAMES);
 
           // Progress.
 
@@ -1263,10 +1281,10 @@ void DoUI() {
                 const auto rot = -(i - 1) * PI32 / 8;
                 BF_CLAY_IMAGE(
                   {
-                    .texID = glib->ui_star_gray_texture_id(),
-                    .offset{0, (i - 1 ? 0 : 40)},
+                    .texID    = glib->ui_star_gray_texture_id(),
                     .rotation = rot,
-                    .color    = Fade(WHITE, stripP),
+                    .offset{0, (i - 1 ? 0 : 40)},
+                    .color = Fade(WHITE, stripP),
                   },
                   [&]() BF_FORCE_INLINE_LAMBDA {
                     if (!won)
@@ -1285,11 +1303,12 @@ void DoUI() {
                       FLOATING_BEAUTIFY;
 
                       BF_CLAY_IMAGE({
-                        .texID = glib->ui_star_gold_texture_id(),
+                        .texID    = glib->ui_star_gold_texture_id(),
+                        .rotation = rot,
                         .offset{0, (i - 1 ? 0 : 40)},
                         .scale = Vector2One()
                                  * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES)),
-                        .rotation = rot,
+                        .dontCareAboutScaleWhenCalculatingSize = true,
                       });
                     }
                   }
@@ -1328,8 +1347,13 @@ void DoUI() {
               BF_CLAY_TEXT_LOCALIZED(
                 (Loc)((int)(won ? Loc_UI_WON_1__CAPS : Loc_UI_LOST_1__CAPS)
                       + g.run.wonOrLostLabelIndex),
-                {.color    = Fade(won ? PAL_CASABLANCA : PAL_ALIZARIN_CRIMSON, stripP),
-                 .wrapMode = CLAY_TEXT_WRAP_NONE}
+                {
+                  .scale
+                  = Vector2One() * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES)),
+                  .color    = Fade(won ? PAL_CASABLANCA : PAL_ALIZARIN_CRIMSON, stripP),
+                  .wrapMode = CLAY_TEXT_WRAP_NONE,
+                  .textAlignment = CLAY_TEXT_ALIGN_CENTER,
+                }
               );
               FontEnd();
             }
@@ -1337,7 +1361,12 @@ void DoUI() {
             FontBegin(&g.meta.fontWinDescription);
             BF_CLAY_TEXT_LOCALIZED(
               (won ? Loc_UI_WON_DESCRIPTION : Loc_UI_LOST_DESCRIPTION),
-              {.color = Fade(WHITE, stripP), .textAlignment = CLAY_TEXT_ALIGN_CENTER}
+              {
+                .scale
+                = Vector2One() * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES)),
+                .color         = Fade(WHITE, stripP),
+                .textAlignment = CLAY_TEXT_ALIGN_CENTER,
+              }
             );
             FontEnd();
           }

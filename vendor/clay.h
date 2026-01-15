@@ -396,6 +396,8 @@ typedef struct Clay_TextElementConfig {
     // CLAY_TEXT_ALIGN_CENTER - Horizontally aligns wrapped lines of text to the center of their bounding box.
     // CLAY_TEXT_ALIGN_RIGHT - Horizontally aligns wrapped lines of text to the right hand side of their bounding box.
     Clay_TextAlignment textAlignment;
+
+    Clay_Vector2 hulvdanScale; // {0, 0} means that scale is {1, 1}
 } Clay_TextElementConfig;
 
 CLAY__WRAPPER_STRUCT(Clay_TextElementConfig);
@@ -566,6 +568,9 @@ typedef struct Clay_TextRenderData {
     uint16_t letterSpacing;
     // The height of the bounding box for this line of text.
     uint16_t lineHeight;
+
+    Clay_Vector2 hulvdanScale;
+    Clay_TextAlignment hulvdanTextAlignment;
 } Clay_TextRenderData;
 
 // Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_RECTANGLE
@@ -2898,6 +2903,8 @@ void Clay__CalculateFinalLayout(void) {
                                         .fontSize = textElementConfig->fontSize,
                                         .letterSpacing = textElementConfig->letterSpacing,
                                         .lineHeight = textElementConfig->lineHeight,
+                                        .hulvdanScale = textElementConfig->hulvdanScale,
+                                        .hulvdanTextAlignment = textElementConfig->textAlignment,
                                     }},
                                     .userData = textElementConfig->userData,
                                     .id = Clay__HashNumber(lineIndex, currentElement->id).id,
@@ -4412,7 +4419,7 @@ void Clay_ResetMeasureTextCache(void) {
     context->measureTextHashMap.length = 0;
     context->measuredWords.length = 0;
     context->measuredWordsFreeList.length = 0;
-    
+
     for (int32_t i = 0; i < context->measureTextHashMap.capacity; ++i) {
         context->measureTextHashMap.internalArray[i] = 0;
     }
