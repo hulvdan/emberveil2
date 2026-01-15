@@ -1871,7 +1871,9 @@ void GameDraw() {
     = Fade(ColorFromRGBA(glib->item_draw_depth_color()), glib->item_draw_depth_fade());
 
   LAMBDA (
-    void, drawItem, (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, int depth)
+    void,
+    drawItem,
+    (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, int depth, f32 fade)
   )
   {  ///
     if (depth > 1)
@@ -1892,34 +1894,35 @@ void GameDraw() {
       .pos      = pos,
       .anchor{0.5f, 0},
       .scale = scale,
-      .color = color,
+      .color = Fade(color, fade),
     });
   };
 
   int        actualLevelIndex = -1;
   const auto fb_level         = GetFBLevel(g.save.level, &actualLevelIndex);
 
-  Vector2    playerPos{};
-  Vector2    playerItemPos{};
-  const auto infinityDur = lframe::FromSeconds(glib->player_infinity_duration_seconds());
-  f32        infinityP   = 0;
-  if (pl.infinityAt.IsSet()) {
-    infinityP
-      = (f32)(pl.infinityAt.Elapsed().value % infinityDur.value) / (f32)infinityDur.value;
-    if (pl.infinityReverse)
-      infinityP *= -1;
-  }
-  else
-    infinityP = (f32)(ge.meta.frameGame % infinityDur.value) / (f32)infinityDur.value;
-
-  const auto playerPosInfinityOffset
-    = InfinitySymbol(infinityP) * ToVector2(glib->player_infinity_symbol_offset());
-
+  Vector2 playerPos{};
+  Vector2 playerItemPos{};
   // f32 playerRotation = InfinitySymbolRotation(infinityP);
   f32 playerRotation = 0;
 
-  // Calculating player data.
+  // Calculating.
   {  ///
+    const auto infinityDur
+      = lframe::FromSeconds(glib->player_infinity_duration_seconds());
+    f32 infinityP = 0;
+    if (pl.infinityAt.IsSet()) {
+      infinityP = (f32)(pl.infinityAt.Elapsed().value % infinityDur.value)
+                  / (f32)infinityDur.value;
+      if (pl.infinityReverse)
+        infinityP *= -1;
+    }
+    else
+      infinityP = (f32)(ge.meta.frameGame % infinityDur.value) / (f32)infinityDur.value;
+
+    const auto playerPosInfinityOffset
+      = InfinitySymbol(infinityP) * ToVector2(glib->player_infinity_symbol_offset());
+
     playerPos = ToVector2(fb_level->player());
     if (g.meta.verticalOrientation)
       playerPos += Vector2(0.5f, -0.5f);
@@ -1999,7 +2002,7 @@ void GameDraw() {
                 }
               }
 
-              drawItem(pos + actionOffset, p, 0, scale, depth);
+              drawItem(pos + actionOffset, p, 0, scale, depth, 1);
             }
 
             if (gdebug.gizmos && !depth) {
@@ -2020,11 +2023,9 @@ void GameDraw() {
   // Drawing player.
   {  ///
     auto color = WHITE;
-    if (g.run.gameplayEnded.IsSet()) {
-      color = Fade(
-        color, MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES))
-      );
-    }
+    auto fade  = MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES));
+    if (g.run.gameplayEnded.IsSet())
+      color = Fade(color, fade);
 
     if (pl.item) {
       Vector2 actionOffset{};
@@ -2034,7 +2035,7 @@ void GameDraw() {
         actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
       }
 
-      drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0);
+      drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0, fade);
     }
 
     color.a *= audioUnlockP;
