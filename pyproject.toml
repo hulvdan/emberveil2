@@ -22,6 +22,7 @@ dependencies = [
     "pydub>=0.25.1",
     "pyfiglet>=1.0.4",
     "pyjson5>=2.0.0",
+    "pyright>=1.1.408",
     "pytest>=9.0.1",
     "pyyaml>=6.0.3",
     "rich>=14.2.0",
@@ -135,3 +136,26 @@ python_classes = ["Test*"]
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.pyright]
+include = ["cli"]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.venv",
+    "**/build",
+    "**/dist",
+]
+# ignore = ["src/oldstuff"]
+# defineConstant = { DEBUG = true }
+# stubPath = "src/stubs"
+# reportMissingImports = "error"
+# reportMissingTypeStubs = false
+pythonVersion = "3.11"
+# pythonPlatform = "Linux"
+# executionEnvironments = [
+#   { root = "src/web", pythonVersion = "3.5", pythonPlatform = "Windows", extraPaths = [ "src/service_libs" ], reportMissingImports = "warning" },
+#   { root = "src/sdk", pythonVersion = "3.0", extraPaths = [ "src/backend" ] },
+#   { root = "src/tests", extraPaths = ["src/tests/e2e", "src/sdk" ]},
+#   { root = "src" }
+# ]

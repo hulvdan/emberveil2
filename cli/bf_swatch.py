@@ -128,7 +128,7 @@ def _parse_chunk(fd):
         elif chunk_type == b"\xc0\x01":
             # folder/palate
             o = _dict_for_chunk(fd)
-            o["swatches"] = list(_colors(fd))
+            o["swatches"] = list(_colors(fd))  # type: ignore
             yield o
 
         elif chunk_type == b"\xc0\x02":

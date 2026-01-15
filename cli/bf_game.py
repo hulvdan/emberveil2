@@ -17,7 +17,6 @@ USAGE:
 # Imports.  {  ###
 from itertools import groupby
 
-import bf_image
 import bf_lib as bf
 from bf_typer import command, timing
 from PIL import Image
@@ -136,6 +135,10 @@ def _process_gamelib(
                 assert s == (entities.cWid_, entities.cHei_), (
                     "All levels must have the same size!"
                 )
+
+            assert s is not None
+            assert sx is not None
+            assert sy is not None
 
             shelves = []
             for entity in entities.entityInstances:
@@ -330,8 +333,8 @@ def process_images():
     OUTLINE_WIDTH = 10
 
     # _ui_button
-    bf_image.outline(
-        bf_image.remap(
+    bf.im_outline(
+        bf.im_remap(
             Image.open(bf.ART_TEXTURES_DIR / "other" / "ui_button.png"),
             bf.palette_color_tuple3("ORANGE"),
             bf.palette_color_tuple3("CASABLANCA"),
@@ -346,8 +349,8 @@ def process_images():
         ("gold", "ORANGE", "CASABLANCA"),
         ("gray", "SCORPION", "SCORPION"),
     ):
-        image_star_processed = bf_image.outline(
-            bf_image.remap(
+        image_star_processed = bf.im_outline(
+            bf.im_remap(
                 image_star, bf.palette_color_tuple3(c1), bf.palette_color_tuple3(c2)
             ),
             radius=int(OUTLINE_WIDTH * 1.4),
@@ -355,24 +358,24 @@ def process_images():
         image_star_processed.save(bf.ART_TEXTURES_DIR / f"_ui_star_{suf}.png")
 
         small_star_scale = 0.1
-        bf_image.outline(
-            bf_image.scale(image_star_processed, small_star_scale), radius=2
-        ).save(bf.ART_TEXTURES_DIR / f"_ui_star_small_{suf}.png")
+        bf.im_outline(bf.im_scale(image_star_processed, small_star_scale), radius=2).save(
+            bf.ART_TEXTURES_DIR / f"_ui_star_small_{suf}.png"
+        )
 
     # _game_particle_star
-    bf_image.outline(bf_image.star(320), radius=20, color=(255, 255, 255, 255)).save(
+    bf.im_outline(bf.im_star(320), radius=20, color=(255, 255, 255, 255)).save(
         bf.ART_TEXTURES_DIR / "_game_particle_star.png"
     )
 
     # _game_feedback_circle
-    bf_image.outline(
-        bf_image.ellipse(60), radius=100, is_shadow=True, color=(255, 255, 255, 255)
+    bf.im_outline(
+        bf.im_ellipse(60), radius=100, is_shadow=True, color=(255, 255, 255, 255)
     ).save(bf.ART_TEXTURES_DIR / "_game_feedback_circle.png")
 
     # _game_particle_diamond
     diamond_size = 320
     rh = Image.new("RGBA", (diamond_size, diamond_size), (255, 255, 255, 255))
-    ell = bf_image.ellipse(diamond_size, fill=(0, 0, 0, 255))
+    ell = bf.im_ellipse(diamond_size, fill=(0, 0, 0, 255))
     for off in ((0, 0), (1, 0), (0, 1), (1, 1)):
         rh.paste(
             ell,
@@ -382,18 +385,16 @@ def process_images():
             ),
             ell,
         )
-    bf_image.extract_white(rh).save(bf.ART_TEXTURES_DIR / "_game_particle_diamond.png")
+    bf.im_extract_white(rh).save(bf.ART_TEXTURES_DIR / "_game_particle_diamond.png")
 
     # _ui_icon_ad_small
-    bf_image.outline(
-        bf_image.scale(
-            Image.open(bf.ART_DIR / "src" / "icons" / "ic_video_fill.png"), 0.25
-        ),
+    bf.im_outline(
+        bf.im_scale(Image.open(bf.ART_DIR / "src" / "icons" / "ic_video_fill.png"), 0.25),
         radius=OUTLINE_WIDTH,
     ).save(bf.ART_TEXTURES_DIR / "_ui_icon_ad_small.png")
 
     # Spritesheetifying items.
-    bf_image.spritesheetify(
+    bf.im_spritesheetify(
         bf.ART_DIR / "src" / "main_001.png",
         cell_size=480,
         size=(7, 8),
@@ -404,14 +405,14 @@ def process_images():
     for f in (bf.ART_TEXTURES_DIR / "items").glob("*.png"):
         img = Image.open(f)
         img.save(bf.ART_TEXTURES_DIR / f.name)
-        bf_image.white(img).save(bf.ART_TEXTURES_DIR / (f.stem + "_dark.png"))
+        bf.im_white(img).save(bf.ART_TEXTURES_DIR / (f.stem + "_dark.png"))
 
-    bf_image.conveyor(
+    bf.im_conveyor(
         "icons",
         "Icons",
-        bf_image.conveyor_prefix(""),
-        bf_image.conveyor_scale(0.55),
-        bf_image.conveyor_outline(radius=OUTLINE_WIDTH),
+        bf.imc_prefix(""),
+        bf.imc_scale(0.55),
+        bf.imc_outline(radius=OUTLINE_WIDTH),
     )
     # }
 

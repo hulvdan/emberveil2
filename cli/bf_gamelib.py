@@ -682,84 +682,81 @@ def convert_gamelib_json_to_binary(
         postload_files.append(path.as_posix())
         return len(postload_files)
 
-    if 1:
-        do_audio(platform)
+    do_audio(platform)
 
-        sound_paths = [*bf.RES_DIR.glob("*.ogg")]
-        if platform.is_web():
-            sound_paths.extend((bf.PROJECT_DIR / "resp").glob("*.ogg"))
+    sound_paths = [*bf.RES_DIR.glob("*.ogg")]
+    if platform.is_web():
+        sound_paths.extend((bf.PROJECT_DIR / "resp").glob("*.ogg"))
 
-        m = 2**32
-        sound_types_ = [
-            (t, (bf.stable_hash(t) % m))
-            for t in {
-                sound_path.stem.split("__", 1)[0].upper() for sound_path in sound_paths
+    m = 2**32
+    sound_types_ = [
+        (t, (bf.stable_hash(t) % m))
+        for t in {sound_path.stem.split("__", 1)[0].upper() for sound_path in sound_paths}
+    ]
+    sound_types_for_humans = sorted(x[0] for x in sound_types_)
+    sound_types_.sort(key=lambda x: x[1])
+    sound_types_sorted_by_enum_value: list[str] = [x[0] for x in sound_types_]
+    sound_enum_values = [x[1] for x in sound_types_]
+    bf.genenum(
+        genline,
+        "Sound",
+        sound_types_for_humans,
+        override_values=[
+            sound_types_sorted_by_enum_value.index(x) for x in sound_types_for_humans
+        ],
+    )
+
+    genline("constexpr u32 SOUND_TO_HASH_VALUE_[]{  ///")
+    for t in sound_enum_values:
+        genline(f"  {t},")
+    genline("};")
+    genline("VIEW_FROM_ARRAY_DANGER(SOUND_TO_HASH_VALUE);\n")
+
+    sound_variations_per_type: dict[str, list[Any]] = defaultdict(list)
+
+    for sound_path in sound_paths:
+        filepath = sound_path.relative_to(bf.PROJECT_DIR)
+
+        postload_index = 0
+        if (sound_path.parent.name == "resp") and platform.is_web():
+            postload_index = next_postload_file_index(filepath)
+
+        sound_variations_per_type[sound_path.stem.split("__", 1)[0].upper()].append(
+            {
+                "filepath": filepath.as_posix(),
+                "postload_index": postload_index,
             }
-        ]
-        sound_types_for_humans = sorted(x[0] for x in sound_types_)
-        sound_types_.sort(key=lambda x: x[1])
-        sound_types_sorted_by_enum_value: list[str] = [x[0] for x in sound_types_]
-        sound_enum_values = [x[1] for x in sound_types_]
-        bf.genenum(
-            genline,
-            "Sound",
-            sound_types_for_humans,
-            override_values=[
-                sound_types_sorted_by_enum_value.index(x) for x in sound_types_for_humans
-            ],
         )
 
-        genline("constexpr u32 SOUND_TO_HASH_VALUE_[]{  ///")
-        for t in sound_enum_values:
-            genline(f"  {t},")
-        genline("};")
-        genline("VIEW_FROM_ARRAY_DANGER(SOUND_TO_HASH_VALUE);\n")
+    existing_sounds_by_type = {x.pop("type"): x for x in gamelib.get("sounds", [])}
 
-        sound_variations_per_type: dict[str, list[Any]] = defaultdict(list)
+    sounds: list[Any] = []
+    gamelib["sounds"] = sounds
+    sound_index = -1
+    for sound_type, enum_value_id in sound_types_:
+        assert enum_value_id > 0
+        sound_index += 1
+        is_music = sound_type.startswith("MUSIC_")
+        kwargs = {}
+        if is_music:
+            kwargs["pitch_min"] = 0
+            kwargs["pitch_max"] = 0
+        x = {
+            "index": sound_index,
+            "enum_value_id": enum_value_id,
+            "variations": sound_variations_per_type[sound_type],
+            "is_music": is_music,
+            **kwargs,
+            **existing_sounds_by_type.pop(sound_type, {}),
+        }
+        sounds.append(x)
 
-        for sound_path in sound_paths:
-            filepath = sound_path.relative_to(bf.PROJECT_DIR)
-
-            postload_index = 0
-            if (sound_path.parent.name == "resp") and platform.is_web():
-                postload_index = next_postload_file_index(filepath)
-
-            sound_variations_per_type[sound_path.stem.split("__", 1)[0].upper()].append(
-                {
-                    "filepath": filepath.as_posix(),
-                    "postload_index": postload_index,
-                }
+    if existing_sounds_by_type:
+        bf.log.warning(
+            "gamelib.yml `sounds` contain those that aren't bound to any exported sounds: {}".format(
+                ", ".join(existing_sounds_by_type)
             )
-
-        existing_sounds_by_type = {x.pop("type"): x for x in gamelib.get("sounds", [])}
-
-        sounds: list[Any] = []
-        gamelib["sounds"] = sounds
-        sound_index = -1
-        for sound_type, enum_value_id in sound_types_:
-            assert enum_value_id > 0
-            sound_index += 1
-            is_music = sound_type.startswith("MUSIC_")
-            kwargs = {}
-            if is_music:
-                kwargs["pitch_min"] = 0
-                kwargs["pitch_max"] = 0
-            x = {
-                "index": sound_index,
-                "enum_value_id": enum_value_id,
-                "variations": sound_variations_per_type[sound_type],
-                "is_music": is_music,
-                **kwargs,
-                **existing_sounds_by_type.pop(sound_type, {}),
-            }
-            sounds.append(x)
-
-        if existing_sounds_by_type:
-            bf.log.warning(
-                "gamelib.yml `sounds` contain those that aren't bound to any exported sounds: {}".format(
-                    ", ".join(existing_sounds_by_type)
-                )
-            )
+        )
     # }
 
     gamelib |= atlas_data
@@ -849,7 +846,7 @@ def convert_gamelib_json_to_binary(
     # Creation of `gamelib.bin`.
     # {  ###
     intermediate_path = bf.TEMP_DIR / "gamelib.intermediate.jsonc"
-    intermediate_path.write_text(json.dumps(gamelib, indent=4))
+    intermediate_path.write_text(json.dumps(gamelib, indent=4), newline="\n")
     bf.run_command(
         [
             bf.FLATC_PATH,
@@ -1208,7 +1205,7 @@ def regenerate_shaders(building_for_release: bool) -> None:
     bf.recursive_mkdir(output_directory)
 
     with open(
-        output_directory / "include_all.h", "w", encoding="utf-8"
+        output_directory / "include_all.h", "w", encoding="utf-8", newline="\n"
     ) as include_all_file:
         include_all_file.write("#pragma once\n\n")
 
@@ -1482,7 +1479,9 @@ def do_generate(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
         name = "shell_release"
         if suffix := platform.lower().removeprefix("web"):
             name += "_" + suffix
-        (bf.TEMP_DIR / f"{name}.html").write_text(shell_contents, encoding="utf-8")
+        (bf.TEMP_DIR / f"{name}.html").write_text(
+            shell_contents, encoding="utf-8", newline="\n"
+        )
 
     # Shaders.
     # regenerate_shaders(build_type != BuildType.Debug)
@@ -1506,10 +1505,11 @@ def do_generate(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
                 ),
             ),
             encoding="utf-8",
+            newline="\n",
         )
 
     with open(
-        bf.HANDS_GENERATED_DIR / "bf_codegen.cpp", "w", encoding="utf-8"
+        bf.HANDS_GENERATED_DIR / "bf_codegen.cpp", "w", encoding="utf-8", newline="\n"
     ) as codegen_file:
         codegen_file.write(CODEGEN_DISCLAIMER)
 

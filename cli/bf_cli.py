@@ -494,6 +494,7 @@ def banner(filepath: Path) -> None:
     filepath.write_text(
         bf.bannerify([x.rstrip() for x in filepath.read_text("utf-8").splitlines()]),
         "utf-8",
+        newline="\n",
     )
     # }
 

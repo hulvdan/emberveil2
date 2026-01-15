@@ -15,17 +15,7 @@ x hh настроить норм поиск
 
 Заоблачная НЛО Сортировка
 
-x use fonts for labels - DOWNLOADS FONTS
-x win screen looks good
-x win: stars colors
-x win: ease overlay
-x win: ease enwiding of background rect
-x win: ease translate alpha appear of labels and buttons
-x win: ease stars pop
-x win font НА РУССКОМ БУКВА У
-x win: rewarded ad skip
-x win: rewarded ad skip VIDEO ICON
-
+* bf_image fade_white для стекла, что прозрачное, а контур - нет
 * win: ease ufo pos scale
 * win: ease
 * win: ease
