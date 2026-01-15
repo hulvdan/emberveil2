@@ -20,8 +20,8 @@ x better win / lose easings
 - win: ease ufo pos scale
 x плашка нажмите, чтобы начать
 x win ease player fade
+x tutor finger sprite
 
-* tutor finger sprite
 * hardcode 1/2 levels
 * 1st level tutor
 *

@@ -713,16 +713,19 @@ void RunInit() {
     }
   }
 
-  // Filling shelves with items.
-  {  ///
-    ZoneScopedN("Filling shelves with items.");
+  auto& shelves = g.run.shelves;
+  for (auto& s : shelves) {
+    s.rows        = {};
+    *s.rows.Add() = {};
+  }
 
-    auto& shelves = g.run.shelves;
-
-    for (auto& s : shelves) {
-      s.rows        = {};
-      *s.rows.Add() = {};
-    }
+  // Placing items manually.
+  if (fb_level->hardcoded()) {  ///
+    for ()
+  }
+  // Automatically filling shelves with items.
+  else {  ///
+    ZoneScopedN("Automatically filling shelves with items.");
 
     g.run.remainingRows
       = Round((f32)fb_level->shelves()->size() * glib->default_item_rows_per_shelf());

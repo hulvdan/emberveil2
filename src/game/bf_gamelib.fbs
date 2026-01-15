@@ -121,6 +121,9 @@ table Color {
 // GAME STUFF
 table Shelf {
     pos: Pos;
+    manual_item1: int;
+    manual_item2: int;
+    manual_item3: int;
 }
 
 table Item {
