@@ -1052,7 +1052,13 @@ void GameInitAfterLoadingSavedata() {  ///
 }
 
 bool PlayerCanHandleControls() {  ///
-  return !(gdebug.drawWin || gdebug.drawLost || g.run.gameplayEnded.IsSet());
+  if (gdebug.drawWin || gdebug.drawLost)
+    return false;
+  if (g.run.gameplayEnded.IsSet())
+    return false;
+  if (!ge.soundManager.unlocked.IsSet())
+    return false;
+  return true;
 }
 
 // NOTE: Logic must be executed only when `ge.meta._drawing` (`draw`) is false!
@@ -1127,6 +1133,11 @@ void DoUI() {
 
     const auto stripP = progressify(ANIMATION_1_FRAMES);
 
+    const auto breathingDur = (int)(2.5f * FIXED_FPS);
+    const f32 breathingP_ = (f32)(ge.meta.frameVisual % breathingDur) / (f32)breathingDur;
+    const f32 breathingP  = sinf(breathingP_ * 2 * PI32);
+    const f32 breathingScale = 1 + 0.05f * (sinf(breathingP_ * 2 * PI32) + 1) / 2;
+
     componentOverlay([]() {}, stripP);
 
     CLAY(  ///
@@ -1156,11 +1167,6 @@ void DoUI() {
         int      texID = {};
       };
 
-      const auto buttonRotationInterval = lframe::FromSeconds(2);
-      const f32  buttonRotationP
-        = (f32)(ge.meta.frameVisual % buttonRotationInterval.value)
-          / (f32)(buttonRotationInterval.value);
-
       LAMBDA (bool, componentButton, (ComponentButtonData data, auto innerLambda)) {  ///
         ASSERT(data.id);
         ASSERT(data.texID);
@@ -1179,10 +1185,9 @@ void DoUI() {
         CLAY({}) {
           BF_CLAY_IMAGE(
             {
-              .texID    = glib->ui_button_texture_id(),
-              .rotation = sinf(buttonRotationP * 2 * PI32),
-              .scale    = Vector2One() * EaseBounceSmallSmooth(p),
-              .color    = color,
+              .texID = glib->ui_button_texture_id(),
+              .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
+              .color = color,
               .dontCareAboutScaleWhenCalculatingSize = true,
             },
             [&]() BF_FORCE_INLINE_LAMBDA {
@@ -1192,14 +1197,14 @@ void DoUI() {
               }})
               BF_CLAY_IMAGE({
                 .texID = data.texID,
-                .scale = Vector2One() * EaseBounceSmallSmooth(p),
+                .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
                 .color = color,
                 .dontCareAboutScaleWhenCalculatingSize = true,
               });
             }
           );
 
-          innerLambda();
+          innerLambda(p);
 
           result = clickedOrTouchedThisComponent();
           if (result) {
@@ -1307,7 +1312,8 @@ void DoUI() {
                         .rotation = rot,
                         .offset{0, (i - 1 ? 0 : 40)},
                         .scale = Vector2One()
-                                 * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES)),
+                                 * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES))
+                                 * breathingScale,
                         .dontCareAboutScaleWhenCalculatingSize = true,
                       });
                     }
@@ -1348,8 +1354,9 @@ void DoUI() {
                 (Loc)((int)(won ? Loc_UI_WON_1__CAPS : Loc_UI_LOST_1__CAPS)
                       + g.run.wonOrLostLabelIndex),
                 {
-                  .scale
-                  = Vector2One() * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES)),
+                  .scale = Vector2One()
+                           * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES))
+                           * breathingScale,
                   .color    = Fade(won ? PAL_CASABLANCA : PAL_ALIZARIN_CRIMSON, stripP),
                   .wrapMode = CLAY_TEXT_WRAP_NONE,
                   .textAlignment = CLAY_TEXT_ALIGN_CENTER,
@@ -1362,8 +1369,9 @@ void DoUI() {
             BF_CLAY_TEXT_LOCALIZED(
               (won ? Loc_UI_WON_DESCRIPTION : Loc_UI_LOST_DESCRIPTION),
               {
-                .scale
-                = Vector2One() * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES)),
+                .scale = Vector2One()
+                         * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES))
+                         * breathingScale,
                 .color         = Fade(WHITE, stripP),
                 .textAlignment = CLAY_TEXT_ALIGN_CENTER,
               }
@@ -1381,21 +1389,21 @@ void DoUI() {
             if (won) {
               if (componentButton(
                     {.id = ButtonID_NEXT, .texID = glib->ui_icon_next_texture_id()},
-                    []() {}
+                    [](f32 p) {}
                   ))
                 g.run.levelControlPressed.SetNow();
             }
             else {
               if (componentButton(
                     {.id = ButtonID_RESTART, .texID = glib->ui_icon_restart_texture_id()},
-                    []() {}
+                    [](f32 p) {}
                   ))
                 g.run.levelControlPressed.SetNow();
 
 #if BF_DEBUG || defined(BF_PLATFORM_WebYandex)
               if (componentButton(
                     {.id = ButtonID_SKIP, .texID = glib->ui_icon_skip_texture_id()},
-                    [&]() BF_FORCE_INLINE_LAMBDA {
+                    [&](f32 p) BF_FORCE_INLINE_LAMBDA {
                       CLAY({.floating{
                         .zIndex = zIndex,
                         .attachPoints{
@@ -1407,7 +1415,10 @@ void DoUI() {
                       }}) {
                         BF_CLAY_IMAGE({
                           .texID = glib->ui_icon_ad_small_texture_id(),
-                          .color = PAL_CASABLANCA,
+                          .scale
+                          = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
+                          .color                                 = PAL_CASABLANCA,
+                          .dontCareAboutScaleWhenCalculatingSize = true,
                         });
                       }
                     }
@@ -1443,6 +1454,20 @@ void UpdateCamera() {  ///
   const auto v                = LOGICAL_RESOLUTIONf / g.meta.worldSizef;
   g.meta.camera.zoom          = MIN(v.x, v.y);
   g.meta.camera.texturesScale = 1 / g.meta.camera.zoom;
+  {
+    constexpr f32 MAX_ZOOM = 1.8f;
+    auto&         u        = ge.soundManager.unlocked;
+    if (u.IsSet()) {
+      if (u._value != 0) {
+        auto p = u.Elapsed().Progress(ANIMATION_2_FRAMES);
+        p      = MIN(1, p);
+        p      = EaseInOutQuad(p);
+        g.meta.camera.zoom *= Lerp(MAX_ZOOM, 1, p);
+      }
+    }
+    else
+      g.meta.camera.zoom *= MAX_ZOOM;
+  }
 }
 
 f32 GetItemOffsetX(int itemIndex) {  ///
@@ -1804,7 +1829,12 @@ void GameFixedUpdate() {
 void GameDraw() {
   ZoneScoped;
 
-  const auto& pl = g.run.player;
+  // Setup.
+  // {  ///
+  const auto  localization         = glib->localizations()->Get(ge.meta.localization);
+  const auto  localization_strings = localization->strings();
+  const auto& pl                   = g.run.player;
+  // }
 
   BeginMode2D(&g.meta.camera);
 
@@ -1886,12 +1916,12 @@ void GameDraw() {
       playerPos += Vector2(-0.5f, 0.5f);
 
     if (pl.posFrom)
-      playerPos = ToWorld(pl.posFrom);
+      playerPos = ToWorld(pl.posFrom) + Vector2(0, glib->player_offset_y());
 
     f32 playerInfinityPosOffsetScale = 1;
 
     if (pl.pos) {
-      const auto pos2 = ToWorld(pl.pos);
+      const auto pos2 = ToWorld(pl.pos) + Vector2(0, glib->player_offset_y());
       if (pl.actionStartedAt.IsSet()) {
         const auto actionDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
         f32        posP      = pl.actionStartedAt.Elapsed().Progress(actionDur);
@@ -1979,6 +2009,11 @@ void GameDraw() {
   // Drawing player.
   {  ///
     auto color = WHITE;
+    if (g.run.gameplayEnded.IsSet()) {
+      color = Fade(
+        color, MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES))
+      );
+    }
 
     if (pl.item) {
       Vector2 actionOffset{};
@@ -2046,6 +2081,28 @@ void GameDraw() {
   }
 
   EndMode2D();
+
+  // Start button for web (to enable audio).
+  if (!ge.soundManager.unlocked.IsSet() && ge.soundManager._works) {  ///
+    DrawGroup_Begin(DrawZ_WEB_AUDIO_BUTTON_PROMPT);
+    DrawGroup_SetSortY(0);
+
+    const auto text = localization_strings->Get(Loc_UI_WEB_AUDIO_BUTTON_PROMPT__CAPS);
+
+    const auto breathingDur = (int)(2.5f * FIXED_FPS);
+    const f32  p    = (f32)(ge.meta.frameVisual % breathingDur) / (f32)breathingDur;
+    const f32  pSin = sinf(p * 2 * PI32);
+
+    DrawGroup_CommandText({
+      .pos        = LOGICAL_RESOLUTIONf / 2.0f,
+      .scale      = Vector2One() * (1 + 0.1f * pSin),
+      .font       = &g.meta.fontWinDescription,
+      .text       = text->c_str(),
+      .bytesCount = (int)text->size(),
+    });
+
+    DrawGroup_End();
+  }
 
   DoUI();
 

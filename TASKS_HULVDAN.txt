@@ -16,22 +16,15 @@ x hh настроить норм поиск
 Заоблачная НЛО Сортировка
 
 x merge bf_image -> bf_lib
+x better win / lose easings
+- win: ease ufo pos scale
+x плашка нажмите, чтобы начать
 
-* win: ease ufo pos scale
-* win: ease
-* win: ease
-*
-* progress bar on top: draw progress rects
-* progress bar on top: draw outline
-* progress bar on top: sprite circle generate it
-* progress bar on top: stars quarters
-* progress bar on top: animate stars
-*
-* ref merge bf_image -> bf_lib.py
+* hardcode 1/2 levels
+* 1st level tutor
 *
 * ref casual star sky background + clear sky + облака
 *
-* drag: show arrow
 * bf_image fade_white для стекла, что прозрачное, а контур - нет
 *
 * chatgpt
@@ -42,14 +35,8 @@ x merge bf_image -> bf_lib
 * art: gather shelf stylized references
 * art: draw shelf
 *
-* progress on top (sortirovka po polochkam-like)
-*
 * metrika levels 1 2 3 5 7 9 11 13 15 20
   progression pow(1.7)
-*
-* hardcode 1/2 levels
-*
-* 1st level tutor
 *
 * art: ufo
   ref ufo geometry dash
@@ -58,7 +45,6 @@ x merge bf_image -> bf_lib
 *
 * polish: popping rows to front depth easing
 * polish: can drag (press picks up -> release puts down / exchanges)
-*
 * polish: ufo animation: slight rotation when moving
 *
 * найти, где задать вопрос
@@ -82,6 +68,13 @@ PROGRESSION
 * progression: platform sprites
 * progression:
 RELEASED
+* progress on top (sortirovka po polochkam-like)
+* drag: show arrow
+* progress bar on top: draw progress rects
+* progress bar on top: draw outline
+* progress bar on top: sprite circle generate it
+* progress bar on top: stars quarters
+* progress bar on top: animate stars
 * star on level -> player would gather stars for meta
   (receives 2 stars by default + 1 pickupable)
 * drag items outline (нужно вести действия)

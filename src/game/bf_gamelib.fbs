@@ -205,6 +205,7 @@ table GameLibrary {
     item_pos_lerp_factor: float;
     shelf_size: Posf;
 
+    player_offset_y: float;
     item_inside_player_offset_y: float;
     player_texture_id: int;
     items: [Item] (required);

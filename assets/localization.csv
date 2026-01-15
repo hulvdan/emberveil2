@@ -1,4 +1,5 @@
 id;russian;english;comment
+UI_WEB_AUDIO_BUTTON_PROMPT;Нажмите, Чтобы Начать;Tap To Start;
 UI_LEVEL_TOP_LEVEL;Ур.;Lvl.;
 UI_LEVEL_NEXT;Продолжить;Keep Going;
 UI_LEVEL_RESTART;Заново;Restart;

@@ -5,6 +5,7 @@ draw_z: # {  ###
   - DEFAULT
   - UI
   - VIGNETTE
+  - WEB_AUDIO_BUTTON_PROMPT
   - SCREEN_FADE
   - INACTIVE_WINDOW_DIM
   - GIZMOS
@@ -127,6 +128,7 @@ item_pos_lerp_factor: 0.05
 shelf_size:
   x: 2
   y: 1.6
+player_offset_y: -0.25
 item_inside_player_offset_y: -0.3
 player_texture_id: game_player_removeme
 
