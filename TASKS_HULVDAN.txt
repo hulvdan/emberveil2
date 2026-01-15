@@ -21,10 +21,10 @@ x better win / lose easings
 x плашка нажмите, чтобы начать
 x win ease player fade
 x tutor finger sprite
+x hardcode 1/2 levels
+x 1st level tutor
 
-* hardcode 1/2 levels
-* 1st level tutor
-*
+* tutor show finger
 * ref casual star sky background + clear sky + облака
 *
 * bf_image fade_white для стекла, что прозрачное, а контур - нет

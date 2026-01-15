@@ -290,6 +290,17 @@ struct PlayerLastAction : public Equatable<PlayerLastAction> {  ///
   }
 };
 
+struct {
+  int shelf = {};
+  int item  = {};
+} FIRST_LEVEL_TUTOR_MOVES_[]{
+  {.shelf = 0, .item = 1},
+  {.shelf = 2, .item = 0},
+  {.shelf = 0, .item = 2},
+  {.shelf = 1, .item = 2},
+};
+VIEW_FROM_ARRAY_DANGER(FIRST_LEVEL_TUTOR_MOVES);
+
 struct GameData {
   struct Meta {
     Font            fontUI             = {};
@@ -332,6 +343,8 @@ struct GameData {
     FrameVisual levelStartedAfterTransitionAt = {};
 
     PushableArray<PlayerBufferedAction, 12> bufferedActions = {};
+
+    int firstLevelTutorMoveIndex = 0;
 
     struct Player {
       PlayerPos posFrom = {};
@@ -1597,12 +1610,13 @@ void GameFixedUpdate() {
         const auto td = GetTouchData(ge.meta._latestActiveTouchID);
         const auto wp
           = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.meta.camera);
-        if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount)
+        if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount) {
           *g.run.bufferedActions.Add() = {
             .pos     = wp,
             .touchID = ge.meta._latestActiveTouchID,
             .press   = press,
           };
+        }
       }
     }
 
@@ -1646,6 +1660,16 @@ void GameFixedUpdate() {
             else if (pl.item && !p) {
               if (ba.press || (!ba.press && (pl.lastAction != currentAction)))
                 actionToSet = PlayerAction_PUT;
+            }
+
+            if (!g.save.level
+                && (g.run.firstLevelTutorMoveIndex < FIRST_LEVEL_TUTOR_MOVES.count))
+            {
+              const auto& m = FIRST_LEVEL_TUTOR_MOVES[g.run.firstLevelTutorMoveIndex];
+              if ((m.shelf == shelf) && (m.item == itemIndex))
+                g.run.firstLevelTutorMoveIndex++;
+              else
+                actionToSet = {};
             }
 
             if (actionToSet) {
