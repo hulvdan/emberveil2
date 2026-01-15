@@ -290,14 +290,17 @@ struct PlayerLastAction : public Equatable<PlayerLastAction> {  ///
   }
 };
 
-struct {
+struct FirstLevelTutorMove {  ///
   int shelf = {};
   int item  = {};
-} FIRST_LEVEL_TUTOR_MOVES_[]{
+};
+
+FirstLevelTutorMove FIRST_LEVEL_TUTOR_MOVES_[]{
   {.shelf = 0, .item = 1},
   {.shelf = 2, .item = 0},
   {.shelf = 0, .item = 2},
   {.shelf = 1, .item = 2},
+  {.shelf = -1, .item = -1},
 };
 VIEW_FROM_ARRAY_DANGER(FIRST_LEVEL_TUTOR_MOVES);
 
@@ -1662,9 +1665,7 @@ void GameFixedUpdate() {
                 actionToSet = PlayerAction_PUT;
             }
 
-            if (!g.save.level
-                && (g.run.firstLevelTutorMoveIndex < FIRST_LEVEL_TUTOR_MOVES.count))
-            {
+            if (!g.save.level) {
               const auto& m = FIRST_LEVEL_TUTOR_MOVES[g.run.firstLevelTutorMoveIndex];
               if ((m.shelf == shelf) && (m.item == itemIndex))
                 g.run.firstLevelTutorMoveIndex++;
@@ -1879,6 +1880,10 @@ void GameDraw() {
   const auto  localization         = glib->localizations()->Get(ge.meta.localization);
   const auto  localization_strings = localization->strings();
   const auto& pl                   = g.run.player;
+
+  const auto _breathingDur = (int)(2.5f * FIXED_FPS);
+  const f32 _breathingP = (f32)(ge.meta.frameVisual % _breathingDur) / (f32)_breathingDur;
+  const f32 breathingScale = 1 + 0.1f * sinf(_breathingP * 2 * PI32);
   // }
 
   f32 audioUnlockP_ = 0;
@@ -1931,6 +1936,7 @@ void GameDraw() {
     if (depth) {
       tex   = fb->dark_texture_id();
       color = depthItemColor;
+      pos += ToVector2(glib->item_draw_depth_offset());
     }
 
     DrawGroup_CommandTexture({
@@ -2007,9 +2013,14 @@ void GameDraw() {
   DrawGroup_Begin(DrawZ_DEFAULT);
   DrawGroup_SetSortY(0);
 
+  FirstLevelTutorMove firstLevelTutorMove
+    = FIRST_LEVEL_TUTOR_MOVES[FIRST_LEVEL_TUTOR_MOVES.count - 1];
+  if (!g.save.level)
+    firstLevelTutorMove = FIRST_LEVEL_TUTOR_MOVES[g.run.firstLevelTutorMoveIndex];
+
   // Drawing shelves.
-  FOR_RANGE (int, mode, 2) {  ///
-    // mode 0 - drawing shelves, 1 - drawing items.
+  FOR_RANGE (int, mode, 3) {  ///
+    // mode 0 - drawing shelves, 1 - drawing items, 2 - drawing 1st level tutor.
     int shelf = -1;
     for (const auto& s : g.run.shelves) {
       shelf++;
@@ -2017,12 +2028,13 @@ void GameDraw() {
       const auto r = s.Rect();
 
       if (!mode) {
+        // Drawing shelf.
         DrawGroup_CommandTexture({
           .texID = glib->game_shelf_texture_id(),
           .pos   = r.pos,
         });
       }
-      else {
+      else if ((mode == 1) || !g.save.level) {
         for (int depth = s.rows.count - 1; depth >= 0; depth--) {
           Vector2 scale{1, 1};
           if (s.IsLocked() && !depth) {
@@ -2034,23 +2046,38 @@ void GameDraw() {
           FOR_RANGE (int, itemIndex, 3) {
             auto& p   = s.rows[depth][itemIndex];
             auto  pos = GetItemBottomPos(shelf, itemIndex);
-            if (p) {
-              Vector2 actionOffset{};
-              if (!depth) {
-                if ((pl.action == PlayerAction_PICKUP)
-                    || (pl.action == PlayerAction_EXCHANGE))
-                {
-                  if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
-                    f32 p        = GetPlayerActionWithoutFlyingProgress();
-                    actionOffset = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
-                  }
+
+            Vector2 actionOffset{};
+            if (!depth) {
+              if ((pl.action == PlayerAction_PICKUP)
+                  || (pl.action == PlayerAction_EXCHANGE))
+              {
+                if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
+                  f32 p        = GetPlayerActionWithoutFlyingProgress();
+                  actionOffset = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
                 }
               }
-
-              drawItem(pos + actionOffset, p, 0, scale, depth, 1);
             }
 
-            if (gdebug.gizmos && !depth) {
+            if ((mode == 1) && p) {
+              // Drawing item.
+              drawItem(pos + actionOffset, p, 0, scale, depth, 1);
+            }
+            else if (mode == 2) {
+              // Drawing 1st level touch tutor.
+              if ((firstLevelTutorMove.shelf == shelf)
+                  && (firstLevelTutorMove.item == itemIndex))
+              {
+                DrawGroup_CommandTexture({
+                  .texID  = glib->ui_input_touch_down_texture_id(),
+                  .pos    = pos + ToVector2(glib->move_tutor_finger_offset()),
+                  .anchor = ToVector2(glib->tutor_finger_anchor()),
+                  .scale  = Vector2One() * breathingScale,
+                });
+              }
+            }
+
+            if (gdebug.gizmos && !depth && (mode == 1)) {
               const auto r = GetItemRect(shelf, itemIndex);
               DrawGroup_CommandRectLines({
                 .pos    = r.pos,
@@ -2145,7 +2172,8 @@ void GameDraw() {
 
   EndMode2D();
 
-  if (audioUnlockP < 1) {
+  // Dim screen if audio is not unlocked yet.
+  if (audioUnlockP < 1) {  ///
     DrawGroup_OneShotRect(
       {
         .pos   = LOGICAL_RESOLUTIONf / 2.0f,
@@ -2163,13 +2191,9 @@ void GameDraw() {
 
     const auto text = localization_strings->Get(Loc_UI_WEB_AUDIO_BUTTON_PROMPT__CAPS);
 
-    const auto breathingDur = (int)(2.5f * FIXED_FPS);
-    const f32  p    = (f32)(ge.meta.frameVisual % breathingDur) / (f32)breathingDur;
-    const f32  pSin = sinf(p * 2 * PI32);
-
     DrawGroup_CommandText({
       .pos        = LOGICAL_RESOLUTIONf / 2.0f + Vector2(0, glib->tutor_text_offset_y()),
-      .scale      = Vector2One() * (1 + 0.1f * pSin),
+      .scale      = Vector2One() * breathingScale,
       .font       = &g.meta.fontWinDescription,
       .text       = text->c_str(),
       .bytesCount = (int)text->size(),
@@ -2177,9 +2201,9 @@ void GameDraw() {
 
     DrawGroup_CommandTexture({
       .texID  = glib->ui_input_touch_down_texture_id(),
-      .pos    = LOGICAL_RESOLUTIONf / 2.0f + ToVector2(glib->tutor_finger_offset()),
+      .pos    = LOGICAL_RESOLUTIONf / 2.0f + ToVector2(glib->audio_tutor_finger_offset()),
       .anchor = ToVector2(glib->tutor_finger_anchor()),
-      .scale  = Vector2One() * (1 + 0.1f * pSin),
+      .scale  = Vector2One() * breathingScale,
     });
 
     DrawGroup_End();

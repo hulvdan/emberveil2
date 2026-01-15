@@ -186,6 +186,7 @@ table GameLibrary {
     matching_particles_parts_seconds: [float];
     item_draw_depth_fade: float;
     item_draw_depth_color: uint;
+    item_draw_depth_offset: Posf;
     default_depth: int;
     default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;
@@ -216,7 +217,8 @@ table GameLibrary {
     items: [Item] (required);
 
     tutor_text_offset_y: float;
-    tutor_finger_offset: Posf;
+    audio_tutor_finger_offset: Posf;
+    move_tutor_finger_offset: Posf;
     tutor_finger_anchor: Posf;
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.

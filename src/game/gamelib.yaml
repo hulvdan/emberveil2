@@ -97,6 +97,9 @@ matching_particles_parts_seconds:
 # item_draw_depth_fade: 0.6
 item_draw_depth_fade: 1
 item_draw_depth_color: 0x625565ff
+item_draw_depth_offset:
+  x: -0.03
+  y: 0.03
 player_infinity_duration_seconds: 3
 player_infinity_symbol_offset:
   x: 0.3
@@ -132,9 +135,12 @@ player_offset_y: -0.25
 item_inside_player_offset_y: -0.3
 player_texture_id: game_player_removeme
 tutor_text_offset_y: 30
-tutor_finger_offset:
+audio_tutor_finger_offset:
   x: 0
   y: -10
+move_tutor_finger_offset:
+  x: 0.1
+  y: 0.3
 tutor_finger_anchor:
   x: 0.2
   y: 0.9
