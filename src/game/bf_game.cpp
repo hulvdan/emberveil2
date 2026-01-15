@@ -720,8 +720,26 @@ void RunInit() {
   }
 
   // Placing items manually.
-  if (fb_level->hardcoded()) {  ///
-    for ()
+  if (fb_level->manually_placed_rows()) {  ///
+    g.run.remainingRows = fb_level->manually_placed_rows();
+
+    int shelf = -1;
+
+    LAMBDA (void, placeItem, (int item, int color)) {
+      ASSERT(color);
+      shelves[shelf].rows[0][item].color = color;
+    };
+
+    for (auto s : *fb_level->shelves()) {
+      shelf++;
+
+      if (s->manual_item1())
+        placeItem(0, s->manual_item1());
+      if (s->manual_item2())
+        placeItem(1, s->manual_item2());
+      if (s->manual_item3())
+        placeItem(2, s->manual_item3());
+    }
   }
   // Automatically filling shelves with items.
   else {  ///
@@ -2026,7 +2044,11 @@ void GameDraw() {
   // Drawing player.
   {  ///
     auto color = WHITE;
-    auto fade  = MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES));
+
+    f32 fade = 1.0f;
+    if (g.run.gameplayEnded.IsSet())
+      fade = MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES));
+
     if (g.run.gameplayEnded.IsSet())
       color = Fade(color, fade);
 

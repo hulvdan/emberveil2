@@ -15,6 +15,7 @@ USAGE:
 """
 
 # Imports.  {  ###
+from collections import Counter
 from itertools import groupby
 
 import bf_lib as bf
@@ -140,12 +141,29 @@ def _process_gamelib(
             assert sx is not None
             assert sy is not None
 
+            manually_placed_items_ = []
+
             shelves = []
             for entity in entities.entityInstances:
                 if entity.identifier_ == "Zone":
-                    shelves.append({"pos": (entity.grid_[0], sy - entity.grid_[1] - 1)})
+                    shelf = {
+                        "pos": (entity.grid_[0], sy - entity.grid_[1] - 1),
+                    }
+                    for i in range(3):
+                        item = entity.field(f"item{i + 1}")
+                        shelf[f"manual_item{i + 1}"] = item
+                        if item:
+                            manually_placed_items_.append(item)
+                    shelves.append(shelf)
             shelves.sort(key=lambda x: (x["pos"][1], x["pos"][0]))  # type: ignore
             player = bf.ldtk_get_single_entity(entities, "Player")
+
+            manually_placed_items = Counter(manually_placed_items_)
+            for v in manually_placed_items.values():
+                assert not (v % 3), (
+                    f"Level (index={level_index}) must have 3 of each hand placed items!\n"
+                    f"{manually_placed_items=}"
+                )
 
             total_item_rows = level.field("OverrideTotalItemRows")
             if not total_item_rows:
@@ -165,6 +183,7 @@ def _process_gamelib(
                     "override_total_item_rows": total_item_rows,
                     "override_empty_item_rows": level.field("OverrideEmptyItemRows"),
                     "random_seed": level.field("RandomSeed"),
+                    "manually_placed_rows": sum(manually_placed_items.values()) // 3,
                 }
             )
             if level.field("Cycle"):

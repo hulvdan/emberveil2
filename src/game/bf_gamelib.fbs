@@ -138,6 +138,7 @@ table Level {
     override_total_item_rows: int;
     override_empty_item_rows: int;
     random_seed: uint32;
+    manually_placed_rows: int;
 }
 // GAME STUFF END
 
