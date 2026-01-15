@@ -17,7 +17,6 @@ x hh настроить норм поиск
 
 x merge bf_image -> bf_lib
 
-* bf_image fade_white для стекла, что прозрачное, а контур - нет
 * win: ease ufo pos scale
 * win: ease
 * win: ease
@@ -28,11 +27,12 @@ x merge bf_image -> bf_lib
 * progress bar on top: stars quarters
 * progress bar on top: animate stars
 *
-* draw win / lost
-*
 * ref merge bf_image -> bf_lib.py
 *
 * ref casual star sky background + clear sky + облака
+*
+* drag: show arrow
+* bf_image fade_white для стекла, что прозрачное, а контур - нет
 *
 * chatgpt
   на что заменить полки в игре сортировка по полочкам, если у меня персонаж - НЛО
