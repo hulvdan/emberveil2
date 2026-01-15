@@ -15,6 +15,8 @@ x hh настроить норм поиск
 
 Заоблачная НЛО Сортировка
 
+x merge bf_image -> bf_lib
+
 * bf_image fade_white для стекла, что прозрачное, а контур - нет
 * win: ease ufo pos scale
 * win: ease
