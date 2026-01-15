@@ -1836,6 +1836,17 @@ void GameDraw() {
   const auto& pl                   = g.run.player;
   // }
 
+  f32 audioUnlockP_ = 0;
+  if (ge.soundManager.unlocked.IsSet()) {  ///
+    if (ge.soundManager.unlocked._value) {
+      audioUnlockP_
+        = MIN(1, ge.soundManager.unlocked.Elapsed().Progress(ANIMATION_1_FRAMES));
+    }
+    else
+      audioUnlockP_ = 1;
+  }
+  const auto audioUnlockP = audioUnlockP_;
+
   BeginMode2D(&g.meta.camera);
 
   // Drawing tiled background.
@@ -2026,6 +2037,8 @@ void GameDraw() {
       drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0);
     }
 
+    color.a *= audioUnlockP;
+
     DrawGroup_CommandTexture({
       .texID    = glib->player_texture_id(),
       .rotation = playerRotation,
@@ -2081,16 +2094,6 @@ void GameDraw() {
   }
 
   EndMode2D();
-
-  f32 audioUnlockP = 0;
-  if (ge.soundManager.unlocked.IsSet()) {  ///
-    if (ge.soundManager.unlocked._value) {
-      audioUnlockP
-        = MIN(1, ge.soundManager.unlocked.Elapsed().Progress(ANIMATION_1_FRAMES));
-    }
-    else
-      audioUnlockP = 1;
-  }
 
   if (audioUnlockP < 1) {
     DrawGroup_OneShotRect(
