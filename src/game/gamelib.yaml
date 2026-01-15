@@ -5,8 +5,8 @@ draw_z: # {  ###
   - DEFAULT
   - UI
   - VIGNETTE
-  - WEB_AUDIO_BUTTON_PROMPT
   - SCREEN_FADE
+  - WEB_AUDIO_BUTTON_PROMPT
   - INACTIVE_WINDOW_DIM
   - GIZMOS
 # }
@@ -131,5 +131,12 @@ shelf_size:
 player_offset_y: -0.25
 item_inside_player_offset_y: -0.3
 player_texture_id: game_player_removeme
+tutor_text_offset_y: 30
+tutor_finger_offset:
+  x: 0
+  y: -10
+tutor_finger_anchor:
+  x: 0.2
+  y: 0.9
 
 ###

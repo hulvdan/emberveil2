@@ -163,6 +163,7 @@ table GameLibrary {
     ui_icon_next_texture_id: int;
     ui_icon_restart_texture_id: int;
     ui_icon_ad_small_texture_id: int;
+    ui_input_touch_down_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
     ui_icon_skip_texture_id: int;
@@ -209,6 +210,10 @@ table GameLibrary {
     item_inside_player_offset_y: float;
     player_texture_id: int;
     items: [Item] (required);
+
+    tutor_text_offset_y: float;
+    tutor_finger_offset: Posf;
+    tutor_finger_anchor: Posf;
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.

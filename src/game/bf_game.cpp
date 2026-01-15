@@ -2083,7 +2083,7 @@ void GameDraw() {
   EndMode2D();
 
   // Start button for web (to enable audio).
-  if (!ge.soundManager.unlocked.IsSet() && ge.soundManager._works) {  ///
+  if (1 || !ge.soundManager.unlocked.IsSet() && ge.soundManager._works) {  ///
     DrawGroup_Begin(DrawZ_WEB_AUDIO_BUTTON_PROMPT);
     DrawGroup_SetSortY(0);
 
@@ -2094,11 +2094,18 @@ void GameDraw() {
     const f32  pSin = sinf(p * 2 * PI32);
 
     DrawGroup_CommandText({
-      .pos        = LOGICAL_RESOLUTIONf / 2.0f,
+      .pos        = LOGICAL_RESOLUTIONf / 2.0f + Vector2(0, glib->tutor_text_offset_y()),
       .scale      = Vector2One() * (1 + 0.1f * pSin),
       .font       = &g.meta.fontWinDescription,
       .text       = text->c_str(),
       .bytesCount = (int)text->size(),
+    });
+
+    DrawGroup_CommandTexture({
+      .texID  = glib->ui_input_touch_down_texture_id(),
+      .pos    = LOGICAL_RESOLUTIONf / 2.0f + ToVector2(glib->tutor_finger_offset()),
+      .anchor = ToVector2(glib->tutor_finger_anchor()),
+      .scale  = Vector2One() * (1 + 0.1f * pSin),
     });
 
     DrawGroup_End();

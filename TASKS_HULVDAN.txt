@@ -19,7 +19,9 @@ x merge bf_image -> bf_lib
 x better win / lose easings
 - win: ease ufo pos scale
 x плашка нажмите, чтобы начать
+x win ease player fade
 
+* tutor finger sprite
 * hardcode 1/2 levels
 * 1st level tutor
 *
