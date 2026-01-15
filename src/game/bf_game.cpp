@@ -2082,8 +2082,29 @@ void GameDraw() {
 
   EndMode2D();
 
+  f32 audioUnlockP = 0;
+  if (ge.soundManager.unlocked.IsSet()) {  ///
+    if (ge.soundManager.unlocked._value) {
+      audioUnlockP
+        = MIN(1, ge.soundManager.unlocked.Elapsed().Progress(ANIMATION_1_FRAMES));
+    }
+    else
+      audioUnlockP = 1;
+  }
+
+  if (audioUnlockP < 1) {
+    DrawGroup_OneShotRect(
+      {
+        .pos   = LOGICAL_RESOLUTIONf / 2.0f,
+        .size  = ge.meta.scaledLogicalResolution,
+        .color = Fade(ge.settings.screenFadeColor, Lerp(0.5f, 0, audioUnlockP)),
+      },
+      DrawZ_SCREEN_FADE
+    );
+  }
+
   // Start button for web (to enable audio).
-  if (1 || !ge.soundManager.unlocked.IsSet() && ge.soundManager._works) {  ///
+  if (0 || !ge.soundManager.unlocked.IsSet() && ge.soundManager._works) {  ///
     DrawGroup_Begin(DrawZ_WEB_AUDIO_BUTTON_PROMPT);
     DrawGroup_SetSortY(0);
 
