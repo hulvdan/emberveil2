@@ -25,36 +25,27 @@ x hardcode 1/2 levels
 x 1st level tutor
 x tutor show finger
 
-* ref casual star sky background + clear sky + облака
-*
-* bf_image fade_white для стекла, что прозрачное, а контур - нет
-*
 * chatgpt
   на что заменить полки в игре сортировка по полочкам, если у меня персонаж - НЛО
+*
+* ref casual star sky background + clear sky + облака
+* bf_image fade_white для стекла, что прозрачное, а контур - нет
+*
 * art: sprite: cloud / shelf
 * art: sprite: ufo
-*
 * art: gather shelf stylized references
 * art: draw shelf
-*
-* metrika levels 1 2 3 5 7 9 11 13 15 20
-  progression pow(1.7)
-*
 * art: ufo
   ref ufo geometry dash
-*
 * 2nd pass items
-*
-* polish: popping rows to front depth easing
-* polish: can drag (press picks up -> release puts down / exchanges)
-* polish: ufo animation: slight rotation when moving
-*
-* найти, где задать вопрос
-  задать вопрос, как делать воронки для АБ тестов по прохождению уровней
+* metrika levels 1 2 3 5 7 9 11 13 15 20
+  progression pow(1.7)
 *
 FEELING
 * упругость
 * feeling
+* polish: popping rows to front depth easing
+* polish: ufo animation: slight rotation when moving
 BEFORE RELEASE
 * 2nd level shows табличку death
 * change yandex metrika
@@ -70,6 +61,8 @@ PROGRESSION
 * progression: platform sprites
 * progression:
 RELEASED
+* найти, где задать вопрос
+  задать вопрос, как делать воронки для АБ тестов по прохождению уровней
 * progress on top (sortirovka po polochkam-like)
 * drag: show arrow
 * progress bar on top: draw progress rects
