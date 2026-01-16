@@ -79,6 +79,14 @@ debug_variables: # {  ###
     type: bool
 # }
 
+background_fill_color2:
+  color: 0x8fd3ffff
+  s: 0.99
+  v: 0.99
+background_rect_color2:
+  color: 0x8fd3ffff
+  s: 0.82
+  v: 0.99
 ui_icon_skip_texture_id: ui_icon_next
 button_press_duration_seconds: 0.22
 ui_stars_child_gap: 10

@@ -145,6 +145,13 @@ table Cloud {
     texture_id: int;
     offset: Posf;
 }
+
+table Color2 {
+    color: uint;
+    s: float = 1;
+    v: float = 1;
+    b: float = 1;
+}
 // GAME STUFF END
 
 table GameLibrary {
@@ -173,7 +180,11 @@ table GameLibrary {
     ui_icon_restart_texture_id: int;
     ui_icon_ad_small_texture_id: int;
     ui_input_touch_down_texture_id: int;
+    ui_background_rect_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
+
+    background_fill_color2: Color2;
+    background_rect_color2: Color2;
 
     ui_icon_skip_texture_id: int;
 

@@ -1912,6 +1912,23 @@ void GameFixedUpdate() {
   ge.meta.frameVisual++;
 }
 
+Color ToColor(const BFGame::Color2* fb) {  ///
+  auto c = ColorFromRGBA(fb->color());
+  if ((fb->s() != 1) || (fb->v() != 1)) {
+    auto hsv = ColorToHSV(c);
+    hsv.g *= fb->s();
+    hsv.g = MIN(1, hsv.g);
+    hsv.b *= fb->v();
+    hsv.b  = MIN(1, hsv.b);
+    auto a = c.a;
+    c      = ColorFromHSV(hsv);
+    c.a    = a;
+  }
+  if (fb->b() != 1)
+    c = ColorBrightness(c, fb->b());
+  return c;
+}
+
 void GameDraw() {
   ZoneScoped;
 
@@ -1937,9 +1954,23 @@ void GameDraw() {
   }
   const auto audioUnlockP = audioUnlockP_;
 
+  // Background.
+  {  ///
+    DrawGroup_Begin(DrawZ_SCREEN_BACKGROUND);
+    DrawGroup_SetSortY(0);
+
+    DrawTiledBackgroundRects({
+      .backgroundColor = ToColor(glib->background_fill_color2()),
+      .rectColor       = ToColor(glib->background_rect_color2()),
+      .rectTexID       = glib->ui_background_rect_texture_id(),
+    });
+
+    DrawGroup_End();
+  }
+
   BeginMode2D(&g.meta.camera);
 
-  // Drawing tiled background.
+  // Drawing debug tiles.
   if (gdebug.drawTiledBackground) {  ///
     FOR_RANGE (int, y, g.meta.worldSize.y) {
       FOR_RANGE (int, x, g.meta.worldSize.x) {

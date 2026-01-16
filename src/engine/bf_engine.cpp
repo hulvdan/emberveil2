@@ -5754,6 +5754,63 @@ int GetTextureIDByProgress(const flatbuffers::Vector<int>* texs, f32 p) {  ///
   return texs->Get(index);
 }
 
+struct DrawTiledBackgroundRectsData {  ///
+  Color backgroundColor = {};
+  Color rectColor       = {};
+  int   rectTexID       = 0;
+  int   rectsXToSide    = 9;
+  int   rectsYToSide    = 5;
+  int   cycleDur        = 20 * FIXED_FPS;
+  f32   angle           = -PI32 / 6;
+};
+
+void DrawTiledBackgroundRects(DrawTiledBackgroundRectsData data) {  ///
+  DrawGroup_CommandRect({
+    .pos   = LOGICAL_RESOLUTIONf / 2.0f,
+    .size  = ge.meta.scaledLogicalResolution * 1.1f,
+    .color = data.backgroundColor,
+  });
+
+  constexpr int gap  = 8;
+  const auto    size = ToVector2(glib->original_texture_sizes()->Get(data.rectTexID))
+                    * ASSETS_TO_LOGICAL_RATIO;
+
+  const f32 cycleP = (f32)(ge.meta.frameVisual % data.cycleDur) / (f32)data.cycleDur;
+
+  FOR_RANGE (int, y, data.rectsYToSide) {
+    FOR_RANGE (int, n, 2) {
+      FOR_RANGE (int, x, data.rectsXToSide) {
+        FOR_RANGE (int, m, 2) {
+          if (!x && m)
+            continue;
+
+          if ((x == data.rectsXToSide - 1) && (y >= data.rectsYToSide - 1))
+            continue;
+
+          f32 offY = (size.y + gap) / 2.0f;
+          if (x % 2)
+            offY = 0;
+
+          auto center = LOGICAL_RESOLUTIONf / 2.0f;
+          auto off    = Vector2(x * (size.x + gap), offY + y * (size.y + gap));
+          if (n)
+            off.y *= -1;
+
+          off.y
+            += (((x + m) % 2) ? 1 : -1) * (size.y + gap) * 0.1f * cosf(2 * PI32 * cycleP);
+
+          DrawGroup_CommandTexture({
+            .texID    = data.rectTexID,
+            .rotation = data.angle,
+            .pos      = center + Vector2Rotate(off, data.angle + (m ? PI32 : 0)),
+            .color    = data.rectColor,
+          });
+        }
+      }
+    }
+  }
+}
+
 #include "game/bf_game.cpp"
 
 void DrawParticles() {  ///
