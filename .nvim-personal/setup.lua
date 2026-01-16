@@ -17,7 +17,7 @@ vim.keymap.set("n", "<leader>9", function()
 end, opts)
 
 function cli_command(cmd)
-    return [[uvx ruff check --output-format concise cli && uv run pyright cli && uv run cli\bf_cli.py ]] .. cmd
+    return [[uvx ruff check --output-format concise cli && uv run cli\bf_cli.py ]] .. cmd
 end
 
 target = "game"
@@ -63,7 +63,7 @@ function rebuild_tasks()
         { "t_test", cli_command("test") },
         {
             "y_test_python",
-            [[uvx ruff check --output-format concise cli && uv run pyright cli && uv run pytest -x -vv]],
+            [[uvx ruff check --output-format concise cli && uv run pytest -x -vv]],
         },
         { "r_build_all_and_test", cli_command("build_all_and_test") },
         {

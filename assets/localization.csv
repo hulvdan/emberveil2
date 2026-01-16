@@ -7,4 +7,4 @@ UI_LEVEL_SKIP;Пропустить;Skip;
 UI_WON_1;Победа!;Victory!;
 UI_LOST_1;Упс!;Oops!;
 UI_WON_DESCRIPTION;Уровень пройден;Level completed;
-UI_LOST_DESCRIPTION;Не осталось выигрышных ходов;No more matches available;
+UI_LOST_DESCRIPTION;Не осталось "троек";No more "triples" available;

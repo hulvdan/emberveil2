@@ -7,8 +7,9 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 x CLAY LATCH GUARD FIX at the end
 - CLAY LATCH GUARD FIX immediate
 x draw clouds good
+x попарное закраснение пар предметов при проигрыше
 
-* попарное закраснение пар предметов при проигрыше
+* pyright
 * clouds breathing
 * not white cloud color
 * c++ cloud color

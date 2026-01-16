@@ -338,11 +338,12 @@ struct GameData {
 
     b2WorldId world = {};
 
-    uint                            remainingRows         = 0;
-    FrameVisual                     gameplayEnded         = {};
-    bool                            won                   = false;
-    PushableArray<int, TOTAL_ITEMS> lostFrontUniqueColors = 0;
-    int                             wonOrLostLabelIndex   = -1;
+    uint                       remainingRows                     = 0;
+    FrameVisual                gameplayEnded                     = {};
+    bool                       won                               = false;
+    int                        lostFrontUniqueColorsCount        = 0;
+    Array<lframe, TOTAL_ITEMS> lostFrontUniqueColorsStartFlashes = {};
+    int                        wonOrLostLabelIndex               = -1;
 
     FrameVisual levelControlPressed           = {};
     bool        levelControlPressedSkip       = false;
@@ -1164,10 +1165,12 @@ void DoUI() {
     else
       e = g.run.gameplayEnded.Elapsed();
 
-    e.value -= lframe::FromSeconds(
-                 glib->item_paired_red_seconds() * g.run.lostFrontUniqueColors.count
-    )
-                 .value;
+    e.value
+      -= lframe::FromSeconds(
+           (glib->lost_items_flashing_seconds() + glib->lost_items_flashing_gap_seconds())
+           * g.run.lostFrontUniqueColorsCount
+      )
+           .value;
 
     LAMBDA (f32, progressify, (lframe dur)) {  ///
       auto result = Clamp01(e.Progress(dur));
@@ -1555,12 +1558,26 @@ void EndGameplay(bool won) {  ///
   g.run.won = won;
 
   if (!won) {
+    PushableArray<int, TOTAL_ITEMS> frontItemColors{};
+
     for (const auto& s : g.run.shelves) {
       FOR_RANGE (int, i, 3) {
         const auto& item = s.rows[0][i];
-        if (item && !g.run.lostFrontUniqueColors.Contains(item))
-          *g.run.lostFrontUniqueColors.Add() = item;
+        if (!item)
+          continue;
+        if (!frontItemColors.Contains(item.color))
+          *frontItemColors.Add() = item.color;
       }
+    }
+    VRAND.Shuffle(frontItemColors._base, frontItemColors.count);
+    lframe e{.value = 0};
+    auto   interval = lframe::FromSeconds(
+      glib->lost_items_flashing_seconds() + glib->lost_items_flashing_gap_seconds()
+    );
+    g.run.lostFrontUniqueColorsCount = frontItemColors.count;
+    FOR_RANGE (int, i, frontItemColors.count) {
+      g.run.lostFrontUniqueColorsStartFlashes[frontItemColors[i]] = e;
+      e.value += interval.value;
     }
   }
 
@@ -1943,16 +1960,20 @@ void GameDraw() {
   const auto depthItemColor
     = Fade(ColorFromRGBA(glib->item_draw_depth_color()), glib->item_draw_depth_fade());
 
+  const auto lostItemFlashingDur
+    = lframe::FromSeconds(glib->lost_items_flashing_seconds());
+
   LAMBDA (
     void,
     drawItem,
-    (Vector2 pos, const Item& p, f32 rotation, Vector2 scale, int depth, f32 fade)
+    (Vector2 pos, const Item& item, f32 rotation, Vector2 scale, int depth, f32 fade)
   )
   {  ///
+    ASSERT(item);
     if (depth > 1)
       return;
 
-    const auto fb = glib->items()->Get(g.run.colorIndexToItemIndex[p.color]);
+    const auto fb = glib->items()->Get(g.run.colorIndexToItemIndex[item.color]);
 
     auto tex   = fb->texture_id();
     auto color = WHITE;
@@ -1962,6 +1983,26 @@ void GameDraw() {
       pos += ToVector2(glib->item_draw_depth_offset());
     }
 
+    auto flash = TRANSPARENT_BLACK;
+
+    if (!depth && g.run.gameplayEnded.IsSet() && !g.run.won) {
+      auto e = g.run.gameplayEnded.Elapsed();
+      e.value -= g.run.lostFrontUniqueColorsStartFlashes[item.color].value;
+      if ((lframe::Unscaled(0) <= e) && (e <= lostItemFlashingDur)) {
+        auto p = e.Progress(lostItemFlashingDur);
+#if 0
+        // Flashing once.
+        p *= 2;
+        if (p > 1)
+          p = 2 - p;
+#else
+        // Flash holds.
+        p = MIN(1, p);
+#endif
+        flash = Fade(PAL_MAROON_FLUSH, EaseInOutQuart(p));
+      }
+    }
+
     DrawGroup_CommandTexture({
       .texID    = tex,
       .rotation = rotation,
@@ -1969,6 +2010,7 @@ void GameDraw() {
       .anchor{0.5f, 0},
       .scale = scale,
       .color = Fade(color, fade),
+      .flash = flash,
     });
   };
 

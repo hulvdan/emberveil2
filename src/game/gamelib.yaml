@@ -86,6 +86,8 @@ ui_stars_element_height: 300
 ui_label_element_height: 100
 button_press_darken: 0.5
 ui_sizing_win_x: 540
+lost_items_flashing_seconds: 0.6
+lost_items_flashing_gap_seconds: -0.4
 world_mat_x_scale: 1.0
 world_mat_y_scale: 0.7
 matching_particles_offset_y: -0.3

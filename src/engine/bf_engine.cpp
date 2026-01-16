@@ -1907,7 +1907,7 @@ void _SetShouldGameplayStop(_ShouldGameplayStopType type, bool value) {  ///
   auto& v = ge.meta._shouldGameplayStop[type];
   if (v != value) {
     v = value;
-    LOGI("_SetShouldGameplayStop %d %d", (int)type, (int)value);
+    // LOGI("_SetShouldGameplayStop %d %d", (int)type, (int)value);
     _UpdateVolumes();
   }
 }
