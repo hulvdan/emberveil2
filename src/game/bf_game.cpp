@@ -1257,10 +1257,12 @@ void DoUI() {
 
           innerLambda(p);
 
-          result = clickedOrTouchedThisComponent();
-          if (result) {
-            pressedAt = {};
-            pressedAt.SetNow();
+          if (p > 0.3f) {
+            result = clickedOrTouchedThisComponent();
+            if (result) {
+              pressedAt = {};
+              pressedAt.SetNow();
+            }
           }
         };
 

@@ -12,9 +12,11 @@ x red flashing upon losing
 x tiled background
 x ref cloud offset -> anchor
 x larger item collider
+x can't press lose buttons until they're visible
+  (so that rewarded isn't pressed!)
 
+* ITEM SPOT SHADOWS
 * clouds breathing
-* can't press
 * not white cloud color
 * c++ cloud color
 * ref casual star sky background + clear sky + облака
