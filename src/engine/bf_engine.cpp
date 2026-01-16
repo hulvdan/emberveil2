@@ -5811,6 +5811,12 @@ void DrawTiledBackgroundRects(DrawTiledBackgroundRectsData data) {  ///
   }
 }
 
+// [0, 1]
+f32 BreathingP(i64 frame, lframe dur) {  ///
+  const f32 breathingP_ = (f32)(frame % dur.value) / (f32)dur.value;
+  return (sinf(breathingP_ * 2 * PI32) + 1) / 2;
+}
+
 #include "game/bf_game.cpp"
 
 void DrawParticles() {  ///

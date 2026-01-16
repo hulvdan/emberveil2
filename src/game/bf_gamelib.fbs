@@ -207,6 +207,9 @@ table GameLibrary {
     item_draw_depth_offset: Posf;
     item_spot_shadow_fade: float;
     item_spot_shadow_offset_y: float;
+    clouds_breathing_seconds: float;
+    clouds_breathing_scale_from: Posf;
+    clouds_breathing_scale_to: Posf;
     default_depth: int;
     default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;

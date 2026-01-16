@@ -14,11 +14,12 @@ x ref cloud offset -> anchor
 x larger item collider
 x can't press lose buttons until they're visible
   (so that rewarded isn't pressed!)
+x ITEM SPOT SHADOWS
+x clouds breathing
+- not white cloud color
+- c++ cloud color
 
-* ITEM SPOT SHADOWS
-* clouds breathing
-* not white cloud color
-* c++ cloud color
+* fix win/lost ui breathing
 * ref casual star sky background + clear sky + облака
 * bf_image fade_white для стекла, что прозрачное, а контур - нет
 * art: sprite: cloud / shelf

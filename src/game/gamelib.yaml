@@ -109,6 +109,13 @@ item_draw_depth_fade: 1
 item_draw_depth_color: 0x625565ff
 item_spot_shadow_fade: 0.1
 item_spot_shadow_offset_y: 0.17
+clouds_breathing_seconds: 8
+clouds_breathing_scale_from:
+  x: 1.04
+  y: 0.92
+clouds_breathing_scale_to:
+  x: 1.0
+  y: 1.0
 item_draw_depth_offset:
   x: -0.03
   y: 0.03

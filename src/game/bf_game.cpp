@@ -1184,10 +1184,11 @@ void DoUI() {
 
     const auto stripP = progressify(ANIMATION_1_FRAMES);
 
-    const auto breathingDur = (int)(2.5f * FIXED_FPS);
-    const f32 breathingP_ = (f32)(ge.meta.frameVisual % breathingDur) / (f32)breathingDur;
-    const f32 breathingP  = sinf(breathingP_ * 2 * PI32);
-    const f32 breathingScale = 1 + 0.05f * (sinf(breathingP_ * 2 * PI32) + 1) / 2;
+    const f32 breathingScale
+      = 1
+        + 0.05f
+            * (sinf(BreathingP(ge.meta.frameVisual, lframe::FromSeconds(2.5f)) * 2 * PI32) + 1)
+            / 2;
 
     componentOverlay([]() {}, stripP);
 
@@ -2134,6 +2135,15 @@ void GameDraw() {
       const auto r = s.Rect();
 
       if (!mode) {
+        const auto cloudsBreathingP = BreathingP(
+          ge.meta.frameVisual, lframe::FromSeconds(glib->clouds_breathing_seconds())
+        );
+        const auto cloudsScale = Vector2Lerp(
+          ToVector2(glib->clouds_breathing_scale_from()),
+          ToVector2(glib->clouds_breathing_scale_to()),
+          cloudsBreathingP
+        );
+
         // Drawing shelf.
         FOR_RANGE (int, i, 3) {
           const auto fb_cloud = fb_clouds[i]->Get(s.clouds[i]);
@@ -2141,6 +2151,7 @@ void GameDraw() {
             .texID  = fb_cloud->texture_id(),
             .pos    = r.pos + Vector2(0, glib->clouds_offset_y()),
             .anchor = ToVector2(fb_cloud->anchor()),
+            .scale  = cloudsScale,
           });
         }
         // Drawing spot shadows.
