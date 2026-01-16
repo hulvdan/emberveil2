@@ -2143,6 +2143,17 @@ void GameDraw() {
             .anchor = ToVector2(fb_cloud->anchor()),
           });
         }
+        // Drawing spot shadows.
+        FOR_RANGE (int, i, 3) {
+          DrawGroup_CommandTexture({
+            .texID = glib->game_item_spot_shadow_texture_id(),
+            .pos
+            = GetItemBottomPos(shelf, i) + Vector2(0, glib->item_spot_shadow_offset_y()),
+            .color = Fade(
+              ColorFromRGBA(glib->item_draw_depth_color()), glib->item_spot_shadow_fade()
+            ),
+          });
+        }
       }
       else if ((mode == 1) || !g.save.level) {
         for (int depth = s.rows.count - 1; depth >= 0; depth--) {

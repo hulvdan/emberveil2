@@ -351,6 +351,9 @@ def process_images():
 
     OUTLINE_WIDTH = 10
 
+    # _game_item_spot_shadow
+    bf.im_ellipse((120, 120)).save(bf.ART_TEXTURES_DIR / "_game_item_spot_shadow.png")
+
     # _ui_button
     bf.im_outline(
         bf.im_remap(
@@ -433,6 +436,12 @@ def process_images():
         bf.imc_scale(0.55),
         bf.imc_outline(radius=OUTLINE_WIDTH),
     )
+
+    import bf_cli  # noqa
+
+    bf_cli.do_generate(bf.BuildPlatform.Win, bf.BuildType.Debug)
+    bf_cli.do_activate_game_ahk()
+
     # }
 
 

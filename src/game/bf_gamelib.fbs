@@ -170,7 +170,7 @@ table GameLibrary {
     // GAME STUFF
     // AUTOMATIC_TEXTURE_BIND_START
     vignette_texture_id: int;
-    game_shelf_texture_id: int;
+    game_item_spot_shadow_texture_id: int;
     ui_star_gold_texture_id: int;
     ui_star_gray_texture_id: int;
     ui_star_small_gold_texture_id: int;
@@ -205,6 +205,8 @@ table GameLibrary {
     item_draw_depth_fade: float;
     item_draw_depth_color: uint;
     item_draw_depth_offset: Posf;
+    item_spot_shadow_fade: float;
+    item_spot_shadow_offset_y: float;
     default_depth: int;
     default_item_rows_per_shelf: float;
     default_empty_rows_factor_min: float;

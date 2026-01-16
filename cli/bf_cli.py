@@ -47,9 +47,6 @@ def enrich_game_settings_colors() -> None:
     # }
 
 
-enrich_game_settings_colors()
-
-
 @timing
 def make_web_build_archive(zip_path: Path, cmake_build_out_path: Path) -> None:
     # {  ###
@@ -584,6 +581,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    enrich_game_settings_colors()
     main()
 
 ###
