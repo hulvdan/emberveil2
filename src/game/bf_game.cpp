@@ -1988,19 +1988,23 @@ void GameDraw() {
     if (!depth && g.run.gameplayEnded.IsSet() && !g.run.won) {
       auto e = g.run.gameplayEnded.Elapsed();
       e.value -= g.run.lostFrontUniqueColorsStartFlashes[item.color].value;
-      if ((lframe::Unscaled(0) <= e) && (e <= lostItemFlashingDur)) {
-        auto p = e.Progress(lostItemFlashingDur);
 #if 0
-        // Flashing once.
+      // Flashing once.
+      if ((e.value >= 0) && (e <= lostItemFlashingDur)) {
+        auto p = e.Progress(lostItemFlashingDur);
         p *= 2;
         if (p > 1)
           p = 2 - p;
-#else
-        // Flash holds.
-        p = MIN(1, p);
-#endif
         flash = Fade(PAL_MAROON_FLUSH, EaseInOutQuart(p));
       }
+#else
+      // Flash holds.
+      if (e.value >= 0) {
+        auto p = e.Progress(lostItemFlashingDur);
+        p      = MIN(1, p);
+        flash  = Fade(PAL_MAROON_FLUSH, EaseInOutQuart(p));
+      }
+#endif
     }
 
     DrawGroup_CommandTexture({
