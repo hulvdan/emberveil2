@@ -2135,8 +2135,9 @@ void GameDraw() {
         FOR_RANGE (int, i, 3) {
           const auto fb_cloud = fb_clouds[i]->Get(s.clouds[i]);
           DrawGroup_CommandTexture({
-            .texID = fb_cloud->texture_id(),
-            .pos   = r.pos + ToVector2(fb_cloud->offset()),
+            .texID  = fb_cloud->texture_id(),
+            .pos    = r.pos + Vector2(0, glib->clouds_offset_y()),
+            .anchor = ToVector2(fb_cloud->anchor()),
           });
         }
       }

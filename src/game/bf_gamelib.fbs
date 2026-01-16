@@ -143,7 +143,7 @@ table Level {
 
 table Cloud {
     texture_id: int;
-    offset: Posf;
+    anchor: Posf;
 }
 
 table Color2 {
@@ -239,6 +239,7 @@ table GameLibrary {
     move_tutor_finger_offset: Posf;
     tutor_finger_anchor: Posf;
 
+    clouds_offset_y: float;
     clouds_left: [Cloud] (required);
     clouds_center: [Cloud] (required);
     clouds_right: [Cloud] (required);

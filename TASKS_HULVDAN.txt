@@ -10,6 +10,7 @@ x draw clouds good
 x попарное закраснение пар предметов при проигрыше
 x red flashing upon losing
 x tiled background
+x ref cloud offset -> anchor
 
 * clouds breathing
 * not white cloud color
