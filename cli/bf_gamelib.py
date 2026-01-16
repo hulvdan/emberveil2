@@ -616,6 +616,34 @@ def convert_gamelib_json_to_binary(
 
     gamelib["original_texture_sizes"] = original_texture_sizes
 
+    # Colors.
+    # {  ###
+    if 1:
+        used_color_names = set()
+        genline("// Usage: PAL_ORANGE, PAL_TEXT_ORANGE.")
+        genline("#define PAL_COLORS_TABLE \\")
+        for i, hex_color_ in enumerate(bf.game_settings.colors):
+            hex_color = hex_color_[1:].lower()
+
+            color_name = bf.game_settings.computed_color_names[i]
+            assert color_name not in used_color_names, color_name
+            used_color_names.add(color_name)
+
+            color_type = color_name.upper().replace(" ", "_")
+
+            gamelib["colors"].append({"type": color_type, "color": f"0x{hex_color}ff"})
+
+            genline(
+                '  X("{}", 0x{}ff, {}){}'.format(
+                    hex_color_.lower(),
+                    hex_color,
+                    color_type,
+                    "   \\" if i < len(bf.game_settings.colors) - 1 else "\n",
+                )
+            )
+
+    # }
+
     # Imgui debug variables.
     # {  ###
     if 1:
@@ -773,35 +801,6 @@ def convert_gamelib_json_to_binary(
 
     for gamelib_processing_function in bf.gamelib_processing_functions:
         gamelib_processing_function(genline, gamelib, localization_codepoints, warning)
-
-    # Colors.
-    # ============================================================
-    # {  ###
-    if 1:
-        used_color_names = set()
-        genline("// Usage: PAL_ORANGE, PAL_TEXT_ORANGE.")
-        genline("#define PAL_COLORS_TABLE \\")
-        for i, hex_color_ in enumerate(bf.game_settings.colors):
-            hex_color = hex_color_[1:].lower()
-
-            color_name = bf.game_settings.computed_color_names[i]
-            assert color_name not in used_color_names, color_name
-            used_color_names.add(color_name)
-
-            color_type = color_name.upper().replace(" ", "_")
-
-            gamelib["colors"].append({"type": color_type, "color": f"0x{hex_color}ff"})
-
-            genline(
-                '  X("{}", 0x{}ff, {}){}'.format(
-                    hex_color_.lower(),
-                    hex_color,
-                    color_type,
-                    "   \\" if i < len(bf.game_settings.colors) - 1 else "\n",
-                )
-            )
-
-    # }
 
     genline(f"constexpr bool BUILD_WARNINGS = {warnings};\n")
 

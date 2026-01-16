@@ -184,6 +184,7 @@ table GameLibrary {
     button_press_darken: float;
     ui_sizing_win_x: float;
 
+    item_paired_red_seconds: float;
     world_mat_x_scale: float;
     world_mat_y_scale: float;
     matching_particles_offset_y: float;

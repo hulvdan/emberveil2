@@ -338,10 +338,11 @@ struct GameData {
 
     b2WorldId world = {};
 
-    uint        remainingRows       = 0;
-    FrameVisual gameplayEnded       = {};
-    bool        won                 = false;
-    int         wonOrLostLabelIndex = -1;
+    uint                            remainingRows         = 0;
+    FrameVisual                     gameplayEnded         = {};
+    bool                            won                   = false;
+    PushableArray<int, TOTAL_ITEMS> lostFrontUniqueColors = 0;
+    int                             wonOrLostLabelIndex   = -1;
 
     FrameVisual levelControlPressed           = {};
     bool        levelControlPressedSkip       = false;
@@ -1163,6 +1164,11 @@ void DoUI() {
     else
       e = g.run.gameplayEnded.Elapsed();
 
+    e.value -= lframe::FromSeconds(
+                 glib->item_paired_red_seconds() * g.run.lostFrontUniqueColors.count
+    )
+                 .value;
+
     LAMBDA (f32, progressify, (lframe dur)) {  ///
       auto result = Clamp01(e.Progress(dur));
       e.value -= dur.value * 2 / 3;
@@ -1542,9 +1548,21 @@ Rect GetItemRect(int shelf, int itemIndex) {  ///
   };
 }
 
-void EndGameplay() {  ///
+void EndGameplay(bool won) {  ///
   g.run.gameplayEnded.SetNow();
   g.run.bufferedActions.Reset();
+
+  g.run.won = won;
+
+  if (!won) {
+    for (const auto& s : g.run.shelves) {
+      FOR_RANGE (int, i, 3) {
+        const auto& item = s.rows[0][i];
+        if (item && !g.run.lostFrontUniqueColors.Contains(item))
+          *g.run.lostFrontUniqueColors.Add() = item;
+      }
+    }
+  }
 
   // while (1) {
   //   const int v = VRAND.Rand() % 4;
@@ -1841,8 +1859,7 @@ void GameFixedUpdate() {
     if (!g.run.gameplayEnded.IsSet()) {
       // Checking if player's won.
       if (!g.run.remainingRows) {  ///
-        EndGameplay();
-        g.run.won = true;
+        EndGameplay(true);
         Save();
       }
 
@@ -1850,7 +1867,7 @@ void GameFixedUpdate() {
       else if (!SolvableRowOfThreeExists()) {  ///
         const int requiredEmptySpots = (pl.item ? 3 : 2);
         if (CountEmptySpots() < requiredEmptySpots)
-          EndGameplay();
+          EndGameplay(false);
       }
     }
 
@@ -2025,7 +2042,7 @@ void GameDraw() {
     firstLevelTutorMove = FIRST_LEVEL_TUTOR_MOVES[g.run.firstLevelTutorMoveIndex];
 
   const flatbuffers::Vector<flatbuffers::Offset<BFGame::Cloud>, flatbuffers::uoffset_t>*
-    fb_clouds[3]{glib->clouds_left(), glib->clouds_center(), glib->clouds_right()};
+    fb_clouds[3]{glib->clouds_left(), glib->clouds_right(), glib->clouds_center()};
 
   // Drawing shelves.
   FOR_RANGE (int, mode, 3) {  ///
@@ -2289,13 +2306,12 @@ void GameDraw() {
         IM::Checkbox("Draw Win", &gdebug.drawWin);
         IM::Checkbox("Draw Lost", &gdebug.drawLost);
 
-        if (IM::Button("Win") && !g.run.gameplayEnded.IsSet()) {
-          EndGameplay();
-          g.run.won = true;
+        if (!g.run.gameplayEnded.IsSet()) {
+          if (IM::Button("Win"))
+            EndGameplay(true);
+          if (IM::Button("Lose"))
+            EndGameplay(false);
         }
-
-        if (IM::Button("Lose") && !g.run.gameplayEnded.IsSet())
-          EndGameplay();
 
         if (IM::Button("Reset Level"))
           g.meta.reload = true;

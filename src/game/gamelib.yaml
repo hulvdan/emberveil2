@@ -147,7 +147,7 @@ tutor_finger_anchor:
 clouds_left:
   - texture_id: game_cloud_left_1
     offset:
-      x: -0.65
+      x: -0.55
       y: -0.60
 clouds_center:
   - texture_id: game_cloud_center_1
@@ -157,7 +157,7 @@ clouds_center:
 clouds_right:
   - texture_id: game_cloud_right_1
     offset:
-      x: 0.65
+      x: 0.55
       y: -0.60
 
 ###

@@ -2,28 +2,18 @@ WORKING SINCE 2026-01-05
 https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
-casual
-sort by colors
-
-- work: friendlier photo
-- work: reformat, actualize
-x hh настроить норм поиск
-
-* hh delete old searches
-* hh open CV
-* hh send 5 times
-
 Заоблачная НЛО Сортировка
 
 x CLAY LATCH GUARD FIX at the end
 - CLAY LATCH GUARD FIX immediate
+x draw clouds good
 
-* draw clouds good
+* попарное закраснение пар предметов при проигрыше
+* clouds breathing
+* not white cloud color
 * c++ cloud color
 * ref casual star sky background + clear sky + облака
 * bf_image fade_white для стекла, что прозрачное, а контур - нет
-*
-* win: particles
 * art: sprite: cloud / shelf
 * art: sprite: ufo
 * art: gather shelf stylized references
@@ -31,23 +21,18 @@ x CLAY LATCH GUARD FIX at the end
 * art: ufo
   ref ufo geometry dash
 * 2nd pass items
-* metrika levels 1 2 3 5 7 9 11 13 15 20
   progression pow(1.7)
 * polish: popping rows to front depth easing
 * polish: ufo animation: slight rotation when moving
-* change yandex metrika
-PROGRESSION
-* progression: different helicopters
-  * flyer
-  * balanced
-  * horizontal
-* progression: helicopter colors?
-* progression: change doors
-* progression: another passenger sprites
-* progression: helicopter trails
-* progression: platform sprites
-* progression:
+* metrics: create target levels 1 2 3 5 7 9 11 13 15 20 etc up to 100
+* metrics: send level complete metric
+* metrics: change yandex metrika
 RELEASED
+* better clouds
+* win: particles
+* add leaderboard
+* progression: ufos trails
+* specifying color in gamelib w/ saturation and brightness
 * найти, где задать вопрос
   задать вопрос, как делать воронки для АБ тестов по прохождению уровней
 * progress on top (sortirovka po polochkam-like)
@@ -60,6 +45,15 @@ RELEASED
 * star on level -> player would gather stars for meta
   (receives 2 stars by default + 1 pickupable)
 * drag items outline (нужно вести действия)
+PROGRESSION
+* progression: different ufos
+  * flyer
+  * balanced
+  * horizontal
+* progression: ufos colors?
+* progression: change doors
+* progression: another passenger sprites
+* progression: platform sprites
 ENGINE
 * fix ui gizmos positioning
 * happy: assert on clay counter. latch. so that i don't RETURN inside CLAY
