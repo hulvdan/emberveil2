@@ -6,7 +6,6 @@ import zipfile
 from collections import Counter
 from pathlib import Path
 
-import bf_lib
 import bf_lib as bf
 import bf_swatch
 import colornames
@@ -347,7 +346,7 @@ def build_all_and_test():
             continue
         do_generate(platform, build_type)
         build(bf.BuildTarget.game, platform, build_type)
-        bf_lib._gamelib = None  # noqa: SLF001
+        bf._gamelib = None  # noqa: SLF001
     # }
 
 

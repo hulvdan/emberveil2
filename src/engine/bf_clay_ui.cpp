@@ -436,6 +436,10 @@ ASSERT(ge._ui.clayZIndex == 0);
 ASSERT_FALSE(ge._ui.overriddenFont);
 auto drawCommands = Clay_EndLayout();
 
+// Asserting clay valid usage.
+const auto clayContext = Clay_GetCurrentContext();
+ASSERT(clayContext->hulvdanOpenedElements == clayContext->hulvdanClosedElements);
+
 // Drawing UI.
 if (draw) {  ///
   ZoneScopedN("Drawing UI");

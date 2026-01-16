@@ -1247,6 +1247,10 @@ struct Clay_Context {
     void *measureTextUserData;
     void *queryScrollOffsetUserData;
     Clay_Arena internalArena;
+
+    int32_t hulvdanOpenedElements;
+    int32_t hulvdanClosedElements;
+
     // Layout Elements / Render Commands
     Clay_LayoutElementArray layoutElements;
     Clay_RenderCommandArray renderCommands;
@@ -1812,6 +1816,7 @@ void Clay__UpdateAspectRatioBox(Clay_LayoutElement *layoutElement) {
 
 void Clay__CloseElement(void) {
     Clay_Context* context = Clay_GetCurrentContext();
+    context->hulvdanClosedElements++;
     if (context->booleanWarnings.maxElementsExceeded) {
         return;
     }
@@ -1988,6 +1993,7 @@ bool Clay__MemCmp(const char *s1, const char *s2, int32_t length);
 
 void Clay__OpenElement(void) {
     Clay_Context* context = Clay_GetCurrentContext();
+    context->hulvdanOpenedElements++;
     if (context->layoutElements.length == context->layoutElements.capacity - 1 || context->booleanWarnings.maxElementsExceeded) {
         context->booleanWarnings.maxElementsExceeded = true;
         return;

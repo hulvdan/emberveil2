@@ -231,6 +231,8 @@ struct Shelf {  ///
   FrameGame updatedAt     = {};
   FrameGame lastMatchedAt = {};
 
+  int clouds[3] = {};
+
   Vector2 pos() const;
 
   Rect Rect() const {
@@ -724,8 +726,11 @@ void RunInit() {
     // int shelfIndex = -1;
     for (auto fb_shelf : *fb_level->shelves()) {
       // shelfIndex++;
-      auto& s = *g.run.shelves.Add();
-      s       = {.posi = ToVector2(fb_shelf->pos())};
+      auto& s     = *g.run.shelves.Add();
+      s           = {.posi = ToVector2(fb_shelf->pos())};
+      s.clouds[0] = VRAND.Rand() % glib->clouds_left()->size();
+      s.clouds[1] = VRAND.Rand() % glib->clouds_center()->size();
+      s.clouds[2] = VRAND.Rand() % glib->clouds_right()->size();
     }
   }
 
@@ -1249,6 +1254,7 @@ void DoUI() {
             pressedAt.SetNow();
           }
         };
+
         return result;
       };
 
@@ -2018,6 +2024,9 @@ void GameDraw() {
   if (!g.save.level)
     firstLevelTutorMove = FIRST_LEVEL_TUTOR_MOVES[g.run.firstLevelTutorMoveIndex];
 
+  const flatbuffers::Vector<flatbuffers::Offset<BFGame::Cloud>, flatbuffers::uoffset_t>*
+    fb_clouds[3]{glib->clouds_left(), glib->clouds_center(), glib->clouds_right()};
+
   // Drawing shelves.
   FOR_RANGE (int, mode, 3) {  ///
     // mode 0 - drawing shelves, 1 - drawing items, 2 - drawing 1st level tutor.
@@ -2029,10 +2038,13 @@ void GameDraw() {
 
       if (!mode) {
         // Drawing shelf.
-        DrawGroup_CommandTexture({
-          .texID = glib->game_shelf_texture_id(),
-          .pos   = r.pos,
-        });
+        FOR_RANGE (int, i, 3) {
+          const auto fb_cloud = fb_clouds[i]->Get(s.clouds[i]);
+          DrawGroup_CommandTexture({
+            .texID = fb_cloud->texture_id(),
+            .pos   = r.pos + ToVector2(fb_cloud->offset()),
+          });
+        }
       }
       else if ((mode == 1) || !g.save.level) {
         for (int depth = s.rows.count - 1; depth >= 0; depth--) {

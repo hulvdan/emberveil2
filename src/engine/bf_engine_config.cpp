@@ -10,7 +10,6 @@
 // ClayScreenBackground would need to have `bool set = false;`
 //
 #define BF_ENGINE_EXTEND_CLAY_CUSTOM_DATA
-#define BF_MAX_PARTICLES_COUNT (2048)
 
 #define BF_MAX_PARTICLES_COUNT (2048)
 

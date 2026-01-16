@@ -140,6 +140,11 @@ table Level {
     random_seed: uint32;
     manually_placed_rows: int;
 }
+
+table Cloud {
+    texture_id: int;
+    offset: Posf;
+}
 // GAME STUFF END
 
 table GameLibrary {
@@ -220,6 +225,10 @@ table GameLibrary {
     audio_tutor_finger_offset: Posf;
     move_tutor_finger_offset: Posf;
     tutor_finger_anchor: Posf;
+
+    clouds_left: [Cloud] (required);
+    clouds_center: [Cloud] (required);
+    clouds_right: [Cloud] (required);
 
     // NOTE: "Table Gen" works in Python `bf_game.py`.
     // It goes through the field names in the following TABLE_GEN_START/END region.
