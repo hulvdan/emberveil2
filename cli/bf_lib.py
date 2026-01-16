@@ -237,7 +237,7 @@ def batched(list_: list[T], n: int) -> Iterator[list[T]]:
         yield list_[i : i + n]
 
 
-def check_duplicates(values: list) -> None:
+def check_duplicates(values: list | tuple) -> None:
     # {  ###
     for i in range(len(values)):
         for k in range(i + 1, len(values)):
@@ -245,7 +245,7 @@ def check_duplicates(values: list) -> None:
     # }
 
 
-def only_one_is_not_none(values: list) -> bool:
+def only_one_is_not_none(values: Iterator | list | tuple) -> bool:
     # {  ###
     found = False
     for v in values:
@@ -266,18 +266,20 @@ def test_only_one_is_not_none() -> None:
     # }
 
 
-def all_are_not_none(values: Iterator) -> bool:
+def all_are_not_none(values: Iterator | list | tuple) -> bool:
     return all(v is not None for v in values)
 
 
-def all_are_none(values: Iterator) -> bool:
+def all_are_none(values: Iterator | list | tuple) -> bool:
     return all(v is None for v in values)
 
 
 def get_local_ip() -> str:
+    # {  ###
     ip_address = socket.gethostbyname(socket.gethostname())
     assert ip_address != "127.0.0.1"
     return ip_address
+    # }
 
 
 # !banner: codegen
