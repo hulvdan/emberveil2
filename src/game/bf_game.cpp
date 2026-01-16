@@ -1526,7 +1526,7 @@ f32 GetItemOffsetX(int itemIndex) {  ///
   ASSERT(itemIndex >= 0);
   ASSERT(itemIndex <= 2);
   const f32 off
-    = (glib->shelf_size()->x() / 2 - glib->item_margin()->x() - glib->item_size()->x() / 2);
+    = (glib->shelf_size()->x() / 2 - glib->item_margin()->x() - glib->item_collider_size()->x() / 2);
   return (itemIndex - 1) * off;
 }
 
@@ -1546,8 +1546,9 @@ Vector2 GetItemBottomPos(int shelf, int itemIndex) {  ///
 
 Rect GetItemRect(int shelf, int itemIndex) {  ///
   return {
-    .pos  = GetItemBottomPos(shelf, itemIndex) - Vector2(glib->item_size()->x() / 2, 0),
-    .size = ToVector2(glib->item_size()),
+    .pos = GetItemBottomPos(shelf, itemIndex)
+           - Vector2(glib->item_collider_size()->x() / 2, glib->item_collider_offset_y()),
+    .size = ToVector2(glib->item_collider_size()),
   };
 }
 

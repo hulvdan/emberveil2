@@ -223,7 +223,8 @@ table GameLibrary {
     player_fly_duration_seconds: float;
     item_margin: Posf;
     item_max_shown: int;
-    item_size: Posf;
+    item_collider_size: Posf;
+    item_collider_offset_y: float;
     item_put_seconds: float;
     level_advance_transition_seconds: float;
     item_pos_lerp_factor: float;
