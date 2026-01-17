@@ -224,6 +224,41 @@ struct Item {  ///
 
 using ItemRow = Array<Item, 3>;
 
+Color CLOUD_COLORS_[]{
+  PAL_ORANGE,            // #fb6b1d
+  PAL_ALIZARIN_CRIMSON,  // #e83b3b
+  // PAL_DISCO,             // #831c5d
+  PAL_MAROON_FLUSH,     // #c32454
+  PAL_WILD_WATERMELON,  // #f04f78
+  PAL_GERALDINE,        // #f68181
+  PAL_MONA_LISA,        // #fca790
+  PAL_CALICO,           // #e3c896
+  // PAL_SANDRIFT,          // #ab947a
+  PAL_COPPER_ROSE,  // #966c6c
+  // PAL_SCORPION,          // #625565
+  // PAL_SHIP_GRAY,         // #3e3546
+  // PAL_CHATHAMS_BLUE,     // #0b5e65
+  // PAL_TEAL,              // #0b8a8f
+  PAL_JADE,        // #1ebc73
+  PAL_CONIFER,     // #91db69
+  PAL_DOLLY,       // #fbff86
+  PAL_CASABLANCA,  // #fbb954
+  // PAL_PIPER,             // #cd683d
+  // PAL_MULE_FAWN,         // #9e4539
+  // PAL_TAWNY_PORT,        // #7a3045
+  // PAL_COSMIC,            // #6b3e75
+  // PAL_TRENDY_PINK,       // #905ea9
+  PAL_DULL_LAVENDER,  // #a884f3
+  PAL_MAUVE,          // #eaaded
+  PAL_CORNFLOWER,     // #8fd3ff
+  PAL_HAVELOCK_BLUE,  // #4d9be6
+  // PAL_SAN_MARINO,        // #4d65b4
+  // PAL_EAST_BAY,          // #484a77
+  PAL_SHAMROCK,  // #30e1b9
+  PAL_ANAKIWA,   // #8ff8e2
+};
+VIEW_FROM_ARRAY_DANGER(CLOUD_COLORS);
+
 struct Shelf {  ///
   Vector2Int                        posi = {};
   PushableArray<ItemRow, MAX_DEPTH> rows = {};
@@ -231,7 +266,8 @@ struct Shelf {  ///
   FrameGame updatedAt     = {};
   FrameGame lastMatchedAt = {};
 
-  int clouds[3] = {};
+  int color               = {};
+  int cloudPartIndices[3] = {};
 
   Vector2 pos() const;
 
@@ -327,6 +363,8 @@ struct GameData {
 
     glm::mat3 mat                 = {};
     bool      verticalOrientation = {};
+
+    f32 cloudsBreathingP = {};
   } meta;
 
   struct Save {
@@ -373,6 +411,8 @@ struct GameData {
 
     Array<int, TOTAL_ITEMS>  colorIndexToItemIndex = {};
     PushableArray<Shelf, 15> shelves               = {};
+
+    int backgroundColorIndex = {};
 
 #define VECTORS_TABLE X(BodyShape, bodyShapes)
 
@@ -728,11 +768,11 @@ void RunInit() {
     // int shelfIndex = -1;
     for (auto fb_shelf : *fb_level->shelves()) {
       // shelfIndex++;
-      auto& s     = *g.run.shelves.Add();
-      s           = {.posi = ToVector2(fb_shelf->pos())};
-      s.clouds[0] = VRAND.Rand() % glib->clouds_left()->size();
-      s.clouds[1] = VRAND.Rand() % glib->clouds_center()->size();
-      s.clouds[2] = VRAND.Rand() % glib->clouds_right()->size();
+      auto& s               = *g.run.shelves.Add();
+      s                     = {.posi = ToVector2(fb_shelf->pos())};
+      s.cloudPartIndices[0] = VRAND.Rand() % glib->clouds_left()->size();
+      s.cloudPartIndices[1] = VRAND.Rand() % glib->clouds_center()->size();
+      s.cloudPartIndices[2] = VRAND.Rand() % glib->clouds_right()->size();
     }
   }
 
@@ -811,6 +851,16 @@ void RunInit() {
   FOR_RANGE (int, i, TOTAL_ITEMS)
     g.run.colorIndexToItemIndex[i] = i;
   GRAND.Shuffle(g.run.colorIndexToItemIndex.base, TOTAL_ITEMS);
+
+  int colorsArr[g.run.shelves.maxCount]{};
+  FOR_RANGE (int, i, g.run.shelves.maxCount)
+    colorsArr[i] = i;
+  GRAND.Shuffle(colorsArr, g.run.shelves.maxCount);
+  FOR_RANGE (int, i, g.run.shelves.count)
+    g.run.shelves[i].color = colorsArr[i];
+
+  // g.run.backgroundColorIndex = GRAND.Rand() % glib->background_colors2()->size();
+  g.run.backgroundColorIndex = g.save.level % glib->background_colors2()->size();
 }
 
 void RunReset() {  ///
@@ -1185,10 +1235,7 @@ void DoUI() {
     const auto stripP = progressify(ANIMATION_1_FRAMES);
 
     const f32 breathingScale
-      = 1
-        + 0.05f
-            * (sinf(BreathingP(ge.meta.frameVisual, lframe::FromSeconds(2.5f)) * 2 * PI32) + 1)
-            / 2;
+      = 1 + 0.05f * BreathingP(ge.meta.frameVisual, lframe::FromSeconds(2.5f));
 
     componentOverlay([]() {}, stripP);
 
@@ -1539,12 +1586,19 @@ Vector2 ToWorld(PlayerPos pos) {  ///
          + Vector2(GetItemOffsetX(pos.itemIndex), glib->player_inside_shelf_offset_y());
 }
 
-Vector2 GetItemBottomPos(int shelf, int itemIndex) {  ///
-  return g.run.shelves[shelf].pos()
-         + Vector2(
-           GetItemOffsetX(itemIndex),
-           glib->item_margin()->y() - glib->shelf_size()->y() / 2
-         );
+Vector2 GetItemBottomPos(int shelf, int itemIndex, bool visual = false) {  ///
+  auto result
+    = g.run.shelves[shelf].pos()
+      + Vector2(
+        GetItemOffsetX(itemIndex), glib->item_margin()->y() - glib->shelf_size()->y() / 2
+      );
+
+  if (visual) {
+    result += Vector2(glib->item_breathing_offset_x() * (itemIndex - 1), 0)
+              * (1 - g.meta.cloudsBreathingP);
+  }
+
+  return result;
 }
 
 Rect GetItemRect(int shelf, int itemIndex) {  ///
@@ -1697,7 +1751,7 @@ void GameFixedUpdate() {
 
             PlayerAction actionToSet{};
 
-            if (p && pl.item && (p.color != pl.item.color)) {
+            if (p && pl.item) {
               if (ba.press || (!ba.press && (pl.lastAction != currentAction)))
                 actionToSet = PlayerAction_EXCHANGE;
             }
@@ -1945,6 +1999,10 @@ void GameDraw() {
   const auto _breathingDur = (int)(2.5f * FIXED_FPS);
   const f32 _breathingP = (f32)(ge.meta.frameVisual % _breathingDur) / (f32)_breathingDur;
   const f32 breathingScale = 1 + 0.1f * sinf(_breathingP * 2 * PI32);
+
+  g.meta.cloudsBreathingP = BreathingP(
+    ge.meta.frameVisual, lframe::FromSeconds(glib->clouds_breathing_seconds())
+  );
   // }
 
   f32 audioUnlockP_ = 0;
@@ -1963,10 +2021,19 @@ void GameDraw() {
     DrawGroup_Begin(DrawZ_SCREEN_BACKGROUND);
     DrawGroup_SetSortY(0);
 
+    auto fb_colors = glib->background_colors2();
+    if (g.run.backgroundColorIndex >= fb_colors->size())
+      g.run.backgroundColorIndex = 0;
+    if (g.run.backgroundColorIndex < 0)
+      g.run.backgroundColorIndex = fb_colors->size() - 1;
+
+    const auto fb = fb_colors->Get(g.run.backgroundColorIndex);
+
     DrawTiledBackgroundRects({
-      .backgroundColor = ToColor(glib->background_fill_color2()),
-      .rectColor       = ToColor(glib->background_rect_color2()),
+      .backgroundColor = ToColor(fb->fill()),
+      .rectColor       = ToColor(fb->rect()),
       .rectTexID       = glib->ui_background_rect_texture_id(),
+      .cycleDur        = 30 * FIXED_FPS,
     });
 
     DrawGroup_End();
@@ -2135,23 +2202,22 @@ void GameDraw() {
       const auto r = s.Rect();
 
       if (!mode) {
-        const auto cloudsBreathingP = BreathingP(
-          ge.meta.frameVisual, lframe::FromSeconds(glib->clouds_breathing_seconds())
-        );
         const auto cloudsScale = Vector2Lerp(
           ToVector2(glib->clouds_breathing_scale_from()),
           ToVector2(glib->clouds_breathing_scale_to()),
-          cloudsBreathingP
+          g.meta.cloudsBreathingP
         );
 
         // Drawing shelf.
         FOR_RANGE (int, i, 3) {
-          const auto fb_cloud = fb_clouds[i]->Get(s.clouds[i]);
+          const auto fb_cloud = fb_clouds[i]->Get(s.cloudPartIndices[i]);
           DrawGroup_CommandTexture({
             .texID  = fb_cloud->texture_id(),
             .pos    = r.pos + Vector2(0, glib->clouds_offset_y()),
             .anchor = ToVector2(fb_cloud->anchor()),
             .scale  = cloudsScale,
+            .color
+            = ColorLerp(WHITE, CLOUD_COLORS[s.color], glib->clouds_color_lerp_factor()),
           });
         }
         // Drawing spot shadows.
@@ -2177,7 +2243,7 @@ void GameDraw() {
 
           FOR_RANGE (int, itemIndex, 3) {
             auto& p   = s.rows[depth][itemIndex];
-            auto  pos = GetItemBottomPos(shelf, itemIndex);
+            auto  pos = GetItemBottomPos(shelf, itemIndex, true);
 
             Vector2 actionOffset{};
             if (!depth) {
@@ -2239,7 +2305,7 @@ void GameDraw() {
       Vector2 actionOffset{};
       if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
         f32  p         = GetPlayerActionWithoutFlyingProgress();
-        auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex);
+        auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
         actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
       }
 
@@ -2432,6 +2498,10 @@ void GameDraw() {
             g.save.level = 0;
           g.meta.reload = true;
         }
+        if (IM::Button("Background color--"))
+          g.run.backgroundColorIndex--;
+        if (IM::Button("Background color++"))
+          g.run.backgroundColorIndex++;
 
         IM::Text("Actual level index %d", actualLevelIndex);
 

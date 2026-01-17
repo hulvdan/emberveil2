@@ -4,37 +4,22 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
-x CLAY LATCH GUARD FIX at the end
-- CLAY LATCH GUARD FIX immediate
-x draw clouds good
-x попарное закраснение пар предметов при проигрыше
-x red flashing upon losing
-x tiled background
-x ref cloud offset -> anchor
-x larger item collider
-x can't press lose buttons until they're visible
-  (so that rewarded isn't pressed!)
-x ITEM SPOT SHADOWS
-x clouds breathing
-- not white cloud color
-- c++ cloud color
+x rainbow clouds tint
+x rainbow background tint
 
-* fix win/lost ui breathing
-* ref casual star sky background + clear sky + облака
+* small clouds perlin movement
 * bf_image fade_white для стекла, что прозрачное, а контур - нет
-* art: sprite: cloud / shelf
 * art: sprite: ufo
-* art: gather shelf stylized references
-* art: draw shelf
-* art: ufo
   ref ufo geometry dash
+* art: gather shelf stylized references
 * 2nd pass items
-  progression pow(1.7)
 * polish: popping rows to front depth easing
 * polish: ufo animation
 * metrics: create target levels 1 2 3 5 7 9 11 13 15 20 etc up to 100
+  progression pow(1.7)
 * metrics: send level complete metric
 * metrics: change yandex metrika
+* make game easier
 RELEASED
 * pyright after python exception?
 * better clouds

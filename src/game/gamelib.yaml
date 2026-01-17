@@ -79,15 +79,8 @@ debug_variables: # {  ###
     type: bool
 # }
 
-background_fill_color2:
-  color: 0x8fd3ffff
-  s: 0.99
-  v: 0.99
-background_rect_color2:
-  color: 0x8fd3ffff
-  s: 0.82
-  v: 0.99
 ui_icon_skip_texture_id: ui_icon_next
+clouds_color_lerp_factor: 0.25
 button_press_duration_seconds: 0.22
 ui_stars_child_gap: 10
 ui_stars_element_height: 300
@@ -104,11 +97,148 @@ matching_particles_parts_seconds:
   - 0.2
   - 0.3
   - 0.45
+background_colors2:
+  # - fill:
+  #     color: 0xfbff86ff # #fbff86
+  #     s: 0.58
+  #     v: 0.96
+  #   rect:
+  #     color: 0xfbff86ff # #fbff86
+  #     s: 0.48
+  #     v: 0.99
+  # - fill:
+  #     color: 0xe3c896ff # #e3c896
+  #     s: 0.58
+  #     v: 0.96
+  #   rect:
+  #     color: 0xe3c896ff # #e3c896
+  #     s: 0.48
+  #     v: 0.99
+  # - fill:
+  #     color: 0xfca790ff # #fca790
+  #     s: 0.58
+  #     v: 0.96
+  #   rect:
+  #     color: 0xfca790ff # #fca790
+  #     s: 0.48
+  #     v: 0.99
+  # - fill:
+  #     color: 0xf68181ff # #f68181
+  #     s: 0.58
+  #     v: 0.96
+  #   rect:
+  #     color: 0xf68181ff # #f68181
+  #     s: 0.48
+  #     v: 0.99
+  # - fill:
+  #     color: 0x91db69ff # #91db69
+  #     s: 0.55
+  #     v: 1.06
+  #   rect:
+  #     color: 0x91db69ff # #91db69
+  #     s: 0.44
+  #     v: 1.08
+  # - fill:
+  #     color: 0x30e1b9ff # #30e1b9
+  #     s: 0.38
+  #     v: 1.06
+  #   rect:
+  #     color: 0x30e1b9ff # #30e1b9
+  #     s: 0.28
+  #     v: 1.07
+  # - fill:
+  #     color: 0x8ff8e2ff # #8ff8e2
+  #     s: 0.58
+  #     v: 0.93
+  #   rect:
+  #     color: 0x8ff8e2ff # #8ff8e2
+  #     s: 0.48
+  #     v: 0.94
+  - fill:
+      color: 0x8fd3ffff # #8fd3ff
+      s: 0.58
+      v: 0.95
+    rect:
+      color: 0x8fd3ffff # #8fd3ff
+      s: 0.52
+      v: 0.96
+  - fill:
+      color: 0xa884f3ff # #a884f3
+      s: 0.54
+      v: 1.08
+    rect:
+      color: 0xa884f3ff # #a884f3
+      s: 0.47
+      v: 1.7
+  - fill:
+      color: 0x91db69ff # #1ebc73
+      s: 0.61
+      v: 1.06
+    rect:
+      color: 0x91db69ff # #1ebc73
+      s: 0.56
+      v: 1.08
+      # - fill:
+      #     color: 0xfca790ff # #c32454
+      #     s: 0.74
+      #     v: 0.96
+      #   rect:
+      #     color: 0xfca790ff # #c32454
+      #     s: 0.64
+      #     v: 0.96
+      # - fill:
+      #     color: 0xfb6b1dff # #fb6b1d
+      #     s: 0.35
+      #     v: 1.02
+      #   rect:
+      #     color: 0xfb6b1dff # #fb6b1d
+      #     s: 0.28
+      #     v: 1.10
+      # - fill:
+      #     color: 0xfbb954ff # #fbb954
+      #     s: 0.57
+      #     v: 0.97
+      #   rect:
+      #     color: 0xfbb954ff # #fbb954
+      #     s: 0.50
+      #     v: 0.99
+      # - fill:
+      #     color: 0xeaadedff # #eaaded
+      #     s: 0.64
+      #     v: 0.99
+      #   rect:
+      #     color: 0xeaadedff # #eaaded
+      #     s: 0.46
+      #     v: 1.01
+      # #f04f78
+      # #ab947a
+      # #1ebc73
+      # #4d9be6
+      # #cd683d
+      # #e83b3b
+      # #966c6c
+      # #0b8a8f
+      # #905ea9
+      # #c32454
+      # #9e4539
+      # #4d65b4
+      # #625565
+      # #6b3e75
+      # #7a3045
+      # #0b5e65
+      # #484a77
+      # #831c5d
+      # #3e3546
+# background_color_fill_saturation_scale: 0.3
+# background_color_fill_value_scale: 1.3
+# background_color_rect_saturation_scale: 0.2
+# background_color_rect_value_scale: 1.3
 # item_draw_depth_fade: 0.6
 item_draw_depth_fade: 1
 item_draw_depth_color: 0x625565ff
-item_spot_shadow_fade: 0.1
+item_spot_shadow_fade: 0.08
 item_spot_shadow_offset_y: 0.17
+item_breathing_offset_x: 0.025
 clouds_breathing_seconds: 8
 clouds_breathing_scale_from:
   x: 1.04

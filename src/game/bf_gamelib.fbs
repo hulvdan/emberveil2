@@ -3,6 +3,11 @@
 
 namespace BFGame;
 
+table Color {
+    type: string (required);
+    color: uint;
+}
+
 table Texture {
     id: uint (key);
     debug_name: string (required);
@@ -113,10 +118,6 @@ table Particle {
     variations: [ParticleVariation];
 }
 
-table Color {
-    type: string (required);
-    color: uint;
-}
 
 // GAME STUFF
 table Shelf {
@@ -152,6 +153,11 @@ table Color2 {
     v: float = 1;
     b: float = 1;
 }
+
+table BackgroundColor {
+    fill: Color2;
+    rect: Color2;
+}
 // GAME STUFF END
 
 table GameLibrary {
@@ -183,11 +189,15 @@ table GameLibrary {
     ui_background_rect_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
-    background_fill_color2: Color2;
-    background_rect_color2: Color2;
-
     ui_icon_skip_texture_id: int;
 
+    background_color_fill_saturation_scale: float;
+    background_color_fill_value_scale: float;
+    background_color_rect_saturation_scale: float;
+    background_color_rect_value_scale: float;
+
+    background_colors2: [BackgroundColor] (required);
+    clouds_color_lerp_factor: float;
     button_press_duration_seconds: float;
     ui_stars_element_height: float;
     ui_stars_child_gap: uint16;
@@ -207,6 +217,7 @@ table GameLibrary {
     item_draw_depth_offset: Posf;
     item_spot_shadow_fade: float;
     item_spot_shadow_offset_y: float;
+    item_breathing_offset_x: float;
     clouds_breathing_seconds: float;
     clouds_breathing_scale_from: Posf;
     clouds_breathing_scale_to: Posf;
