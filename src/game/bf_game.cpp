@@ -2261,7 +2261,7 @@ void GameDraw() {
               // Drawing item.
               drawItem(pos + actionOffset, p, 0, scale, depth, 1);
             }
-            else if (mode == 2) {
+            else if ((mode == 2) && ge.soundManager.unlocked.IsSet()) {
               // Drawing 1st level touch tutor.
               if ((firstLevelTutorMove.shelf == shelf)
                   && (firstLevelTutorMove.item == itemIndex))
