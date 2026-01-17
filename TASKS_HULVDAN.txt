@@ -6,21 +6,23 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 
 x rainbow clouds tint
 x rainbow background tint
-
-* small clouds perlin movement
-* bf_image fade_white для стекла, что прозрачное, а контур - нет
-* art: sprite: ufo
+x small clouds perlin movement
+x art: sprite: ufo
   ref ufo geometry dash
-* art: gather shelf stylized references
+
+* fix picking up / putting down items drawing glitch
+* cloud item slot red press feedback
 * 2nd pass items
 * polish: popping rows to front depth easing
 * polish: ufo animation
+* 2nd pass ufo
 * metrics: create target levels 1 2 3 5 7 9 11 13 15 20 etc up to 100
   progression pow(1.7)
 * metrics: send level complete metric
 * metrics: change yandex metrika
 * make game easier
 RELEASED
+* bf_image fade_white для стекла, что прозрачное, а контур - нет
 * pyright after python exception?
 * better clouds
 * win: particles

@@ -269,15 +269,6 @@ struct Shelf {  ///
   int color               = {};
   int cloudPartIndices[3] = {};
 
-  Vector2 pos() const;
-
-  Rect Rect() const {
-    return {
-      .pos  = pos(),
-      .size = ToVector2(glib->shelf_size()),
-    };
-  }
-
   bool IsLocked() const {
     return rows[0][0]                                 //
            && (rows[0][0].color == rows[0][1].color)  //
@@ -342,6 +333,8 @@ FirstLevelTutorMove FIRST_LEVEL_TUTOR_MOVES_[]{
 };
 VIEW_FROM_ARRAY_DANGER(FIRST_LEVEL_TUTOR_MOVES);
 
+constexpr int MAX_SHELVES = 15;
+
 struct GameData {
   struct Meta {
     Font            fontUI             = {};
@@ -365,6 +358,7 @@ struct GameData {
     bool      verticalOrientation = {};
 
     f32 cloudsBreathingP = {};
+    int perlinIndex      = {};
   } meta;
 
   struct Save {
@@ -406,11 +400,16 @@ struct GameData {
       PlayerLastAction lastAction = {};
     } player;
 
+    PerlinParams perlinParams = {};
+
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
 
-    Array<int, TOTAL_ITEMS>  colorIndexToItemIndex = {};
-    PushableArray<Shelf, 15> shelves               = {};
+    Array<int, TOTAL_ITEMS>           colorIndexToItemIndex = {};
+    PushableArray<Shelf, MAX_SHELVES> shelves               = {};
+
+    Array<Array<u16, 8192>, MAX_SHELVES> perlinX = {};
+    Array<Array<u16, 8192>, MAX_SHELVES> perlinY = {};
 
     int backgroundColorIndex = {};
 
@@ -422,8 +421,17 @@ struct GameData {
   } run;
 } g = {};
 
-Vector2 Shelf::pos() const {  ///
-  return (Vector2)(g.meta.mat * Vector3(posi, 1));
+Vector2 ShelfPos(int shelf) {  ///
+  const auto& s  = g.run.shelves[shelf];
+  const auto  px = (f32)g.run.perlinX[shelf][g.meta.perlinIndex] / (f32)u16_max;
+  const auto  py = (f32)g.run.perlinY[shelf][g.meta.perlinIndex] / (f32)u16_max;
+  return (Vector2)(g.meta.mat * Vector3(s.posi, 1))
+         + Vector2(Lerp(-1, 1, px), Lerp(-1, 1, py))
+             * ToVector2(glib->clouds_perlin_offset());
+}
+
+Rect ShelfRect(int shelf) {  ///
+  return {.pos = ShelfPos(shelf), .size = ToVector2(glib->shelf_size())};
 }
 
 lframe GetPlayerActionAndFlyingDuration() {  ///
@@ -1582,13 +1590,13 @@ f32 GetItemOffsetX(int itemIndex) {  ///
 
 Vector2 ToWorld(PlayerPos pos) {  ///
   ASSERT(pos);
-  return g.run.shelves[pos.shelf].pos()
+  return ShelfPos(pos.shelf)
          + Vector2(GetItemOffsetX(pos.itemIndex), glib->player_inside_shelf_offset_y());
 }
 
 Vector2 GetItemBottomPos(int shelf, int itemIndex, bool visual = false) {  ///
   auto result
-    = g.run.shelves[shelf].pos()
+    = ShelfPos(shelf)
       + Vector2(
         GetItemOffsetX(itemIndex), glib->item_margin()->y() - glib->shelf_size()->y() / 2
       );
@@ -1896,17 +1904,19 @@ void GameFixedUpdate() {
     };
 
     // Shelf matching.
+    int shelf = -1;
     for (auto& s : g.run.shelves) {  ///
+      shelf++;
       if (gdebug.matchingParticles) {
         makeMatchingParticles(
-          s.pos(), lframe::Unscaled(ge.meta.frameVisual % (2 * FIXED_FPS))
+          ShelfPos(shelf), lframe::Unscaled(ge.meta.frameVisual % (2 * FIXED_FPS))
         );
       }
 
       lframe e{};
       if (s.lastMatchedAt.IsSet()) {
         e = s.lastMatchedAt.Elapsed();
-        makeMatchingParticles(s.pos(), e);
+        makeMatchingParticles(ShelfPos(shelf), e);
       }
 
       if (!s.IsLocked())
@@ -1961,6 +1971,39 @@ void GameFixedUpdate() {
       if (!g.run.levelControlPressedSkip)
         ShowAdInter();
     }
+  }
+
+  // Updating clouds perlin.
+  {  ///
+    PerlinParams perlinParams{
+      .octaves    = glib->clouds_perlin_octaves(),
+      .smoothness = glib->clouds_perlin_smoothness(),
+    };
+    if (g.run.perlinParams != perlinParams) {
+      g.run.perlinParams = perlinParams;
+      LAMBDA (void, normalizedPerlin, (View<u16> container)) {
+        CycledPerlin2D(
+          VRAND, container, &ge.meta.trashArena, perlinParams, {container.count, 1}
+        );
+        u16 valueMin = u16_max;
+        u16 valueMax = 0;
+        for (auto v : container) {
+          valueMin = MIN(v, valueMin);
+          valueMax = MAX(v, valueMax);
+        }
+        for (auto& v : container)
+          v = (u16)Remap(v, valueMin, valueMax, 0, u16_max);
+      };
+      FOR_RANGE (int, i, g.run.shelves.count) {
+        normalizedPerlin(g.run.perlinX[i].ToView());
+        normalizedPerlin(g.run.perlinY[i].ToView());
+      }
+    }
+
+    const auto perlinDur = lframe::FromSeconds(glib->clouds_perlin_seconds());
+    const auto perlinP
+      = (f32)(ge.meta.frameVisual % perlinDur.value) / (f32)perlinDur.value;
+    g.meta.perlinIndex = ProgressToIndex(perlinP, g.run.perlinX[0].count);
   }
 
   UpdateCamera();
@@ -2199,7 +2242,7 @@ void GameDraw() {
     for (const auto& s : g.run.shelves) {
       shelf++;
 
-      const auto r = s.Rect();
+      const auto r = ShelfRect(shelf);
 
       if (!mode) {
         const auto cloudsScale = Vector2Lerp(
@@ -2292,34 +2335,43 @@ void GameDraw() {
 
   // Drawing player.
   {  ///
-    auto color = WHITE;
+    auto texs = glib->player_texture_ids();
 
     f32 fade = 1.0f;
     if (g.run.gameplayEnded.IsSet())
       fade = MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES));
 
-    if (g.run.gameplayEnded.IsSet())
-      color = Fade(color, fade);
+    FOR_RANGE (int, mode, 3) {
+      // 0 - draw item, 1 - draw player glass, 2 - draw player front.
 
-    if (pl.item) {
-      Vector2 actionOffset{};
-      if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
-        f32  p         = GetPlayerActionWithoutFlyingProgress();
-        auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
-        actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
+      auto color = WHITE;
+      if (mode == 1) {
+        color = ColorFromRGBA(glib->player_glass_color());
+        color.a *= glib->player_glass_fade();
       }
 
-      drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0, fade);
+      color.a *= fade;
+      color.a *= audioUnlockP;
+
+      if (mode) {
+        DrawGroup_CommandTexture({
+          .texID    = texs->Get(mode - 1),
+          .rotation = playerRotation,
+          .pos      = playerPos,
+          .color    = color,
+        });
+      }
+      else if (pl.item) {
+        Vector2 actionOffset{};
+        if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
+          f32  p         = GetPlayerActionWithoutFlyingProgress();
+          auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
+          actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
+        }
+
+        drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0, fade);
+      }
     }
-
-    color.a *= audioUnlockP;
-
-    DrawGroup_CommandTexture({
-      .texID    = glib->player_texture_id(),
-      .rotation = playerRotation,
-      .pos      = playerPos,
-      .color    = color,
-    });
   }
 
   DrawParticles();

@@ -196,6 +196,11 @@ table GameLibrary {
     background_color_rect_saturation_scale: float;
     background_color_rect_value_scale: float;
 
+    clouds_perlin_octaves: int;
+    clouds_perlin_smoothness: float;
+    clouds_perlin_seconds: float;
+    clouds_perlin_offset: Posf;
+
     background_colors2: [BackgroundColor] (required);
     clouds_color_lerp_factor: float;
     button_press_duration_seconds: float;
@@ -248,7 +253,9 @@ table GameLibrary {
 
     player_offset_y: float;
     item_inside_player_offset_y: float;
-    player_texture_id: int;
+    player_texture_ids: [int] (required);
+    player_glass_color: uint;
+    player_glass_fade: float;
     items: [Item] (required);
 
     tutor_text_offset_y: float;

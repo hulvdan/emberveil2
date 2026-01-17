@@ -233,6 +233,12 @@ background_colors2:
 # background_color_fill_value_scale: 1.3
 # background_color_rect_saturation_scale: 0.2
 # background_color_rect_value_scale: 1.3
+clouds_perlin_octaves: 4
+clouds_perlin_smoothness: 18
+clouds_perlin_seconds: 60
+clouds_perlin_offset:
+  x: 0.05
+  y: 0.05
 # item_draw_depth_fade: 0.6
 item_draw_depth_fade: 1
 item_draw_depth_color: 0x625565ff
@@ -283,7 +289,11 @@ shelf_size:
   y: 1.6
 player_offset_y: -0.25
 item_inside_player_offset_y: -0.3
-player_texture_id: game_player_removeme
+player_texture_ids:
+  - game_player_back
+  - game_player_front
+player_glass_color: 0x8fd3ffff
+player_glass_fade: 0.5
 tutor_text_offset_y: 30
 audio_tutor_finger_offset:
   x: 0
