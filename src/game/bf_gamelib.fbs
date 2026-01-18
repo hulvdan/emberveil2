@@ -217,11 +217,15 @@ table GameLibrary {
     matching_particles_offset_y: float;
     matching_particles_big_rotation: float;
     matching_particles_parts_seconds: [float];
+    item_spot_shadow_activated_seconds: float;
+    item_spot_shadow_activated_fade: float;
+    item_spot_shadow_activated_scale: float;
+    item_spot_shadow_activated_offset_y: float;
+    item_spot_shadow_fade: float;
+    item_spot_shadow_offset_y: float;
     item_draw_depth_fade: float;
     item_draw_depth_color: uint;
     item_draw_depth_offset: Posf;
-    item_spot_shadow_fade: float;
-    item_spot_shadow_offset_y: float;
     item_breathing_offset_x: float;
     clouds_breathing_seconds: float;
     clouds_breathing_scale_from: Posf;

@@ -246,6 +246,10 @@ clouds_perlin_offset:
 # item_draw_depth_fade: 0.6
 item_draw_depth_fade: 1
 item_draw_depth_color: 0x625565ff
+item_spot_shadow_activated_seconds: 0.4
+item_spot_shadow_activated_fade: 0.6
+item_spot_shadow_activated_scale: 4
+item_spot_shadow_activated_offset_y: 0.23
 item_spot_shadow_fade: 0.08
 item_spot_shadow_offset_y: 0.17
 item_breathing_offset_x: 0.025

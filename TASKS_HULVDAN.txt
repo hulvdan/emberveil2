@@ -6,8 +6,8 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 
 x fix picking up / putting down items drawing glitch
 x scale items inside UFO / lower them down a bit
+- cloud item slot yellow press feedback
 
-* cloud item slot yellow press feedback
 * 2nd pass items
 * polish: popping rows to front depth easing
 * polish: ufo animation

@@ -269,6 +269,8 @@ struct Shelf {  ///
   int color               = {};
   int cloudPartIndices[3] = {};
 
+  FrameVisual clickedAt[3] = {};
+
   bool IsLocked() const {
     return rows[0][0]                                 //
            && (rows[0][0].color == rows[0][1].color)  //
@@ -335,6 +337,9 @@ VIEW_FROM_ARRAY_DANGER(FIRST_LEVEL_TUTOR_MOVES);
 
 constexpr int MAX_SHELVES = 15;
 
+#define BF_ACTIVATE_TOUCH_SPOTS_UPON_CONSUMING (0)
+#define BF_ACTIVATE_TOUCH_SPOTS_UPON_CLICKING_AS_OPPOSED_TO_CONSUMING (0)
+
 struct GameData {
   struct Meta {
     Font            fontUI             = {};
@@ -384,6 +389,7 @@ struct GameData {
     PushableArray<PlayerBufferedAction, 12> bufferedActions = {};
 
     int firstLevelTutorMoveIndex = 0;
+    int visuallyLastPressedItem  = -1;
 
     struct Player {
       PlayerPos posFrom = {};
@@ -1668,26 +1674,28 @@ void EndGameplay(bool won) {  ///
 void GameFixedUpdate() {
   ZoneScoped;
 
+  // Setup. {  ///
   g.meta.worldSize  = ToVector2Int(glib->world_size());
   g.meta.worldSizef = (Vector2)g.meta.worldSize;
 
   g.meta.verticalOrientation
     = (ge.meta.screenSize.x / ge.meta.screenSize.y < VERTICAL_RATIO_BREAKPOINT);
 
-  auto& m = g.meta.mat;
-  m       = glm::mat3(1);
+  {
+    auto& m = g.meta.mat;
+    m       = glm::mat3(1);
 
-  m = glm::translate(m, g.meta.worldSizef / 2.0f);
-  m *= glm::mat3(
-    glib->world_mat_x_scale(), 0, 0, 0, glib->world_mat_y_scale(), 0, 0, 0, 1
-  );
-  if (g.meta.verticalOrientation)
-    m *= glm::mat3(0, -1, 0, 1, 0, 0, 0, 0, 1);
-  m = glm::translate(m, -g.meta.worldSizef / 2.0f);
+    m = glm::translate(m, g.meta.worldSizef / 2.0f);
+    m *= glm::mat3(
+      glib->world_mat_x_scale(), 0, 0, 0, glib->world_mat_y_scale(), 0, 0, 0, 1
+    );
+    if (g.meta.verticalOrientation)
+      m *= glm::mat3(0, -1, 0, 1, 0, 0, 0, 0, 1);
+    m = glm::translate(m, -g.meta.worldSizef / 2.0f);
 
-  m = glm::translate(m, {0.5f, 0.5f});
+    m = glm::translate(m, {0.5f, 0.5f});
+  }
 
-  // Setup. {  ///
   auto& pl = g.run.player;
   ReloadFontsIfNeeded();
   // }
@@ -1728,6 +1736,29 @@ void GameFixedUpdate() {
         const auto td = GetTouchData(ge.meta._latestActiveTouchID);
         const auto wp
           = LogicalPosToWorld(ScreenPosToLogical(td.screenPos), &g.meta.camera);
+
+        if (BF_ACTIVATE_TOUCH_SPOTS_UPON_CLICKING_AS_OPPOSED_TO_CONSUMING) {
+          int shelf = -1;
+          for (auto& s : g.run.shelves) {
+            shelf++;
+            FOR_RANGE (int, itemIndex, 3) {
+              auto index = shelf * 3 + itemIndex;
+              if (!press && (index == g.run.visuallyLastPressedItem))
+                continue;
+
+              if (GetItemRect(shelf, itemIndex).ContainsInside(wp)) {
+                auto& f = s.clickedAt[itemIndex];
+                f       = {};
+                f.SetNow();
+
+                if (press)
+                  g.run.visuallyLastPressedItem = index;
+                break;
+              }
+            }
+          }
+        }
+
         if (g.run.bufferedActions.count < g.run.bufferedActions.maxCount) {
           *g.run.bufferedActions.Add() = {
             .pos     = wp,
@@ -1793,7 +1824,14 @@ void GameFixedUpdate() {
                 goto playerActionWasSet;
               else {
                 actionWasConsumed = true;
-                pl.action         = actionToSet;
+
+                if (BF_ACTIVATE_TOUCH_SPOTS_UPON_CONSUMING) {
+                  auto& f = s.clickedAt[itemIndex];
+                  f       = {};
+                  f.SetNow();
+                }
+
+                pl.action = actionToSet;
                 pl.actionStartedAt.SetNow();
                 pl.actionItemIndex = itemIndex;
                 pl.posFrom         = pl.pos;
@@ -2280,13 +2318,37 @@ void GameDraw() {
         }
         // Drawing spot shadows.
         FOR_RANGE (int, i, 3) {
+          auto  color = ColorFromRGBA(glib->item_draw_depth_color());
+          f32   scale = 1;
+          f32   fade  = glib->item_spot_shadow_fade();
+          auto& f     = s.clickedAt[i];
+          auto  pos
+            = GetItemBottomPos(shelf, i) + Vector2(0, glib->item_spot_shadow_offset_y());
+          if (f.IsSet()) {
+            const auto e = f.Elapsed();
+            const auto dur
+              = lframe::FromSeconds(glib->item_spot_shadow_activated_seconds());
+            auto p = e.Progress(dur);
+            if (e < dur) {
+              pos += Vector2(0, glib->item_spot_shadow_activated_offset_y() * p);
+              scale *= Lerp(1, glib->item_spot_shadow_activated_scale(), EaseOutQuad(p));
+              color = ColorLerp(color, PAL_CASABLANCA, MIN(1, p * 5));
+              fade  = Lerp(
+                fade, glib->item_spot_shadow_activated_fade(), EaseOutQuad(sinf(p * PI32))
+              );
+              if (p > 0.4)
+                fade *= MAX(0, 1 - (p - 0.3f) / (1 - 0.3f));
+            }
+            else {
+              p = p - 1;
+              fade *= MIN(p, 1);
+            }
+          }
           DrawGroup_CommandTexture({
             .texID = glib->game_item_spot_shadow_texture_id(),
-            .pos
-            = GetItemBottomPos(shelf, i) + Vector2(0, glib->item_spot_shadow_offset_y()),
-            .color = Fade(
-              ColorFromRGBA(glib->item_draw_depth_color()), glib->item_spot_shadow_fade()
-            ),
+            .pos   = pos,
+            .scale = Vector2One() * scale,
+            .color = Fade(color, fade),
           });
         }
       }
