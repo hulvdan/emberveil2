@@ -7,17 +7,24 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 x fix picking up / putting down items drawing glitch
 x scale items inside UFO / lower them down a bit
 - cloud item slot yellow press feedback
+x fix touch + gizmos 1st level
+x ease tutor
 
-* 2nd pass items
-* polish: popping rows to front depth easing
+* better background
+  experiment with sizes of rectangle
+* polish particles
 * polish: ufo animation
+* 2nd pass items
 * 2nd pass ufo
+* sfx
 * metrics: create target levels 1 2 3 5 7 9 11 13 15 20 etc up to 100
   progression pow(1.7)
 * metrics: send level complete metric
 * metrics: change yandex metrika
 * make game easier
 RELEASED
+* polish: popping rows to front offset easing
+* polish: popping rows to front depth easing
 * bf_image fade_white для стекла, что прозрачное, а контур - нет
 * pyright after python exception?
 * better clouds

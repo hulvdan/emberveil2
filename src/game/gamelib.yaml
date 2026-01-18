@@ -9,6 +9,7 @@ draw_z: # {  ###
   - PARTICLES
   - UI
   - VIGNETTE
+  - TUTOR
   - SCREEN_FADE
   - WEB_AUDIO_BUTTON_PROMPT
   - INACTIVE_WINDOW_DIM

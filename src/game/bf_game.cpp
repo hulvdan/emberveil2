@@ -388,8 +388,9 @@ struct GameData {
 
     PushableArray<PlayerBufferedAction, 12> bufferedActions = {};
 
-    int firstLevelTutorMoveIndex = 0;
-    int visuallyLastPressedItem  = -1;
+    int         firstLevelTutorMoveIndex = 0;
+    FrameVisual firstLevelTutorPressed   = {};
+    int         visuallyLastPressedItem  = -1;
 
     struct Player {
       PlayerPos posFrom = {};
@@ -1813,8 +1814,11 @@ void GameFixedUpdate() {
 
             if (!g.save.level) {
               const auto& m = FIRST_LEVEL_TUTOR_MOVES[g.run.firstLevelTutorMoveIndex];
-              if ((m.shelf == shelf) && (m.item == itemIndex))
+              if ((m.shelf == shelf) && (m.item == itemIndex)) {
                 g.run.firstLevelTutorMoveIndex++;
+                g.run.firstLevelTutorPressed = {};
+                g.run.firstLevelTutorPressed.SetNow();
+              }
               else
                 actionToSet = {};
             }
@@ -2285,12 +2289,13 @@ void GameDraw() {
 
   // Drawing shelves.
   FOR_RANGE (int, mode, 3) {  ///
+    // mode 0 - drawing shelves, 1 - drawing items, 2 - drawing 1st level tutor.
+
     if (!mode) {
       DrawGroup_Begin(DrawZ_CLOUDS);
       DrawGroup_SetSortY(0);
     }
 
-    // mode 0 - drawing shelves, 1 - drawing items, 2 - drawing 1st level tutor.
     int shelf = -1;
     for (const auto& s : g.run.shelves) {
       shelf++;
@@ -2388,18 +2393,28 @@ void GameDraw() {
               if ((firstLevelTutorMove.shelf == shelf)
                   && (firstLevelTutorMove.item == itemIndex))
               {
-                DrawGroup_CommandTexture({
-                  .texID  = glib->ui_input_touch_down_texture_id(),
-                  .pos    = pos + ToVector2(glib->move_tutor_finger_offset()),
-                  .anchor = ToVector2(glib->tutor_finger_anchor()),
-                  .scale  = Vector2One() * breathingScale,
-                });
+                f32 p = 1;
+                if (g.run.firstLevelTutorPressed.IsSet()) {
+                  p = MIN(
+                    1, g.run.firstLevelTutorPressed.Elapsed().Progress(ANIMATION_1_FRAMES)
+                  );
+                }
+                DrawGroup_OneShotTexture(
+                  {
+                    .texID  = glib->ui_input_touch_down_texture_id(),
+                    .pos    = pos + ToVector2(glib->move_tutor_finger_offset()),
+                    .anchor = ToVector2(glib->tutor_finger_anchor()),
+                    .scale  = Vector2One() * breathingScale,
+                    .color  = Fade(WHITE, p),
+                  },
+                  DrawZ_TUTOR
+                );
               }
             }
 
             if (gdebug.gizmos && !depth && (mode == 1)) {
               const auto r = GetItemRect(shelf, itemIndex);
-              DrawGroup_CommandRectLines({
+              DrawGroup_OneShotRectLines({
                 .pos    = r.pos,
                 .size   = r.size,
                 .anchor = {},
