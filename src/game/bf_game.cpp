@@ -2393,9 +2393,9 @@ void GameDraw() {
               if ((firstLevelTutorMove.shelf == shelf)
                   && (firstLevelTutorMove.item == itemIndex))
               {
-                f32 p = 1;
+                f32 p = audioUnlockP;
                 if (g.run.firstLevelTutorPressed.IsSet()) {
-                  p = MIN(
+                  p *= MIN(
                     1, g.run.firstLevelTutorPressed.Elapsed().Progress(ANIMATION_1_FRAMES)
                   );
                 }

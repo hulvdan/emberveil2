@@ -351,6 +351,11 @@ def process_images():
 
     OUTLINE_WIDTH = 10
 
+    # _ui_background_rect
+    bf.im_rectangle((412, 582), radius=30).save(
+        bf.ART_TEXTURES_DIR / "_ui_background_rect.png"
+    )
+
     # _game_item_spot_shadow
     bf.im_ellipse((120, 120)).save(bf.ART_TEXTURES_DIR / "_game_item_spot_shadow.png")
 
