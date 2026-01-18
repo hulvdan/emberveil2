@@ -2152,6 +2152,9 @@ void GameDraw() {
 #endif
     }
 
+    DrawGroup_Begin(depth ? DrawZ_DEEP_ITEMS : DrawZ_ITEMS);
+    DrawGroup_SetSortY(pos.y);
+
     DrawGroup_CommandTexture({
       .texID    = tex,
       .rotation = rotation,
@@ -2161,6 +2164,8 @@ void GameDraw() {
       .color = Fade(color, fade),
       .flash = flash,
     });
+
+    DrawGroup_End();
   };
 
   int        actualLevelIndex = -1;
@@ -2224,9 +2229,6 @@ void GameDraw() {
         + Vector2Rotate({0, glib->item_inside_player_offset_y()}, playerRotation);
   }
 
-  DrawGroup_Begin(DrawZ_DEFAULT);
-  DrawGroup_SetSortY(0);
-
   FirstLevelTutorMove firstLevelTutorMove
     = FIRST_LEVEL_TUTOR_MOVES[FIRST_LEVEL_TUTOR_MOVES.count - 1];
   if (!g.save.level)
@@ -2237,6 +2239,11 @@ void GameDraw() {
 
   // Drawing shelves.
   FOR_RANGE (int, mode, 3) {  ///
+    if (!mode) {
+      DrawGroup_Begin(DrawZ_CLOUDS);
+      DrawGroup_SetSortY(0);
+    }
+
     // mode 0 - drawing shelves, 1 - drawing items, 2 - drawing 1st level tutor.
     int shelf = -1;
     for (const auto& s : g.run.shelves) {
@@ -2331,10 +2338,14 @@ void GameDraw() {
         }
       }
     }
+
+    if (!mode)
+      DrawGroup_End();
   }
 
   // Drawing player.
   {  ///
+
     auto texs = glib->player_texture_ids();
 
     f32 fade = 1.0f;
@@ -2342,6 +2353,11 @@ void GameDraw() {
       fade = MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES));
 
     FOR_RANGE (int, mode, 3) {
+      if (mode == 1) {
+        DrawGroup_Begin(DrawZ_PLAYER);
+        DrawGroup_SetSortY(0);
+      }
+
       // 0 - draw item, 1 - draw player glass, 2 - draw player front.
 
       auto color = WHITE;
@@ -2371,11 +2387,15 @@ void GameDraw() {
 
         drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0, fade);
       }
+
+      if (mode == 2)
+        DrawGroup_End();
     }
   }
 
+  DrawGroup_Begin(DrawZ_PARTICLES);
+  DrawGroup_SetSortY(0);
   DrawParticles();
-
   DrawGroup_End();
 
   // Gizmos. Colliders.
