@@ -253,6 +253,7 @@ table GameLibrary {
 
     player_offset_y: float;
     item_inside_player_offset_y: float;
+    item_inside_player_size_y_for_scale_calculation: float;
     player_texture_ids: [int] (required);
     player_glass_color: uint;
     player_glass_fade: float;

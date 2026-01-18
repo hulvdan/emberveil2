@@ -293,6 +293,7 @@ shelf_size:
   y: 1.6
 player_offset_y: -0.25
 item_inside_player_offset_y: -0.3
+item_inside_player_size_y_for_scale_calculation: 220
 player_texture_ids:
   - game_player_back
   - game_player_front

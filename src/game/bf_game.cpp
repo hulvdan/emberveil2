@@ -421,6 +421,14 @@ struct GameData {
   } run;
 } g = {};
 
+f32 CalculateItemScaleInsidePlayer(const Item& item) {  ///
+  ASSERT(item);
+  const auto itemIndex = g.run.colorIndexToItemIndex[item.color];
+  const auto fb_item   = glib->items()->Get(itemIndex);
+  return glib->item_inside_player_size_y_for_scale_calculation()
+         / glib->original_texture_sizes()->Get(fb_item->texture_id())->y();
+}
+
 Vector2 ShelfPos(int shelf) {  ///
   const auto& s  = g.run.shelves[shelf];
   const auto  px = (f32)g.run.perlinX[shelf][g.meta.perlinIndex] / (f32)u16_max;
@@ -2292,9 +2300,10 @@ void GameDraw() {
           }
 
           FOR_RANGE (int, itemIndex, 3) {
-            auto& p   = s.rows[depth][itemIndex];
-            auto  pos = GetItemBottomPos(shelf, itemIndex, true);
+            auto& item = s.rows[depth][itemIndex];
+            auto  pos  = GetItemBottomPos(shelf, itemIndex, true);
 
+            f32     targetScale = 1;
             Vector2 actionOffset{};
             if (!depth) {
               if ((pl.action == PlayerAction_PICKUP)
@@ -2303,13 +2312,14 @@ void GameDraw() {
                 if ((shelf == pl.pos.shelf) && (itemIndex == pl.actionItemIndex)) {
                   f32 p        = GetPlayerActionWithoutFlyingProgress();
                   actionOffset = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
+                  targetScale  = Lerp(1, CalculateItemScaleInsidePlayer(item), p);
                 }
               }
             }
 
-            if ((mode == 1) && p) {
+            if ((mode == 1) && item) {
               // Drawing item.
-              drawItem(pos + actionOffset, p, 0, scale, depth, 1);
+              drawItem(pos + actionOffset, item, 0, scale * targetScale, depth, 1);
             }
             else if ((mode == 2) && ge.soundManager.unlocked.IsSet()) {
               // Drawing 1st level touch tutor.
@@ -2353,12 +2363,12 @@ void GameDraw() {
       fade = MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES));
 
     FOR_RANGE (int, mode, 3) {
+      // 0 - draw item, 1 - draw player glass, 2 - draw player front.
+
       if (mode == 1) {
         DrawGroup_Begin(DrawZ_PLAYER);
         DrawGroup_SetSortY(0);
       }
-
-      // 0 - draw item, 1 - draw player glass, 2 - draw player front.
 
       auto color = WHITE;
       if (mode == 1) {
@@ -2378,14 +2388,25 @@ void GameDraw() {
         });
       }
       else if (pl.item) {
+        f32 targetScale = CalculateItemScaleInsidePlayer(pl.item);
+
         Vector2 actionOffset{};
         if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
           f32  p         = GetPlayerActionWithoutFlyingProgress();
           auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
           actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
+
+          targetScale = Lerp(targetScale, 1, p);
         }
 
-        drawItem(playerItemPos + actionOffset, pl.item, playerRotation, {1, 1}, 0, fade);
+        drawItem(
+          playerItemPos + actionOffset,
+          pl.item,
+          playerRotation,
+          Vector2One() * targetScale,
+          0,
+          fade
+        );
       }
 
       if (mode == 2)
