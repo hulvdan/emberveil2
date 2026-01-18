@@ -9,11 +9,11 @@ x scale items inside UFO / lower them down a bit
 - cloud item slot yellow press feedback
 x fix touch + gizmos 1st level
 x ease tutor
-
-* better background
+x better background
   experiment with sizes of rectangle
+
+* polish: ufo animation rotation
 * polish particles
-* polish: ufo animation
 * 2nd pass items
 * 2nd pass ufo
 * sfx
