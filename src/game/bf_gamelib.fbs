@@ -185,11 +185,14 @@ table GameLibrary {
     ui_icon_next_texture_id: int;
     ui_icon_restart_texture_id: int;
     ui_icon_ad_small_texture_id: int;
+    ui_icon_sfx_texture_id: int;
+    ui_icon_music_texture_id: int;
     ui_input_touch_down_texture_id: int;
     ui_background_rect_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
     ui_icon_skip_texture_id: int;
+    ui_icon_volume_bands_texture_ids: [int] (required);
 
     background_color_fill_saturation_scale: float;
     background_color_fill_value_scale: float;

@@ -13,6 +13,9 @@ table Save {
     // GAME STUFF
     level: int;
     // GAME STUFF END
+
+    volume_sfx: int;
+    volume_music: int;
 }
 
 file_identifier "SAVE";

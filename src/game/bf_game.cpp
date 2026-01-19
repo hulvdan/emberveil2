@@ -368,6 +368,9 @@ struct GameData {
 
   struct Save {
     i32 level = 0;
+
+    int volumeSFX   = 3;
+    int volumeMusic = 2;
   } save;
 
   struct Run {
@@ -1182,14 +1185,140 @@ bool PlayerCanHandleControls() {  ///
 // e.g. updating mouse position, processing `clicked()`,
 // logically reacting to `Clay_Hovered()`, changing game's state, etc.
 void DoUI() {
+  // Setup.
+  // {  ///
 #define BF_UI_PRE
 #include "engine/bf_clay_ui.cpp"
 
   auto& pl   = g.run.player;
   blockInput = g.run.levelControlPressed.IsSet();
 
+  const f32 breathingScale
+    = 1 + 0.05f * BreathingP(ge.meta.frameVisual, lframe::FromSeconds(2.5f));
+
 #define GAP_SMALL (8)
 #define GAP_BIG (20)
+
+  enum ButtonID {
+    ButtonID_INVALID,
+    ButtonID_NEXT,
+    ButtonID_RESTART,
+    ButtonID_SKIP,
+    ButtonID_SFX,
+    ButtonID_MUSIC,
+    ButtonID_COUNT,
+  };
+
+  static FrameVisual buttonPressedAt_[ButtonID_COUNT]{};
+  VIEW_FROM_ARRAY_DANGER(buttonPressedAt);
+  // }
+
+  LAMBDA (f32, progressify, (lframe * e, const lframe& dur)) {  ///
+    auto result = Clamp01(e->Progress(dur));
+    e->value -= dur.value * 2 / 3;
+    return result;
+  };
+
+  struct ComponentButtonData {  ///
+    ButtonID id           = {};
+    int      iconTexID    = {};
+    int      iconTexID2   = {};
+    lframe*  e            = {};
+    bool     noBackground = {};
+  };
+
+  LAMBDA (bool, componentButton, (ComponentButtonData data, auto innerLambda)) {  ///
+    ASSERT(data.id);
+    ASSERT(data.iconTexID);
+
+    bool result = false;
+    auto color  = WHITE;
+
+    auto& pressedAt = buttonPressedAt[data.id];
+    if (pressedAt.IsSet()
+        && pressedAt.Elapsed()
+             <= lframe::FromSeconds(glib->button_press_duration_seconds()))
+      color = Darken(color, glib->button_press_darken());
+
+    f32 p = 1;
+    if (data.e)
+      p = progressify(data.e, ANIMATION_1_FRAMES);
+
+    CLAY({}) {
+      auto backgroundColor = color;
+      if (data.noBackground)
+        backgroundColor.a = 0;
+      BF_CLAY_IMAGE(
+        {
+          .texID = glib->ui_button_texture_id(),
+          .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
+          .color = backgroundColor,
+          .dontCareAboutScaleWhenCalculatingSize = true,
+        },
+        [&]() BF_FORCE_INLINE_LAMBDA {
+          CLAY({.layout{
+            BF_CLAY_SIZING_GROW_XY,
+            BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+          }})
+          BF_CLAY_IMAGE({
+            .texID = data.iconTexID,
+            .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
+            .color = color,
+            .dontCareAboutScaleWhenCalculatingSize = true,
+          });
+          if (data.iconTexID2) {
+            BF_CLAY_IMAGE({
+              .texID = data.iconTexID2,
+              .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
+              .color = color,
+              .dontCareAboutScaleWhenCalculatingSize = true,
+            });
+          }
+        }
+      );
+
+      innerLambda(p);
+
+      if (p > 0.3f) {
+        result = clickedOrTouchedThisComponent();
+        if (result) {
+          pressedAt = {};
+          pressedAt.SetNow();
+        }
+      }
+    };
+
+    return result;
+  };
+
+  LAMBDA (void, componentVolumeButtons, ()) {  ///
+    LAMBDA (void, componentButtonVolume, (int iconTexID, ButtonID id, int* var)) {
+      const bool clicked = componentButton(
+        {
+          .id           = id,
+          .iconTexID    = iconTexID,
+          .iconTexID2   = glib->ui_icon_volume_bands_texture_ids()->Get(MAX(0, *var - 1)),
+          .noBackground = true,
+        },
+        [](f32 p) {}
+      );
+
+      if (clicked) {
+        *var = *var - 1;
+        if (*var < 0)
+          *var = 3;
+        // PlaySound(Sound_UI_CLICK);
+        Save();
+      }
+    };
+
+    componentButtonVolume(
+      glib->ui_icon_sfx_texture_id(), ButtonID_SFX, &g.save.volumeSFX
+    );
+    componentButtonVolume(
+      glib->ui_icon_music_texture_id(), ButtonID_MUSIC, &g.save.volumeMusic
+    );
+  };
 
   // HUD.
   CLAY(  ///
@@ -1220,45 +1349,24 @@ void DoUI() {
     }
   }
 
-  enum ButtonID {  ///
-    ButtonID_INVALID,
-    ButtonID_NEXT,
-    ButtonID_RESTART,
-    ButtonID_SKIP,
-    ButtonID_COUNT,
-  };
-
-  static FrameVisual buttonPressedAt_[ButtonID_COUNT]{};
-  VIEW_FROM_ARRAY_DANGER(buttonPressedAt);
-
   if (gdebug.drawWin || gdebug.drawLost || g.run.gameplayEnded.IsSet()) {
-    lframe e{};
+    lframe endE{};
     if (gdebug.drawWin || gdebug.drawLost)
-      e.value = ge.meta.frameVisual % (FIXED_FPS * 6);
+      endE.value = ge.meta.frameVisual % (FIXED_FPS * 6);
     else
-      e = g.run.gameplayEnded.Elapsed();
-
-    e.value
+      endE = g.run.gameplayEnded.Elapsed();
+    endE.value
       -= lframe::FromSeconds(
            (glib->lost_items_flashing_seconds() + glib->lost_items_flashing_gap_seconds())
            * g.run.lostFrontUniqueColorsCount
       )
            .value;
 
-    LAMBDA (f32, progressify, (lframe dur)) {  ///
-      auto result = Clamp01(e.Progress(dur));
-      e.value -= dur.value * 2 / 3;
-      return result;
-    };
-
     // dummy wait.
-    progressify(ANIMATION_0_FRAMES);
-    progressify(ANIMATION_0_FRAMES);
+    progressify(&endE, ANIMATION_0_FRAMES);
+    progressify(&endE, ANIMATION_0_FRAMES);
 
-    const auto stripP = progressify(ANIMATION_1_FRAMES);
-
-    const f32 breathingScale
-      = 1 + 0.05f * BreathingP(ge.meta.frameVisual, lframe::FromSeconds(2.5f));
+    const auto stripP = progressify(&endE, ANIMATION_1_FRAMES);
 
     componentOverlay([]() {}, stripP);
 
@@ -1282,62 +1390,6 @@ void DoUI() {
           .layout{.sizing{.width = CLAY_SIZING_FIXED(6), .height = CLAY_SIZING_GROW(0)}},
           .backgroundColor = ToClayColor(Fade(BLACK, stripP)),
         }) {}
-      };
-
-      struct ComponentButtonData {  ///
-        ButtonID id    = {};
-        int      texID = {};
-      };
-
-      LAMBDA (bool, componentButton, (ComponentButtonData data, auto innerLambda)) {  ///
-        ASSERT(data.id);
-        ASSERT(data.texID);
-
-        bool result = false;
-        auto color  = WHITE;
-
-        auto& pressedAt = buttonPressedAt[data.id];
-        if (pressedAt.IsSet()
-            && pressedAt.Elapsed()
-                 <= lframe::FromSeconds(glib->button_press_duration_seconds()))
-          color = Darken(color, glib->button_press_darken());
-
-        const auto p = progressify(ANIMATION_1_FRAMES);
-
-        CLAY({}) {
-          BF_CLAY_IMAGE(
-            {
-              .texID = glib->ui_button_texture_id(),
-              .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
-              .color = color,
-              .dontCareAboutScaleWhenCalculatingSize = true,
-            },
-            [&]() BF_FORCE_INLINE_LAMBDA {
-              CLAY({.layout{
-                BF_CLAY_SIZING_GROW_XY,
-                BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
-              }})
-              BF_CLAY_IMAGE({
-                .texID = data.texID,
-                .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
-                .color = color,
-                .dontCareAboutScaleWhenCalculatingSize = true,
-              });
-            }
-          );
-
-          innerLambda(p);
-
-          if (p > 0.3f) {
-            result = clickedOrTouchedThisComponent();
-            if (result) {
-              pressedAt = {};
-              pressedAt.SetNow();
-            }
-          }
-        };
-
-        return result;
       };
 
       // Won / Lost. Next level / Restart button.
@@ -1384,10 +1436,7 @@ void DoUI() {
           }}
         ) {
           // dummy wait.
-          progressify(ANIMATION_0_FRAMES);
-          // progressify(ANIMATION_0_FRAMES);
-
-          // Progress.
+          progressify(&endE, ANIMATION_0_FRAMES);
 
           // Stars.
           CLAY({.layout{
@@ -1436,9 +1485,10 @@ void DoUI() {
                         .texID    = glib->ui_star_gold_texture_id(),
                         .rotation = rot,
                         .offset{0, (i - 1 ? 0 : 40)},
-                        .scale = Vector2One()
-                                 * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES))
-                                 * breathingScale,
+                        .scale
+                        = Vector2One()
+                          * EaseBounceSmallSmooth(progressify(&endE, ANIMATION_1_FRAMES))
+                          * breathingScale,
                         .dontCareAboutScaleWhenCalculatingSize = true,
                       });
                     }
@@ -1480,7 +1530,7 @@ void DoUI() {
                       + g.run.wonOrLostLabelIndex),
                 {
                   .scale = Vector2One()
-                           * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES))
+                           * EaseBounceSmallSmooth(progressify(&endE, ANIMATION_1_FRAMES))
                            * breathingScale,
                   .color    = Fade(won ? PAL_CASABLANCA : PAL_ALIZARIN_CRIMSON, stripP),
                   .wrapMode = CLAY_TEXT_WRAP_NONE,
@@ -1495,7 +1545,7 @@ void DoUI() {
               (won ? Loc_UI_WON_DESCRIPTION : Loc_UI_LOST_DESCRIPTION),
               {
                 .scale = Vector2One()
-                         * EaseBounceSmallSmooth(progressify(ANIMATION_1_FRAMES))
+                         * EaseBounceSmallSmooth(progressify(&endE, ANIMATION_1_FRAMES))
                          * breathingScale,
                 .color         = Fade(WHITE, stripP),
                 .textAlignment = CLAY_TEXT_ALIGN_CENTER,
@@ -1513,21 +1563,33 @@ void DoUI() {
 
             if (won) {
               if (componentButton(
-                    {.id = ButtonID_NEXT, .texID = glib->ui_icon_next_texture_id()},
+                    {
+                      .id        = ButtonID_NEXT,
+                      .iconTexID = glib->ui_icon_next_texture_id(),
+                      .e         = &endE,
+                    },
                     [](f32 p) {}
                   ))
                 g.run.levelControlPressed.SetNow();
             }
             else {
               if (componentButton(
-                    {.id = ButtonID_RESTART, .texID = glib->ui_icon_restart_texture_id()},
+                    {
+                      .id        = ButtonID_RESTART,
+                      .iconTexID = glib->ui_icon_restart_texture_id(),
+                      .e         = &endE,
+                    },
                     [](f32 p) {}
                   ))
                 g.run.levelControlPressed.SetNow();
 
 #if BF_DEBUG || defined(BF_PLATFORM_WebYandex)
               if (componentButton(
-                    {.id = ButtonID_SKIP, .texID = glib->ui_icon_skip_texture_id()},
+                    {
+                      .id        = ButtonID_SKIP,
+                      .iconTexID = glib->ui_icon_skip_texture_id(),
+                      .e         = &endE,
+                    },
                     [&](f32 p) BF_FORCE_INLINE_LAMBDA {
                       CLAY({.floating{
                         .zIndex = zIndex,

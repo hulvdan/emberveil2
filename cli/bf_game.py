@@ -351,6 +351,24 @@ def process_images():
 
     OUTLINE_WIDTH = 10
 
+    bf.im_conveyor(
+        "volume_bands",
+        "volume_bands",
+        bf.imc_prefix(""),
+        # bf.imc_outline(radius=10, color=(255, 255, 255, 255)),
+        bf.imc_scale(0.2127),
+        out_dir=bf.ART_TEXTURES_DIR,
+    )
+
+    bf.im_conveyor(
+        "icons_audio",
+        "icons_audio",
+        bf.imc_prefix(""),
+        # bf.imc_outline(radius=10, color=(255, 255, 255, 255)),
+        # bf.imc_scale(0.5),
+        out_dir=bf.ART_TEXTURES_DIR,
+    )
+
     # _ui_background_rect
     bf.im_rectangle((412, 582), radius=30).save(
         bf.ART_TEXTURES_DIR / "_ui_background_rect.png"
