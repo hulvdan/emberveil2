@@ -84,6 +84,7 @@ debug_variables: # {  ###
     type: bool
 # }
 
+ui_pitch_step: 0.1
 ui_icon_skip_texture_id: ui_icon_next
 ui_icon_volume_bands_texture_ids:
   - ui_icon_volume_bands_1

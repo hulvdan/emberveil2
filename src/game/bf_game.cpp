@@ -424,6 +424,8 @@ struct GameData {
 
     int backgroundColorIndex = {};
 
+    int otherElementsPitchCounter = 0;
+
 #define VECTORS_TABLE X(BodyShape, bodyShapes)
 
 #define X(type_, name_) Vector<type_> name_ = {};
@@ -1251,8 +1253,13 @@ void DoUI() {
 
     f32 p = 1;
     if (data.e) {
-      if (!data.e->value && !ge.meta._drawing)
-        PlaySound(Sound_UI_LEVEL_TRANSITION);
+      if (!data.e->value && !ge.meta._drawing) {
+        PlaySound(
+          Sound_UI_WHOOSH,
+          {.pitch = 1 + glib->ui_pitch_step() * (g.run.otherElementsPitchCounter++)}
+        );
+      }
+
       p = progressify(data.e, ANIMATION_1_FRAMES);
     }
 
@@ -1541,8 +1548,11 @@ void DoUI() {
                     }) {
                       FLOATING_BEAUTIFY;
 
-                      if (!endE.value && !ge.meta._drawing)
-                        PlaySound(Sound_UI_STAR, {.pitch = 1 + 0.1f * (i - 1)});
+                      if (!endE.value && !ge.meta._drawing) {
+                        PlaySound(
+                          Sound_UI_STAR, {.pitch = 1 + glib->ui_pitch_step() * (i - 1)}
+                        );
+                      }
 
                       BF_CLAY_IMAGE({
                         .texID    = glib->ui_star_gold_texture_id(),
@@ -1587,8 +1597,13 @@ void DoUI() {
             }) {
               FLOATING_BEAUTIFY;
 
-              if (!endE.value && !ge.meta._drawing)
-                PlaySound(Sound_UI_WHOOSH);
+              if (!endE.value && !ge.meta._drawing) {
+                PlaySound(
+                  Sound_UI_WHOOSH,
+                  {.pitch
+                   = 1 + glib->ui_pitch_step() * (g.run.otherElementsPitchCounter++)}
+                );
+              }
 
               FontBegin(&g.meta.fontWinLabel);
               BF_CLAY_TEXT_LOCALIZED(
@@ -1606,8 +1621,12 @@ void DoUI() {
               FontEnd();
             }
 
-            if (!endE.value && !ge.meta._drawing)
-              PlaySound(Sound_UI_WHOOSH);
+            if (!endE.value && !ge.meta._drawing) {
+              PlaySound(
+                Sound_UI_WHOOSH,
+                {.pitch = 1 + glib->ui_pitch_step() * (g.run.otherElementsPitchCounter++)}
+              );
+            }
 
             FontBegin(&g.meta.fontWinDescription);
             BF_CLAY_TEXT_LOCALIZED(

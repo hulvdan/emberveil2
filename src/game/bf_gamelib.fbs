@@ -191,6 +191,8 @@ table GameLibrary {
     ui_background_rect_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    ui_pitch_step: float;
+
     ui_icon_skip_texture_id: int;
     ui_icon_volume_bands_texture_ids: [int] (required);
 

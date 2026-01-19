@@ -356,6 +356,7 @@ def process_images():
         "volume_bands",
         bf.imc_prefix(""),
         bf.imc_scale(0.2127),
+        bf.imc_outline(radius=1, color=(0, 0, 0, 0)),
         bf.imc_outline(radius=8),
         out_dir=bf.ART_TEXTURES_DIR,
     )
@@ -364,6 +365,7 @@ def process_images():
         "icons_audio",
         "icons_audio",
         bf.imc_prefix(""),
+        bf.imc_outline(radius=1, color=(0, 0, 0, 0)),
         bf.imc_outline(radius=8),
         # bf.imc_scale(0.5),
         out_dir=bf.ART_TEXTURES_DIR,
