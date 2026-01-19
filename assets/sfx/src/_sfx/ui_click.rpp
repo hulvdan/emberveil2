@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.52/win64" 1768805116
+<REAPER_PROJECT 0.1 "7.52/win64" 1768829925
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -35,7 +35,7 @@
   >
   RENDER_FILE ""
   RENDER_PATTERN ../../$project__$regionnumber
-  RENDER_FMT 0 2 44100
+  RENDER_FMT 0 1 44100
   RENDER_1X 0
   RENDER_RANGE 3 0 0 8 2000
   RENDER_RESAMPLE 3 0 1
@@ -93,7 +93,7 @@
   >
   <TEMPOENVEX
     EGUID {15879940-0809-4DD5-99BF-488C76B23E7B}
-    ACT 1 -1
+    ACT 0 -1
     VIS 1 0 1
     LANEHEIGHT 0 0
     ARM 0
@@ -138,7 +138,7 @@
     AUTOMODE 0
     PANLAWFLAGS 3
     VOLPAN 1 0 -1 -1 1
-    MUTESOLO 0 0 0
+    MUTESOLO 1 0 0
     IPHASE 0
     PLAYOFFS 0 1
     ISBUS 0 0
@@ -165,7 +165,7 @@
       FADEIN 1 0.005 0 1 0 0 0
       FADEOUT 1 0.005 0 1 0 0 0
       MUTE 0 0
-      SEL 1
+      SEL 0
       IGUID {93574BF3-3DE5-4EA3-98AA-730F4BA5A435}
       IID 2
       NAME game_bonk__01.ogg
@@ -180,7 +180,7 @@
     >
   >
   <TRACK {C64E99EF-8BBE-46EC-A8EC-5150E51F35ED}
-    NAME ""
+    NAME ESM_Cool_UI_Button_Game_Mobile_User_Interface_Tap_FX_Sound
     PEAKCOL 24382840
     BEAT -1
     AUTOMODE 0
@@ -204,6 +204,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 0.13154195011338
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0.005 0 1 0 0 0
+      FADEOUT 1 0.005 0 1 0 0 0
+      MUTE 0 0
+      SEL 1
+      IGUID {5B585AE6-91EB-456C-8E2F-97D3540F4E5A}
+      IID 3
+      NAME ESM_Cool_UI_Button_Game_Mobile_User_Interface_Tap_FX_Sound.wav
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {3C92780F-4DFC-4361-8524-A2EA13825C0F}
+      <SOURCE WAVE
+        FILE "_sfx\ESM_Cool_UI_Button_Game_Mobile_User_Interface_Tap_FX_Sound.wav"
+      >
+    >
   >
   <TRACK {47267B08-BBC7-4DD3-A057-C03D208A02E9}
     NAME ""
