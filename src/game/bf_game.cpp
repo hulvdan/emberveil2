@@ -1783,7 +1783,7 @@ void EndGameplay(bool won) {  ///
       }
     }
     VRAND.Shuffle(frontItemColors._base, frontItemColors.count);
-    lframe e{.value = 0};
+    lframe e{.value = 1};
     auto   interval = lframe::FromSeconds(
       glib->lost_items_flashing_seconds() + glib->lost_items_flashing_gap_seconds()
     );
@@ -2230,9 +2230,9 @@ void GameFixedUpdate() {
 
   // Playing lost error sounds.
   if (g.run.gameplayEnded.IsSet() && !g.run.won) {  ///
-    auto e = g.run.gameplayEnded.Elapsed();
-    FOR_RANGE (int, i, g.run.lostFrontUniqueColorsCount) {
-      if (e.value - g.run.lostFrontUniqueColorsStartFlashes[i].value == 0) {
+    const auto e = g.run.gameplayEnded.Elapsed();
+    for (const auto& v : g.run.lostFrontUniqueColorsStartFlashes) {
+      if (e == v) {
         PlaySound(Sound_GAME_ITEM_ERROR);
         break;
       }
