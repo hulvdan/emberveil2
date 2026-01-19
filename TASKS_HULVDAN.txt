@@ -10,8 +10,14 @@ x stub music + play it in c++ + lowpass
 x music sfx save load
 x reaper ctrl shift g r
 x stub sfx
+x play stub sfx: ui click
 
-* c++ playing stub sfx
+* play stub sfx: game pickup
+* play stub sfx: game put down
+* play stub sfx: game matched
+* play stub sfx: ui star
+* play stub sfx: ui whoosh for labels and buttons
+* play stub sfx: ui level transitoin whoosh
 *
 * sfx: game pickup
 * sfx: game put down
