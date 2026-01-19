@@ -9,14 +9,17 @@ x fix visual render glitch на опятах или чо это
 x stub music + play it in c++ + lowpass
 x music sfx save load
 x reaper ctrl shift g r
+x stub sfx
 
-* stub sfx
-  * pickup
-  * put down
-  * star
-  * whoosh for labels
-  * whoosh for buttons
 * c++ playing stub sfx
+*
+* sfx: game pickup
+* sfx: game put down
+* sfx: game matched
+* sfx: ui click
+* sfx: ui star
+* sfx: ui whoosh for labels and buttons
+* sfx: ui level transitoin whoosh
 *
 * portrait: zoom
 * portrait: fonts scaling

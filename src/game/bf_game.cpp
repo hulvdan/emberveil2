@@ -1250,8 +1250,11 @@ void DoUI() {
       color = Darken(color, glib->button_press_darken());
 
     f32 p = 1;
-    if (data.e)
+    if (data.e) {
+      if (data.e.value == 1)
+        PlaySound(Sound_UI_CLICK);
       p = progressify(data.e, ANIMATION_1_FRAMES);
+    }
 
     CLAY({}) {
       auto bScale = (data.noBreathing ? 1 : breathingScale);
