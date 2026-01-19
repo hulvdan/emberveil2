@@ -1418,16 +1418,19 @@ void DoUI() {
 
   if (gdebug.drawWin || gdebug.drawLost || g.run.gameplayEnded.IsSet()) {
     lframe endE{};
-    if (gdebug.drawWin || gdebug.drawLost)
-      endE.value = ge.meta.frameVisual % (FIXED_FPS * 6);
-    else
-      endE = g.run.gameplayEnded.Elapsed();
-    endE.value
-      -= lframe::FromSeconds(
-           (glib->lost_items_flashing_seconds() + glib->lost_items_flashing_gap_seconds())
-           * g.run.lostFrontUniqueColorsCount
+    // `endE` calculation (elapsed since gameplayEnded).
+    {  ///
+      if (gdebug.drawWin || gdebug.drawLost)
+        endE.value = ge.meta.frameVisual % (FIXED_FPS * 6);
+      else
+        endE = g.run.gameplayEnded.Elapsed();
+      endE.value -= lframe::FromSeconds(
+                      (glib->lost_items_flashing_seconds()
+                       + glib->lost_items_flashing_gap_seconds())
+                      * g.run.lostFrontUniqueColorsCount
       )
-           .value;
+                      .value;
+    }
 
     // dummy wait.
     progressify(&endE, ANIMATION_0_FRAMES);
