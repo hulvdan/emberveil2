@@ -2426,6 +2426,7 @@ void _OnSoundEnd(void* userData, ma_sound* sound) {  ///
 
 struct PlaySoundData {  ///
   u64 delayMilliseconds = 0;
+  f32 pitch             = f32_inf;
 
   // posx, posy, distmin, distmax.
   Vector4 pos = {f32_inf, f32_inf, f32_inf, f32_inf};
@@ -2615,12 +2616,13 @@ PlayingSound PlaySound(u32 soundHashValue, PlaySoundData data = {}) {  ///
     return {};
   }
 
-  if (fb_sound->pitch_min() != 1) {
+  f32 pitch = data.pitch;
+  if (pitch == f32_inf) {
     ASSERT(fb_sound->pitch_min() <= fb_sound->pitch_max());
-    ma_sound_set_pitch(
-      s, Lerp(fb_sound->pitch_min(), fb_sound->pitch_max(), VRAND.FRand11())
-    );
+    pitch = Lerp(fb_sound->pitch_min(), fb_sound->pitch_max(), VRAND.FRand());
   }
+  if (pitch != 1)
+    ma_sound_set_pitch(s, pitch);
 
   ASSERT_FALSE(strcmp(
     fb_variation->filepath()->c_str(),

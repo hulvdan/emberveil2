@@ -767,8 +767,8 @@ def convert_gamelib_json_to_binary(
         is_music = sound_type.startswith("MUSIC_")
         kwargs = {}
         if is_music:
-            kwargs["pitch_min"] = 0
-            kwargs["pitch_max"] = 0
+            kwargs["pitch_min"] = 1
+            kwargs["pitch_max"] = 1
         x = {
             "index": sound_index,
             "enum_value_id": enum_value_id,

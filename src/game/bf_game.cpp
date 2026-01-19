@@ -1542,7 +1542,7 @@ void DoUI() {
                       FLOATING_BEAUTIFY;
 
                       if (!endE.value && !ge.meta._drawing)
-                        PlaySound(Sound_UI_STAR);
+                        PlaySound(Sound_UI_STAR, {.pitch = 1 + 0.1f * i});
 
                       BF_CLAY_IMAGE({
                         .texID    = glib->ui_star_gold_texture_id(),
