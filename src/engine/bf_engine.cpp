@@ -2665,8 +2665,8 @@ void StopSound(PlayingSound sound) {  ///
   ma_sound_stop(&m._playingSounds[sound.index]);
 }
 
-void PlaySound(Sound sound) {  ///
-  PlaySound(SOUND_TO_HASH_VALUE[sound]);
+void PlaySound(Sound sound, PlaySoundData data = {}) {  ///
+  PlaySound(SOUND_TO_HASH_VALUE[sound], data);
 }
 
 BF_FORCE_INLINE void DrawGroup_Begin(DrawZ z) {  ///
