@@ -8,6 +8,7 @@ x sfx+music buttons
 x fix visual render glitch на опятах или чо это
 x stub music + play it in c++ + lowpass
 x music sfx save load
+x reaper ctrl shift g r
 
 * stub sfx
   * pickup
