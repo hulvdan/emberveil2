@@ -1251,7 +1251,7 @@ void DoUI() {
 
     f32 p = 1;
     if (data.e) {
-      if (!data.e->value)
+      if (!data.e->value && !ge.meta._drawing)
         PlaySound(Sound_UI_LEVEL_TRANSITION);
       p = progressify(data.e, ANIMATION_1_FRAMES);
     }
@@ -1379,7 +1379,6 @@ void DoUI() {
               *var = *var - 1;
               if (*var < 0)
                 *var = 3;
-              // PlaySound(Sound_UI_CLICK);
               Save();
             }
           };
@@ -1542,7 +1541,7 @@ void DoUI() {
                     }) {
                       FLOATING_BEAUTIFY;
 
-                      if (!endE.value)
+                      if (!endE.value && !ge.meta._drawing)
                         PlaySound(Sound_UI_STAR);
 
                       BF_CLAY_IMAGE({
@@ -1588,7 +1587,7 @@ void DoUI() {
             }) {
               FLOATING_BEAUTIFY;
 
-              if (!endE.value)
+              if (!endE.value && !ge.meta._drawing)
                 PlaySound(Sound_UI_WHOOSH);
 
               FontBegin(&g.meta.fontWinLabel);
@@ -1607,7 +1606,7 @@ void DoUI() {
               FontEnd();
             }
 
-            if (!endE.value)
+            if (!endE.value && !ge.meta._drawing)
               PlaySound(Sound_UI_WHOOSH);
 
             FontBegin(&g.meta.fontWinDescription);
@@ -2227,6 +2226,17 @@ void GameFixedUpdate() {
 
     if (ge.soundManager.CanPlaySound())
       SetMusicLowpassFactor(g.meta.musicLowpassFactor);
+  }
+
+  // Playing lost error sounds.
+  if (g.run.gameplayEnded.IsSet() && !g.run.won) {  ///
+    auto e = g.run.gameplayEnded.Elapsed();
+    FOR_RANGE (int, i, g.run.lostFrontUniqueColorsCount) {
+      if (!(e.value - g.run.lostFrontUniqueColorsStartFlashes[i].value)) {
+        PlaySound(Sound_GAME_ITEM_ERROR);
+        break;
+      }
+    }
   }
 
   UpdateCamera();
