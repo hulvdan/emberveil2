@@ -1250,11 +1250,8 @@ void DoUI() {
       color = Darken(color, glib->button_press_darken());
 
     f32 p = 1;
-    if (data.e) {
-      if (data.e.value == 1)
-        PlaySound(Sound_UI_CLICK);
+    if (data.e)
       p = progressify(data.e, ANIMATION_1_FRAMES);
-    }
 
     CLAY({}) {
       auto bScale = (data.noBreathing ? 1 : breathingScale);
@@ -1312,6 +1309,7 @@ void DoUI() {
         if (result) {
           pressedAt = {};
           pressedAt.SetNow();
+          PlaySound(Sound_UI_CLICK);
         }
       }
     };
@@ -1540,6 +1538,9 @@ void DoUI() {
                       },
                     }) {
                       FLOATING_BEAUTIFY;
+
+                      if (!endE.value)
+                        PlaySound(Sound_UI_STAR);
 
                       BF_CLAY_IMAGE({
                         .texID    = glib->ui_star_gold_texture_id(),
@@ -1965,6 +1966,17 @@ void GameFixedUpdate() {
                   f.SetNow();
                 }
 
+                if (actionToSet == PlayerAction_PICKUP)
+                  PlaySound(Sound_GAME_ITEM_PICKUP);
+                else if (actionToSet == PlayerAction_PUT)
+                  PlaySound(Sound_GAME_ITEM_PUT_DOWN);
+                else if (actionToSet == PlayerAction_EXCHANGE) {
+                  PlaySound(Sound_GAME_ITEM_PICKUP);
+                  PlaySound(Sound_GAME_ITEM_PUT_DOWN);
+                }
+                else
+                  INVALID_PATH;
+
                 pl.action = actionToSet;
                 pl.actionStartedAt.SetNow();
                 pl.actionItemIndex = itemIndex;
@@ -2040,8 +2052,10 @@ void GameFixedUpdate() {
       s.updatedAt = {};
       s.updatedAt.SetNow();
 
-      if (s.IsLocked())
+      if (s.IsLocked()) {
         s.lastMatchedAt = s.updatedAt;
+        PlaySound(Sound_GAME_MATCHED);
+      }
     }
 
     auto parts = glib->matching_particles_parts_seconds();
