@@ -362,8 +362,9 @@ struct GameData {
     glm::mat3 mat                 = {};
     bool      verticalOrientation = {};
 
-    f32 cloudsBreathingP = {};
-    int perlinIndex      = {};
+    f32 cloudsBreathingP   = {};
+    int perlinIndex        = {};
+    f32 musicLowpassFactor = 1;
   } meta;
 
   struct Save {
@@ -1792,6 +1793,10 @@ void GameFixedUpdate() {
   ZoneScoped;
 
   // Setup. {  ///
+  SetVolume(VolumeType_MASTER, 0.85f);
+  SetVolume(VolumeType_SFX, (f32)g.save.volumeSFX / 3.0f);
+  SetVolume(VolumeType_MUSIC, (f32)g.save.volumeMusic / 3.0f);
+
   g.meta.worldSize  = ToVector2Int(glib->world_size());
   g.meta.worldSizef = (Vector2)g.meta.worldSize;
 
@@ -2168,6 +2173,28 @@ void GameFixedUpdate() {
     const auto perlinP
       = (f32)(ge.meta.frameVisual % perlinDur.value) / (f32)perlinDur.value;
     g.meta.perlinIndex = ProgressToIndex(perlinP, g.run.perlinX[0].count);
+  }
+
+  // Launching music upon audio unlock.
+  {  ///
+    static bool once = false;
+    if (!once                    //
+        && !ge.meta.postloading  //
+        && ge.soundManager.CanPlaySound())
+    {
+      once = true;
+      PlaySound(Sound_MUSIC_BATTLE);
+    }
+  }
+
+  // Music lowpass.
+  {  ///
+    g.meta.musicLowpassFactor = MoveTowardsF(
+      g.meta.musicLowpassFactor, (g.run.gameplayEnded.IsSet() ? 0.6f : 1), FIXED_DT
+    );
+
+    if (ge.soundManager.CanPlaySound())
+      SetMusicLowpassFactor(g.meta.musicLowpassFactor);
   }
 
   UpdateCamera();
@@ -2586,7 +2613,7 @@ void GameDraw() {
       else if (pl.item) {
         f32 targetScale = CalculateItemScaleInsidePlayer(pl.item);
 
-        auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
+        const auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
 
         Vector2 actionOffset{};
         if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {

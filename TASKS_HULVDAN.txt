@@ -6,8 +6,8 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 
 x sfx+music buttons
 x fix visual render glitch на опятах или чо это
+x stub music + play it in c++ + lowpass
 
-* stub music + play it in c++
 * stub sfx
   * pickup
   * put down
