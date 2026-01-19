@@ -1224,7 +1224,9 @@ void DoUI() {
     int      iconTexID    = {};
     int      iconTexID2   = {};
     lframe*  e            = {};
+    bool     noTexID2     = {};
     bool     noBackground = {};
+    bool     noBreathing  = {};
   };
 
   LAMBDA (bool, componentButton, (ComponentButtonData data, auto innerLambda)) {  ///
@@ -1245,37 +1247,53 @@ void DoUI() {
       p = progressify(data.e, ANIMATION_1_FRAMES);
 
     CLAY({}) {
-      auto backgroundColor = color;
-      if (data.noBackground)
-        backgroundColor.a = 0;
-      BF_CLAY_IMAGE(
-        {
-          .texID = glib->ui_button_texture_id(),
-          .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
-          .color = backgroundColor,
-          .dontCareAboutScaleWhenCalculatingSize = true,
-        },
-        [&]() BF_FORCE_INLINE_LAMBDA {
-          CLAY({.layout{
-            BF_CLAY_SIZING_GROW_XY,
-            BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
-          }})
-          BF_CLAY_IMAGE({
-            .texID = data.iconTexID,
-            .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
+      auto bScale = (data.noBreathing ? 1 : breathingScale);
+
+      Clay_FloatingElementConfig floating{};
+      if (!data.noBackground) {
+        BF_CLAY_IMAGE(
+          {
+            .texID = glib->ui_button_texture_id(),
+            .scale = Vector2One() * EaseBounceSmallSmooth(p) * bScale,
             .color = color,
             .dontCareAboutScaleWhenCalculatingSize = true,
+          },
+          []() {}
+        );
+        floating = {
+          .zIndex = zIndex,
+          .attachPoints{
+            .element = CLAY_ATTACH_POINT_CENTER_CENTER,
+            .parent  = CLAY_ATTACH_POINT_CENTER_CENTER,
+          },
+          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+          .attachTo           = CLAY_ATTACH_TO_PARENT,
+        };
+      }
+
+      CLAY({
+        .layout{
+          BF_CLAY_SIZING_GROW_XY,
+          .childGap = GAP_SMALL,
+          BF_CLAY_CHILD_ALIGNMENT_CENTER_CENTER,
+        },
+        .floating = floating,
+      }) {
+        BF_CLAY_IMAGE({
+          .texID = data.iconTexID,
+          .scale = Vector2One() * EaseBounceSmallSmooth(p) * bScale,
+          .color = color,
+          .dontCareAboutScaleWhenCalculatingSize = true,
+        });
+        if (data.iconTexID2) {
+          BF_CLAY_IMAGE({
+            .texID = data.iconTexID2,
+            .scale = Vector2One() * EaseBounceSmallSmooth(p) * bScale,
+            .color = (data.noTexID2 ? TRANSPARENT_BLACK : color),
+            .dontCareAboutScaleWhenCalculatingSize = true,
           });
-          if (data.iconTexID2) {
-            BF_CLAY_IMAGE({
-              .texID = data.iconTexID2,
-              .scale = Vector2One() * EaseBounceSmallSmooth(p) * breathingScale,
-              .color = color,
-              .dontCareAboutScaleWhenCalculatingSize = true,
-            });
-          }
         }
-      );
+      }
 
       innerLambda(p);
 
@@ -1289,35 +1307,6 @@ void DoUI() {
     };
 
     return result;
-  };
-
-  LAMBDA (void, componentVolumeButtons, ()) {  ///
-    LAMBDA (void, componentButtonVolume, (int iconTexID, ButtonID id, int* var)) {
-      const bool clicked = componentButton(
-        {
-          .id           = id,
-          .iconTexID    = iconTexID,
-          .iconTexID2   = glib->ui_icon_volume_bands_texture_ids()->Get(MAX(0, *var - 1)),
-          .noBackground = true,
-        },
-        [](f32 p) {}
-      );
-
-      if (clicked) {
-        *var = *var - 1;
-        if (*var < 0)
-          *var = 3;
-        // PlaySound(Sound_UI_CLICK);
-        Save();
-      }
-    };
-
-    componentButtonVolume(
-      glib->ui_icon_sfx_texture_id(), ButtonID_SFX, &g.save.volumeSFX
-    );
-    componentButtonVolume(
-      glib->ui_icon_music_texture_id(), ButtonID_MUSIC, &g.save.volumeMusic
-    );
   };
 
   // HUD.
@@ -1341,9 +1330,71 @@ void DoUI() {
     CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
       // Current level.
       if (g.save.level) {  ///
-        CLAY({}) {
+        CLAY({
+          .floating{
+            .zIndex = zIndex,
+            .attachPoints{
+              .element = CLAY_ATTACH_POINT_LEFT_TOP,
+              .parent  = CLAY_ATTACH_POINT_LEFT_TOP,
+            },
+            .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+            .attachTo           = CLAY_ATTACH_TO_PARENT,
+          },
+        }) {
+          FLOATING_BEAUTIFY;
           BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
           BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
+        }
+      }
+
+      // Volume buttons.
+      {  ///
+        LAMBDA (void, componentVolumeButtons, ()) {
+          LAMBDA (void, componentButtonVolume, (int iconTexID, ButtonID id, int* var)) {
+            const bool clicked = componentButton(
+              {
+                .id        = id,
+                .iconTexID = iconTexID,
+                .iconTexID2
+                = glib->ui_icon_volume_bands_texture_ids()->Get(MAX(0, *var - 1)),
+                .noTexID2     = (*var == 0),
+                .noBackground = true,
+                .noBreathing  = true,
+              },
+              [](f32 p) {}
+            );
+
+            if (clicked) {
+              *var = *var - 1;
+              if (*var < 0)
+                *var = 3;
+              // PlaySound(Sound_UI_CLICK);
+              Save();
+            }
+          };
+
+          componentButtonVolume(
+            glib->ui_icon_sfx_texture_id(), ButtonID_SFX, &g.save.volumeSFX
+          );
+          componentButtonVolume(
+            glib->ui_icon_music_texture_id(), ButtonID_MUSIC, &g.save.volumeMusic
+          );
+        };
+
+        CLAY({
+          .layout{.childGap = GAP_BIG},
+          .floating{
+            .zIndex = zIndex,
+            .attachPoints{
+              .element = CLAY_ATTACH_POINT_RIGHT_TOP,
+              .parent  = CLAY_ATTACH_POINT_RIGHT_TOP,
+            },
+            .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+            .attachTo           = CLAY_ATTACH_TO_PARENT,
+          },
+        }) {
+          FLOATING_BEAUTIFY;
+          componentVolumeButtons();
         }
       }
     }
@@ -1600,6 +1651,7 @@ void DoUI() {
                         .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
                         .attachTo           = CLAY_ATTACH_TO_PARENT,
                       }}) {
+                        FLOATING_BEAUTIFY;
                         BF_CLAY_IMAGE({
                           .texID = glib->ui_icon_ad_small_texture_id(),
                           .scale
@@ -1732,6 +1784,9 @@ void EndGameplay(bool won) {  ///
   //   }
   // }
   g.run.wonOrLostLabelIndex = 0;
+
+  if (won)
+    Save();
 }
 
 void GameFixedUpdate() {
@@ -2055,10 +2110,8 @@ void GameFixedUpdate() {
 
     if (!g.run.gameplayEnded.IsSet()) {
       // Checking if player's won.
-      if (!g.run.remainingRows) {  ///
+      if (!g.run.remainingRows)  ///
         EndGameplay(true);
-        Save();
-      }
 
       // Checking if player's lost.
       else if (!SolvableRowOfThreeExists()) {  ///
