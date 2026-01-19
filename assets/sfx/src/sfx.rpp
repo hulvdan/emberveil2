@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.52/win64" 1768805085
+<REAPER_PROJECT 0.1 "7.52/win64" 1768825851
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -19,15 +19,15 @@
   VIDEO_CONFIG 0 0 65792
   PANMODE 3
   PANLAWFLAGS 3
-  CURSOR 2
-  ZOOM 198.12061739149752 0 0
-  VZOOMEX 6 0
+  CURSOR 0.5
+  ZOOM 392.51779035588163 80 0
+  VZOOMEX 5.86688328 0
   USE_REC_CFG 0
   RECMODE 1
   SMPTESYNC 0 30 100 40 1000 300 0 0 1 0 0
   LOOP 0
   LOOPGRAN 0 4
-  RECORD_PATH "Media" ""
+  RECORD_PATH "_sfx" ""
   <RECORD_CFG
     ZXZhdxgAAQ==
   >
@@ -135,7 +135,7 @@
       FADEIN 1 0 0 1 0 0 0
       FADEOUT 1 0 0 1 0 0 0
       MUTE 0 0
-      SEL 0
+      SEL 1
       IGUID {5DC36700-11DF-4909-BEB1-2FB64CE750BC}
       IID 1
       NAME game_item_pickup.rpp
@@ -145,7 +145,7 @@
       CHANMODE 0
       GUID {A0A5CC6E-C681-43EE-834C-68E00E09BB31}
       <SOURCE RPP_PROJECT
-        FILE "Media\game_item_pickup.rpp"
+        FILE "_sfx\game_item_pickup.rpp"
       >
     >
   >
@@ -163,7 +163,7 @@
     BUSCOMP 0 0 0 0 0
     SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
     FIXEDLANES 9 0 0 0 0
-    SEL 0
+    SEL 1
     REC 0 0 1 0 0 0 0 0
     VU 64
     TRACKHEIGHT 0 0 0 0 0 0 0
@@ -193,7 +193,7 @@
       CHANMODE 0
       GUID {F0DA3E46-7734-4FBE-B0F5-D345D75FC74B}
       <SOURCE RPP_PROJECT
-        FILE "Media\game_item_put_down.rpp"
+        FILE "_sfx\game_item_put_down.rpp"
       >
     >
   >
@@ -241,7 +241,7 @@
       CHANMODE 0
       GUID {7044C9F2-27B2-4410-A542-81EC8730C825}
       <SOURCE RPP_PROJECT
-        FILE "Media\game_matched.rpp"
+        FILE "_sfx\game_matched.rpp"
       >
     >
   >
@@ -289,7 +289,7 @@
       CHANMODE 0
       GUID {C5A34C24-A857-4CCE-91E8-B2DBB771522E}
       <SOURCE RPP_PROJECT
-        FILE "Media\ui_star.rpp"
+        FILE "_sfx\ui_star.rpp"
       >
     >
   >
@@ -337,7 +337,7 @@
       CHANMODE 0
       GUID {374DC890-B854-4CA1-9A99-2CABD6CD6E5D}
       <SOURCE RPP_PROJECT
-        FILE "Media\ui_whoosh.rpp"
+        FILE "_sfx\ui_whoosh.rpp"
       >
     >
   >
@@ -385,7 +385,7 @@
       CHANMODE 0
       GUID {562D9C99-9505-4C46-A14B-81CC83639CB9}
       <SOURCE RPP_PROJECT
-        FILE "Media\ui_level_transition.rpp"
+        FILE "_sfx\ui_level_transition.rpp"
       >
     >
   >
@@ -403,7 +403,7 @@
     BUSCOMP 0 0 0 0 0
     SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
     FIXEDLANES 9 0 0 0 0
-    SEL 1
+    SEL 0
     REC 0 0 1 0 0 0 0 0
     VU 64
     TRACKHEIGHT 0 0 0 0 0 0 0
@@ -423,7 +423,7 @@
       FADEIN 1 0 0 1 0 0 0
       FADEOUT 1 0 0 1 0 0 0
       MUTE 0 0
-      SEL 1
+      SEL 0
       IGUID {D726717E-D8C6-4C80-8C7B-36A32E360CE1}
       IID 1
       NAME ui_click.rpp
@@ -433,7 +433,7 @@
       CHANMODE 0
       GUID {24B42689-1382-441B-A044-B8A077463775}
       <SOURCE RPP_PROJECT
-        FILE "Media\ui_click.rpp"
+        FILE "_sfx\ui_click.rpp"
       >
     >
   >

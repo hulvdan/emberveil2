@@ -1249,12 +1249,12 @@ void DoUI() {
              <= lframe::FromSeconds(glib->button_press_duration_seconds()))
       color = Darken(color, glib->button_press_darken());
 
-    if (data.e && !(data.e->value))
-      PlaySound(Sound_UI_LEVEL_TRANSITION);
-
     f32 p = 1;
-    if (data.e)
+    if (data.e) {
+      if (!data.e->value)
+        PlaySound(Sound_UI_LEVEL_TRANSITION);
       p = progressify(data.e, ANIMATION_1_FRAMES);
+    }
 
     CLAY({}) {
       auto bScale = (data.noBreathing ? 1 : breathingScale);
