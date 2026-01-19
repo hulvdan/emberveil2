@@ -5619,6 +5619,7 @@ SDL_AppResult EngineUpdate() {  ///
         ASSERT(fb);
 
         if (fb->is_music()) {
+          ma_sound_stop(sound.ma_sound);
           m._playingMusic = nullptr;
           PlaySound(fb->enum_value_id(), {.delayMilliseconds = 20000});
         }

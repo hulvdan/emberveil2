@@ -19,13 +19,15 @@ x play stub sfx: ui whoosh for labels and buttons
 x play stub sfx: ui level transition whoosh
 x play stub sfx: item lost error
 x sfx: ui star
+x fix music
+x sfx: ui click
+x sfx: ui whoosh for buttons
 
 * sfx: game item pickup
 * sfx: game item put down
 * sfx: game item matched
 * sfx: game item lost error
-* sfx: ui click
-* sfx: ui whoosh for labels and buttons
+* sfx: ui whoosh for labels
 * sfx: ui level transitoin whoosh
 *
 * portrait: zoom
