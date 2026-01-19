@@ -1381,19 +1381,18 @@ void DoUI() {
           );
         };
 
-        CLAY({
-          .layout{.childGap = GAP_BIG},
-          .floating{
-            .zIndex = zIndex,
-            .attachPoints{
-              .element = CLAY_ATTACH_POINT_RIGHT_TOP,
-              .parent  = CLAY_ATTACH_POINT_RIGHT_TOP,
-            },
-            .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-            .attachTo           = CLAY_ATTACH_TO_PARENT,
+        CLAY({.floating{
+          .zIndex = zIndex,
+          .attachPoints{
+            .element = CLAY_ATTACH_POINT_RIGHT_TOP,
+            .parent  = CLAY_ATTACH_POINT_RIGHT_TOP,
           },
-        }) {
+          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+          .attachTo           = CLAY_ATTACH_TO_PARENT,
+        }}) {
           FLOATING_BEAUTIFY;
+
+          CLAY({.layout{.childGap = GAP_BIG}})
           componentVolumeButtons();
         }
       }

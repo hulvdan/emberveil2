@@ -355,8 +355,8 @@ def process_images():
         "volume_bands",
         "volume_bands",
         bf.imc_prefix(""),
-        bf.imc_outline(radius=35),
         bf.imc_scale(0.2127),
+        bf.imc_outline(radius=8),
         out_dir=bf.ART_TEXTURES_DIR,
     )
 
