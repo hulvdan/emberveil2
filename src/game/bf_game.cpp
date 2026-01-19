@@ -1249,6 +1249,9 @@ void DoUI() {
              <= lframe::FromSeconds(glib->button_press_duration_seconds()))
       color = Darken(color, glib->button_press_darken());
 
+    if (data.e && !(data.e->value))
+      PlaySound(Sound_UI_LEVEL_TRANSITION);
+
     f32 p = 1;
     if (data.e)
       p = progressify(data.e, ANIMATION_1_FRAMES);
@@ -1585,6 +1588,9 @@ void DoUI() {
             }) {
               FLOATING_BEAUTIFY;
 
+              if (!endE.value)
+                PlaySound(Sound_UI_WHOOSH);
+
               FontBegin(&g.meta.fontWinLabel);
               BF_CLAY_TEXT_LOCALIZED(
                 (Loc)((int)(won ? Loc_UI_WON_1__CAPS : Loc_UI_LOST_1__CAPS)
@@ -1600,6 +1606,9 @@ void DoUI() {
               );
               FontEnd();
             }
+
+            if (!endE.value)
+              PlaySound(Sound_UI_WHOOSH);
 
             FontBegin(&g.meta.fontWinDescription);
             BF_CLAY_TEXT_LOCALIZED(

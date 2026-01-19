@@ -15,10 +15,9 @@ x play stub sfx: game pickup
 x play stub sfx: game put down
 x play stub sfx: game matched
 x play stub sfx: ui star
+x play stub sfx: ui whoosh for labels and buttons
+x play stub sfx: ui level transition whoosh
 
-* play stub sfx: ui whoosh for labels and buttons
-* play stub sfx: ui level transitoin whoosh
-*
 * sfx: game pickup
 * sfx: game put down
 * sfx: game matched
