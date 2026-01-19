@@ -5,8 +5,8 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
 x sfx+music buttons
+x fix visual render glitch на опятах или чо это
 
-* fix visual render glitch на опятах или чо это
 * stub music + play it in c++
 * stub sfx
   * pickup

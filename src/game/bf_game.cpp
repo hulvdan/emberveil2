@@ -2275,7 +2275,13 @@ void GameDraw() {
   LAMBDA (
     void,
     drawItem,
-    (Vector2 pos, const Item& item, f32 rotation, Vector2 scale, int depth, f32 fade)
+    (Vector2     pos,
+     const Item& item,
+     f32         rotation,
+     Vector2     scale,
+     int         depth,
+     f32         fade,
+     f32         sortY)
   )
   {  ///
     ASSERT(item);
@@ -2317,7 +2323,7 @@ void GameDraw() {
     }
 
     DrawGroup_Begin(depth ? DrawZ_DEEP_ITEMS : DrawZ_ITEMS);
-    DrawGroup_SetSortY(pos.y);
+    DrawGroup_SetSortY(sortY);
 
     DrawGroup_CommandTexture({
       .texID    = tex,
@@ -2500,7 +2506,7 @@ void GameDraw() {
 
             if ((mode == 1) && item) {
               // Drawing item.
-              drawItem(pos + actionOffset, item, 0, scale * targetScale, depth, 1);
+              drawItem(pos + actionOffset, item, 0, scale * targetScale, depth, 1, pos.y);
             }
             else if ((mode == 2) && ge.soundManager.unlocked.IsSet()) {
               // Drawing 1st level touch tutor.
@@ -2546,7 +2552,6 @@ void GameDraw() {
 
   // Drawing player.
   {  ///
-
     auto texs = glib->player_texture_ids();
 
     f32 fade = 1.0f;
@@ -2581,11 +2586,12 @@ void GameDraw() {
       else if (pl.item) {
         f32 targetScale = CalculateItemScaleInsidePlayer(pl.item);
 
+        auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
+
         Vector2 actionOffset{};
         if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
-          f32  p         = GetPlayerActionWithoutFlyingProgress();
-          auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
-          actionOffset   = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
+          f32 p        = GetPlayerActionWithoutFlyingProgress();
+          actionOffset = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
 
           targetScale = Lerp(targetScale, 1, p);
         }
@@ -2596,7 +2602,8 @@ void GameDraw() {
           playerRotation,
           Vector2One() * targetScale,
           0,
-          fade
+          fade,
+          targetPos.y
         );
       }
 
