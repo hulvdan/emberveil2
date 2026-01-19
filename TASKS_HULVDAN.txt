@@ -29,15 +29,16 @@ x sfx: ui pitch steps
 * sfx: game item put down
 * sfx: game item matched
 * sfx: game item lost error
+* sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
-*
-* reaper emberveil2
 *
 * portrait: zoom
 * portrait: fonts scaling
 * portrait:
 * portrait:
 * portrait:
+*
+* reaper codegen emberveil2 (F5 triggers codegen for cookier)
 *
 * polish particles
 * 2nd pass items
