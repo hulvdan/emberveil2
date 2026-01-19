@@ -2232,7 +2232,7 @@ void GameFixedUpdate() {
   if (g.run.gameplayEnded.IsSet() && !g.run.won) {  ///
     auto e = g.run.gameplayEnded.Elapsed();
     FOR_RANGE (int, i, g.run.lostFrontUniqueColorsCount) {
-      if (!(e.value - g.run.lostFrontUniqueColorsStartFlashes[i].value)) {
+      if (e.value - g.run.lostFrontUniqueColorsStartFlashes[i].value == 0) {
         PlaySound(Sound_GAME_ITEM_ERROR);
         break;
       }
