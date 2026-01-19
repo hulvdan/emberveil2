@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.52/win64" 1768804332
+<REAPER_PROJECT 0.1 "7.52/win64" 1768804434
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -19,7 +19,7 @@
   VIDEO_CONFIG 0 0 65792
   PANMODE 3
   PANLAWFLAGS 3
-  CURSOR 1
+  CURSOR 2
   ZOOM 100 0 0
   VZOOMEX 6 0
   USE_REC_CFG 0
@@ -126,6 +126,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 2
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5DC36700-11DF-4909-BEB1-2FB64CE750BC}
+      IID 1
+      NAME game_item_pickup.rpp
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {A0A5CC6E-C681-43EE-834C-68E00E09BB31}
+      <SOURCE RPP_PROJECT
+        FILE "Media\game_item_pickup.rpp"
+      >
+    >
   >
   <TRACK {93683956-162D-4BF8-9393-AFC9D9F8E3E3}
     NAME game_item_put_down
@@ -152,6 +174,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 2
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4BF52C31-7A15-4653-B27C-27219CA5EE68}
+      IID 1
+      NAME game_item_put_down.rpp
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {F0DA3E46-7734-4FBE-B0F5-D345D75FC74B}
+      <SOURCE RPP_PROJECT
+        FILE "Media\game_item_put_down.rpp"
+      >
+    >
   >
   <TRACK {152F4D06-DFFC-46FC-A8DC-A924D5DC81AC}
     NAME game_matched
@@ -178,6 +222,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 2
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C758D72F-2E83-49B9-8428-24553E30E2FF}
+      IID 1
+      NAME game_matched.rpp
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {7044C9F2-27B2-4410-A542-81EC8730C825}
+      <SOURCE RPP_PROJECT
+        FILE "Media\game_matched.rpp"
+      >
+    >
   >
   <TRACK {3BA2B104-78EC-460D-A6E0-482E989313F5}
     NAME ui_star
@@ -204,6 +270,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 2
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {2A373E0B-28F8-4A4F-92D8-88CC5B054FA1}
+      IID 1
+      NAME ui_star.rpp
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {C5A34C24-A857-4CCE-91E8-B2DBB771522E}
+      <SOURCE RPP_PROJECT
+        FILE "Media\ui_star.rpp"
+      >
+    >
   >
   <TRACK {1244890A-09F1-40AB-93BE-5E50087E5A8C}
     NAME ui_whoosh
@@ -230,6 +318,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 2
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D2735E6D-5146-4593-9817-8FC28B48564D}
+      IID 1
+      NAME ui_whoosh.rpp
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {374DC890-B854-4CA1-9A99-2CABD6CD6E5D}
+      <SOURCE RPP_PROJECT
+        FILE "Media\ui_whoosh.rpp"
+      >
+    >
   >
   <TRACK {64BB7F55-C9CC-447B-ACAA-2D28B3480086}
     NAME ui_level_transition
@@ -245,7 +355,7 @@
     BUSCOMP 0 0 0 0 0
     SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
     FIXEDLANES 9 0 0 0 0
-    SEL 0
+    SEL 1
     REC 0 0 1 0 0 0 0 0
     VU 64
     TRACKHEIGHT 0 0 0 0 0 0 0
@@ -256,6 +366,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 2
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 1
+      IGUID {B83228D3-C3B3-4A5F-BCFF-720907831089}
+      IID 1
+      NAME ui_level_transition.rpp
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {562D9C99-9505-4C46-A14B-81CC83639CB9}
+      <SOURCE RPP_PROJECT
+        FILE "Media\ui_level_transition.rpp"
+      >
+    >
   >
   <EXTENSIONS
     <SWSAUTOCOLOR
