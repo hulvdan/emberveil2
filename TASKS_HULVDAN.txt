@@ -22,12 +22,13 @@ x sfx: ui star
 x fix music
 x sfx: ui click
 x sfx: ui whoosh for buttons
+x sfx: ui whoosh for labels
+x sfx: ui pitch steps
 
 * sfx: game item pickup
 * sfx: game item put down
 * sfx: game item matched
 * sfx: game item lost error
-* sfx: ui whoosh for labels
 * sfx: ui level transition whoosh
 *
 * reaper emberveil2
