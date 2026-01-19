@@ -632,14 +632,20 @@ Body MakeCircleBody(MakeCircleBodyData data) {  ///
 }
 
 void GameLoad(const BFSave::Save* save) {  ///
-  auto& s = g.save;
-  s.level = save->level();
+  auto& s       = g.save;
+  s.level       = save->level();
+  s.volumeSFX   = save->volume_sfx();
+  s.volumeMusic = save->volume_music();
 }
 
 void GameDumpStateForSaving(BFSave::SaveT& save) {  ///
-  save.level = g.save.level;
+  const auto& s = g.save;
+
+  save.level = s.level;
   if (g.run.gameplayEnded.IsSet() && g.run.won)
     save.level += 1;
+  save.volume_sfx   = s.volumeSFX;
+  save.volume_music = s.volumeMusic;
 }
 
 struct Line {  ///
