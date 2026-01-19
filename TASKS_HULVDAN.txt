@@ -4,15 +4,22 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
-x fix picking up / putting down items drawing glitch
-x scale items inside UFO / lower them down a bit
-- cloud item slot yellow press feedback
-x fix touch + gizmos 1st level
-x ease tutor
-x better background
-  experiment with sizes of rectangle
-
-* polish: ufo animation rotation
+* sfx music buttons
+* stub music + play it in c++
+* stub sfx
+  * pickup
+  * put down
+  * star
+  * whoosh for labels
+  * whoosh for buttons
+* c++ playing stub sfx
+*
+* portrait: zoom
+* portrait: fonts scaling
+* portrait:
+* portrait:
+* portrait:
+*
 * polish particles
 * 2nd pass items
 * 2nd pass ufo
@@ -22,6 +29,7 @@ x better background
 * metrics: send level complete metric
 * metrics: change yandex metrika
 * make game easier
+* polish: ufo animation rotation
 RELEASED
 * polish: popping rows to front offset easing
 * polish: popping rows to front depth easing
