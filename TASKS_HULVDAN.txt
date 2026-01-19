@@ -17,11 +17,12 @@ x play stub sfx: game matched
 x play stub sfx: ui star
 x play stub sfx: ui whoosh for labels and buttons
 x play stub sfx: ui level transition whoosh
+x play stub sfx: item lost error
 
-* play stub sfx: ui level transition whoosh
-* sfx: game pickup
-* sfx: game put down
-* sfx: game matched
+* sfx: game item pickup
+* sfx: game item put down
+* sfx: game item matched
+* sfx: game item lost error
 * sfx: ui click
 * sfx: ui star
 * sfx: ui whoosh for labels and buttons
