@@ -959,10 +959,10 @@ struct EngineData {
 
     Vector2Int screenSize = {};
 
-    f32     screenToLogicalRatio    = {};
-    Vector2 scaledLogicalResolution = {};
-    // Vector2 logicalToScaledLogicalVector = {};
-    f32 screenScale = {};
+    f32     screenToLogicalRatio       = {};
+    Vector2 scaledLogicalResolution    = {};
+    Vector2 screenToLogicalRatioVector = {};
+    f32     screenScale                = {};
 
     View<const bool> _keyboardState         = {};
     bool*            _keyboardStatePressed  = {};
@@ -1023,8 +1023,6 @@ struct EngineData {
     FrameVisual _lastSaveAt    = {};
 
     int postloading = -1;
-
-    bool portrait = {};
   } meta;
 
   struct SoundManager {
@@ -1074,9 +1072,10 @@ struct EngineData {
   } events;
 
   struct Settings {
-    Color     backgroundColor = BLACK;
-    Color     screenFadeColor = BLACK;
-    f32       screenFade      = 0;
+    f32       uiScaleMultiplier = 1;
+    Color     backgroundColor   = BLACK;
+    Color     screenFadeColor   = BLACK;
+    f32       screenFade        = 0;
     View<u64> bgfxDisabledCapabilities{};
 
     // struct {
@@ -4814,10 +4813,12 @@ std::tuple<bool, LoadFontsResult> _ProcessFonts(
       auto&       font = outFonts[fontIndex];
       const auto& data = data_[fontIndex];
 
-      font.size           = data.size * scaleToFit;
-      font.outlineWidth   = Ceil((f32)data.outlineWidth * scaleToFit);
-      font.outlineAdvance = (f32)data.outlineAdvance * scaleToFit;
-      font._scaleToFit    = scaleToFit;
+      font.size = data.size * scaleToFit * ge.settings.uiScaleMultiplier;
+      font.outlineWidth
+        = Ceil((f32)data.outlineWidth * scaleToFit * ge.settings.uiScaleMultiplier);
+      font.outlineAdvance
+        = (f32)data.outlineAdvance * scaleToFit * ge.settings.uiScaleMultiplier;
+      font._scaleToFit = scaleToFit;
 
       stbtt_pack_range range{
         .font_size                   = (f32)font.size * font.FIXME_sizeScale,
@@ -5023,13 +5024,14 @@ void EngineOnFrameStart() {
   auto           ratioActual   = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
   ge.meta.screenToLogicalRatio = ratioActual / ratioLogical;
 
-  Vector2 screenToLogicalRatioVector{1, 1};
+  ge.meta.screenToLogicalRatioVector = {1, 1};
   if (ge.meta.screenToLogicalRatio > 1)
-    screenToLogicalRatioVector.x *= ge.meta.screenToLogicalRatio;
+    ge.meta.screenToLogicalRatioVector.x *= ge.meta.screenToLogicalRatio;
   else
-    screenToLogicalRatioVector.y /= ge.meta.screenToLogicalRatio;
+    ge.meta.screenToLogicalRatioVector.y /= ge.meta.screenToLogicalRatio;
 
-  ge.meta.scaledLogicalResolution = LOGICAL_RESOLUTIONf * screenToLogicalRatioVector;
+  ge.meta.scaledLogicalResolution
+    = LOGICAL_RESOLUTIONf * ge.meta.screenToLogicalRatioVector;
 
   // Caching ScreenToLogical data.
   {  ///
@@ -5476,7 +5478,6 @@ SDL_AppResult EngineUpdate() {  ///
     frameTime -= FIXED_DT;
 
     SDL_PumpEvents();
-    ge.meta.portrait = (ge.meta.screenSize.x / ge.meta.screenSize.y < 1);
 
     // Controls. Mouse.
     ge.meta._mouseState = SDL_GetMouseState(nullptr, nullptr);
@@ -5761,13 +5762,14 @@ int GetTextureIDByProgress(const flatbuffers::Vector<int>* texs, f32 p) {  ///
 }
 
 struct DrawTiledBackgroundRectsData {  ///
-  Color backgroundColor = {};
-  Color rectColor       = {};
-  int   rectTexID       = 0;
-  int   rectsXToSide    = 9;
-  int   rectsYToSide    = 5;
-  int   cycleDur        = 20 * FIXED_FPS;
-  f32   angle           = -PI32 / 6;
+  Color   backgroundColor = {};
+  Color   rectColor       = {};
+  int     rectTexID       = 0;
+  int     rectsXToSide    = 9;
+  int     rectsYToSide    = 5;
+  int     cycleDur        = 20 * FIXED_FPS;
+  f32     angle           = -PI32 / 6;
+  Vector2 scale           = {1, 1};
 };
 
 void DrawTiledBackgroundRects(DrawTiledBackgroundRectsData data) {  ///
@@ -5808,8 +5810,9 @@ void DrawTiledBackgroundRects(DrawTiledBackgroundRectsData data) {  ///
           DrawGroup_CommandTexture({
             .texID    = data.rectTexID,
             .rotation = data.angle,
-            .pos      = center + Vector2Rotate(off, data.angle + (m ? PI32 : 0)),
-            .color    = data.rectColor,
+            .pos = center + Vector2Rotate(off, data.angle + (m ? PI32 : 0)) * data.scale,
+            .scale = data.scale,
+            .color = data.rectColor,
           });
         }
       }

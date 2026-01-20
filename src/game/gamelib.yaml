@@ -82,8 +82,17 @@ debug_variables: # {  ###
     type: bool
   - name: drawLost
     type: bool
+  - name: test
+    type: bool
 # }
 
+portrait_breakpoints:
+  - ratio: 0
+    ui_scale_multiplier: 1
+  - ratio: 1
+    ui_scale_multiplier: 1.5
+  - ratio: 0.8
+    ui_scale_multiplier: 2
 ui_pitch_step: 0.1
 ui_icon_skip_texture_id: ui_icon_next
 ui_icon_volume_bands_texture_ids:

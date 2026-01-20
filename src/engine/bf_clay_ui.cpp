@@ -137,6 +137,8 @@ if (!draw) {
       res.x = res.y * UI_ASPECT_RATIO_MAX;
     else if (r < UI_ASPECT_RATIO_MIN)
       res.y = res.x / UI_ASPECT_RATIO_MIN;
+    res.x               = Round(res.x / ge.settings.uiScaleMultiplier);
+    res.y               = Round(res.y / ge.settings.uiScaleMultiplier);
     g.meta.screenSizeUI = res;
     Clay_SetLayoutDimensions({res.x, res.y});
   }
@@ -159,6 +161,7 @@ if (!draw) {
   };
 
   pos = Vector2(pos.x, LOGICAL_RESOLUTION.y - pos.y) + g.meta.screenSizeUIMargin;
+  pos /= ge.settings.uiScaleMultiplier;
   Clay_SetPointerState({pos.x, pos.y}, false);
 }
 
@@ -473,6 +476,17 @@ if (draw) {  ///
       cmd.boundingBox.x += beautify.translate.x;
       cmd.boundingBox.y += beautify.translate.y;
 
+      cmd.boundingBox.x -= LOGICAL_RESOLUTION.x / 2;
+      cmd.boundingBox.x *= ge.settings.uiScaleMultiplier;
+      cmd.boundingBox.x += LOGICAL_RESOLUTION.x / 2;
+
+      cmd.boundingBox.y -= LOGICAL_RESOLUTION.y / 2;
+      cmd.boundingBox.y *= ge.settings.uiScaleMultiplier;
+      cmd.boundingBox.y += LOGICAL_RESOLUTION.y / 2;
+
+      cmd.boundingBox.width *= ge.settings.uiScaleMultiplier;
+      cmd.boundingBox.height *= ge.settings.uiScaleMultiplier;
+
       auto bb = cmd.boundingBox;
       bb.y    = LOGICAL_RESOLUTION.y - bb.y - bb.height;
 
@@ -507,7 +521,7 @@ if (draw) {  ///
               bb.y + bb.height / 2 + data.offset.y,
             },
             .anchor        = data.anchor,
-            .scale         = data.scale,
+            .scale         = data.scale * ge.settings.uiScaleMultiplier,
             .sourceMargins = data.sourceMargins,
             .color{
               data.color.r,

@@ -364,6 +364,7 @@ struct GameData {
     f32 cloudsBreathingP   = {};
     int perlinIndex        = {};
     f32 musicLowpassFactor = 1;
+    int portrait           = -1;
   } meta;
 
   struct Save {
@@ -930,12 +931,15 @@ void RunReset() {  ///
 void GamePreInit(GamePreInitOpts opts) {  ///
   ZoneScoped;
 
-  ge.settings.backgroundColor = TextifyColor(PAL_MAUVE);
+  auto& s           = ge.settings;
+  s.backgroundColor = TextifyColor(PAL_MAUVE);
 
   *opts.baseFont = &g.meta.fontUI;
 }
 
 void ReloadFontsIfNeeded() {  ///
+  ASSERT(g.meta.portrait >= 0);
+
   static bool       loaded             = false;
   static Vector2Int previousScreenSize = {};
 
@@ -1159,11 +1163,27 @@ TEST_CASE ("CheckGamelib") {  ///
   CheckGamelib();
 }
 
+void UpdatePortrait() {  ///
+  g.meta.portrait = 0;
+  const auto r    = (f32)ge.meta.screenSize.x / (f32)ge.meta.screenSize.y;
+
+  int i = -1;
+  for (auto v : *glib->portrait_breakpoints()) {
+    i++;
+    if (r <= v->ratio())
+      g.meta.portrait = i;
+  }
+
+  ge.settings.uiScaleMultiplier
+    = glib->portrait_breakpoints()->Get(g.meta.portrait)->ui_scale_multiplier();
+}
+
 void GameInit() {  ///
   ZoneScoped;
 
   SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
+  UpdatePortrait();
   ReloadFontsIfNeeded();
   CheckGamelib();
 }
@@ -1507,6 +1527,8 @@ void DoUI() {
           // dummy wait.
           progressify(&endE, ANIMATION_0_FRAMES);
 
+          BF_CLAY_SPACER_VERTICAL;
+
           // Stars.
           CLAY({.layout{
             .sizing{.height = CLAY_SIZING_FIXED(glib->ui_stars_element_height())}
@@ -1532,6 +1554,7 @@ void DoUI() {
                     .texID    = glib->ui_star_gray_texture_id(),
                     .rotation = rot,
                     .offset{0, (i - 1 ? 0 : 40)},
+                    .scale = Vector2One(),
                     .color = Fade(WHITE, stripP),
                   },
                   [&]() BF_FORCE_INLINE_LAMBDA {
@@ -1572,6 +1595,8 @@ void DoUI() {
               }
             }
           }
+
+          BF_CLAY_SPACER_VERTICAL;
 
           // Label.
           CLAY(  ///
@@ -1645,6 +1670,7 @@ void DoUI() {
           }
 
           BF_CLAY_SPACER_VERTICAL;
+          BF_CLAY_SPACER_VERTICAL;
 
           // Buttons.
           CLAY({.layout{.childGap = GAP_BIG * 4}}) {  ///
@@ -1707,6 +1733,7 @@ void DoUI() {
           }
 
           BF_CLAY_SPACER_VERTICAL;
+          BF_CLAY_SPACER_VERTICAL;
         }
 
         componentVerticalBlackStrip();
@@ -1729,13 +1756,17 @@ void DoUI() {
 void UpdateCamera() {  ///
   g.meta.camera.pos = g.meta.worldSizef / 2.0f;
 
-  const auto v = LOGICAL_RESOLUTIONf / g.meta.worldSizef;
-  if (ge.meta.portrait)
-    g.meta.camera.zoom = MAX(v.x, v.y);
-  else
-    g.meta.camera.zoom = MIN(v.x, v.y);
+  auto ws  = g.meta.worldSizef;
+  auto res = ge.meta.scaledLogicalResolution;
+  ws       = (Vector2)(g.meta.mat * Vector3(ws, 0));
+  if (g.meta.portrait)
+    ws = Vector2Swap(ws);
+  ws.x = fabs(ws.x);
+  ws.y = fabs(ws.y);
 
-  g.meta.camera.texturesScale = 1 / g.meta.camera.zoom;
+  g.meta.camera.zoom          = ScaleToFit(ws, res);
+  g.meta.camera.texturesScale = 1 / ScaleToFit(ws, LOGICAL_RESOLUTIONf);
+
   {
     constexpr f32 MAX_ZOOM = 1.8f;
     auto&         u        = ge.soundManager.unlocked;
@@ -1835,7 +1866,10 @@ void EndGameplay(bool won) {  ///
 void GameFixedUpdate() {
   ZoneScoped;
 
-  // Setup. {  ///
+  // Setup.
+  // {  ///
+  UpdatePortrait();
+
   SetVolume(VolumeType_MASTER, 0.85f);
   SetVolume(VolumeType_SFX, (f32)g.save.volumeSFX / 3.0f);
   SetVolume(VolumeType_MUSIC, (f32)g.save.volumeMusic / 3.0f);
@@ -1851,7 +1885,7 @@ void GameFixedUpdate() {
     m *= glm::mat3(
       glib->world_mat_x_scale(), 0, 0, 0, glib->world_mat_y_scale(), 0, 0, 0, 1
     );
-    if (ge.meta.portrait)
+    if (g.meta.portrait)
       m *= glm::mat3(0, -1, 0, 1, 0, 0, 0, 0, 1);
     m = glm::translate(m, -g.meta.worldSizef / 2.0f);
 
@@ -2332,6 +2366,7 @@ void GameDraw() {
       .rectColor       = ToColor(fb->rect()),
       .rectTexID       = glib->ui_background_rect_texture_id(),
       .cycleDur        = 30 * FIXED_FPS,
+      .scale           = Vector2One(),
     });
 
     DrawGroup_End();
@@ -2349,7 +2384,7 @@ void GameDraw() {
           {
             .pos   = g.meta.mat * Vector3(x, y, 1),
             .size  = g.meta.mat * Vector3(1, 1, 0),
-            .color = Fade(WHITE, 0.1f),
+            .color = Fade(MAGENTA, 0.2f),
           },
           DrawZ_DEBUG_TILED_BACKGROUND
         );
@@ -2455,7 +2490,7 @@ void GameDraw() {
       = InfinitySymbol(infinityP) * ToVector2(glib->player_infinity_symbol_offset());
 
     playerPos = ToVector2(fb_level->player());
-    if (ge.meta.portrait)
+    if (g.meta.portrait)
       playerPos += Vector2(0.5f, -0.5f);
     else
       playerPos += Vector2(-0.5f, 0.5f);
@@ -2825,6 +2860,8 @@ void GameDraw() {
         if (IM::Button("Reset Debug"))
           gdebug = {};
 
+        IM::Checkbox("test", &gdebug.test);
+
         IM::Checkbox("Gizmos", &gdebug.gizmos);
         IM::Checkbox("Emulating Mobile", &gdebug.emulatingMobile);
         IM::Checkbox("Hide UI For Video", &gdebug.hideUIForVideo);
@@ -2886,6 +2923,11 @@ void GameDraw() {
           g.run.backgroundColorIndex++;
 
         IM::Text("Actual level index %d", actualLevelIndex);
+
+        IM::Text("zoom %f", g.meta.camera.zoom);
+        IM::Text("texturesScale %f", g.meta.camera.texturesScale);
+        IM::Text("screenToLogicalRatio %f", ge.meta.screenToLogicalRatio);
+        IM::Text("screenScale %f", ge.meta.screenScale);
 
         // if (IM::Button(
         //       TextFormat("Level Seed (%d) ++",

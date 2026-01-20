@@ -5,9 +5,9 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
 x fixed reaper fast workflow
+- portrait: zoom
+- portrait: fonts scaling
 
-* portrait: zoom
-* portrait: fonts scaling
 * portrait:
 * portrait:
 * portrait:
@@ -20,6 +20,7 @@ x fixed reaper fast workflow
 * sfx: ui level transition whoosh
 *
 * polish particles
+  3 stars
 * 2nd pass items
 * 2nd pass ufo
 * sfx
@@ -28,6 +29,7 @@ x fixed reaper fast workflow
 * metrics: send level complete metric
 * metrics: change yandex metrika
 * make game easier
+  можно балансить через вариативное количество пустых клеток
 * polish: ufo animation rotation
 RELEASED
 * polish: popping rows to front offset easing
