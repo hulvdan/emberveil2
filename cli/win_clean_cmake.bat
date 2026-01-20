@@ -1,1 +1,1 @@
-del /f/s/q .\..\.cmake
+del /f/s/q %~dp0\..\.cmake

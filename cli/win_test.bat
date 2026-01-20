@@ -1,1 +1,1 @@
-poetry run python cli\bf_cli.py test
+poetry run python %~dp0\bf_cli.py test

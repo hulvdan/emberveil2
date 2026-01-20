@@ -1,1 +1,1 @@
-uv run python cli\bf_cli.py build game Win Release
+uv run python %~dp0\bf_cli.py build game Win Release

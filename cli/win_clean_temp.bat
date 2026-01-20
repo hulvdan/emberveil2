@@ -1,1 +1,1 @@
-del /f/s/q .\..\.temp
+del /f/s/q %~dp0\..\.temp

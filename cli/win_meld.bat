@@ -1,1 +1,1 @@
-start Meld.exe .. ../../game-template
+start Meld.exe %~dp0\.. %~dp0\..\..\game-template
