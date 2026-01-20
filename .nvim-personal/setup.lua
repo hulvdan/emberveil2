@@ -6,7 +6,12 @@ vim.keymap.set("n", "<C-S-g>v", function()
     vim.fn.system([[start .cmake/vs17/game.sln]])
 end, opts)
 vim.keymap.set("n", "<C-S-g>r", function()
-    vim.fn.system([[start "c:/Program Files/REAPER (x64)/reaper.exe" assets/sfx/src/sfx.rpp]])
+    vim.fn.system(
+        string.format(
+            [[set REAPER_LAUNCH_CWD=%s && start "c:/Program Files/REAPER (x64)/reaper.exe" assets/sfx/src/sfx.rpp]],
+            vim.fn.getcwd()
+        )
+    )
 end, opts)
 
 local danger = false
