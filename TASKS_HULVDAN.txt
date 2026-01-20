@@ -4,6 +4,8 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
+x fixed reaper fast workflow
+
 * sfx: game item pickup
 * sfx: game item put down
 * sfx: game item matched
@@ -16,8 +18,6 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 * portrait:
 * portrait:
 * portrait:
-*
-* reaper codegen emberveil2 (F5 triggers codegen for cookier)
 *
 * polish particles
 * 2nd pass items
