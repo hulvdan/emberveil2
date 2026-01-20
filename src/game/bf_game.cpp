@@ -359,8 +359,7 @@ struct GameData {
 
     bool reload = {};
 
-    glm::mat3 mat                 = {};
-    bool      verticalOrientation = {};
+    glm::mat3 mat = {};
 
     f32 cloudsBreathingP   = {};
     int perlinIndex        = {};
@@ -1730,8 +1729,12 @@ void DoUI() {
 void UpdateCamera() {  ///
   g.meta.camera.pos = g.meta.worldSizef / 2.0f;
 
-  const auto v                = LOGICAL_RESOLUTIONf / g.meta.worldSizef;
-  g.meta.camera.zoom          = MIN(v.x, v.y);
+  const auto v = LOGICAL_RESOLUTIONf / g.meta.worldSizef;
+  if (ge.meta.portrait)
+    g.meta.camera.zoom = MAX(v.x, v.y);
+  else
+    g.meta.camera.zoom = MIN(v.x, v.y);
+
   g.meta.camera.texturesScale = 1 / g.meta.camera.zoom;
   {
     constexpr f32 MAX_ZOOM = 1.8f;
@@ -1840,9 +1843,6 @@ void GameFixedUpdate() {
   g.meta.worldSize  = ToVector2Int(glib->world_size());
   g.meta.worldSizef = (Vector2)g.meta.worldSize;
 
-  g.meta.verticalOrientation
-    = (ge.meta.screenSize.x / ge.meta.screenSize.y < VERTICAL_RATIO_BREAKPOINT);
-
   {
     auto& m = g.meta.mat;
     m       = glm::mat3(1);
@@ -1851,7 +1851,7 @@ void GameFixedUpdate() {
     m *= glm::mat3(
       glib->world_mat_x_scale(), 0, 0, 0, glib->world_mat_y_scale(), 0, 0, 0, 1
     );
-    if (g.meta.verticalOrientation)
+    if (ge.meta.portrait)
       m *= glm::mat3(0, -1, 0, 1, 0, 0, 0, 0, 1);
     m = glm::translate(m, -g.meta.worldSizef / 2.0f);
 
@@ -2455,7 +2455,7 @@ void GameDraw() {
       = InfinitySymbol(infinityP) * ToVector2(glib->player_infinity_symbol_offset());
 
     playerPos = ToVector2(fb_level->player());
-    if (g.meta.verticalOrientation)
+    if (ge.meta.portrait)
       playerPos += Vector2(0.5f, -0.5f);
     else
       playerPos += Vector2(-0.5f, 0.5f);

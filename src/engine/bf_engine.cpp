@@ -1023,6 +1023,8 @@ struct EngineData {
     FrameVisual _lastSaveAt    = {};
 
     int postloading = -1;
+
+    bool portrait = {};
   } meta;
 
   struct SoundManager {
@@ -5474,6 +5476,7 @@ SDL_AppResult EngineUpdate() {  ///
     frameTime -= FIXED_DT;
 
     SDL_PumpEvents();
+    ge.meta.portrait = (ge.meta.screenSize.x / ge.meta.screenSize.y < 1);
 
     // Controls. Mouse.
     ge.meta._mouseState = SDL_GetMouseState(nullptr, nullptr);
