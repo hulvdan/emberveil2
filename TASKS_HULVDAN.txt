@@ -6,18 +6,18 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 
 x fixed reaper fast workflow
 
+* portrait: zoom
+* portrait: fonts scaling
+* portrait:
+* portrait:
+* portrait:
+*
 * sfx: game item pickup
 * sfx: game item put down
 * sfx: game item matched
 * sfx: game item lost error
 * sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
-*
-* portrait: zoom
-* portrait: fonts scaling
-* portrait:
-* portrait:
-* portrait:
 *
 * polish particles
 * 2nd pass items
