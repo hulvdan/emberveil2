@@ -11,6 +11,7 @@ x sfx pick up / put down delay
 x found cool music
 x normalized music
 x sfx: game item pickup
+x NO PLAYING background red
 
 * sfx: game item put down
 * sfx: game item matched
