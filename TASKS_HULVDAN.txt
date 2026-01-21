@@ -12,8 +12,8 @@ x found cool music
 x normalized music
 x sfx: game item pickup
 x NO PLAYING background red
+x sfx: game item put down
 
-* sfx: game item put down
 * sfx: game item matched
 * sfx: game item lost error
 * sfx: ui win/lost transition whoosh
