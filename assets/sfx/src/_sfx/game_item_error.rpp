@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.52/win64" 1768826834
+<REAPER_PROJECT 0.1 "7.52/win64" 1769016692
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -14,7 +14,7 @@
   PANLAW 1
   PROJOFFS 0 0 0
   MAXPROJLEN 0 0
-  GRID 3199 8 1 8 1 0 0 0
+  GRID 3455 8 1 8 1 0 0 0
   TIMEMODE 1 5 -1 30 0 0 -1
   VIDEO_CONFIG 0 0 65792
   PANMODE 3
@@ -35,7 +35,7 @@
   >
   RENDER_FILE ""
   RENDER_PATTERN ../../$project__$regionnumber
-  RENDER_FMT 0 2 44100
+  RENDER_FMT 0 1 44100
   RENDER_1X 0
   RENDER_RANGE 3 0 0 8 2000
   RENDER_RESAMPLE 3 0 1
@@ -93,7 +93,7 @@
   >
   <TEMPOENVEX
     EGUID {D2C6CB1E-7723-492E-ABB0-D419DDC8F7CD}
-    ACT 1 -1
+    ACT 0 -1
     VIS 1 0 1
     LANEHEIGHT 0 0
     ARM 0
@@ -138,7 +138,7 @@
     AUTOMODE 0
     PANLAWFLAGS 3
     VOLPAN 1 0 -1 -1 1
-    MUTESOLO 0 0 0
+    MUTESOLO 1 0 0
     IPHASE 0
     PLAYOFFS 0 1
     ISBUS 0 0
@@ -165,7 +165,7 @@
       FADEIN 1 0.005 0 1 0 0 0
       FADEOUT 1 0.005 0 1 0 0 0
       MUTE 0 0
-      SEL 1
+      SEL 0
       IGUID {E32D8B07-CFC7-4625-B73D-F20A4F3095E7}
       IID 2
       NAME game_bonk__01.ogg
@@ -180,13 +180,13 @@
     >
   >
   <TRACK {AE138B5A-56FC-4546-B4A5-F83F2F205801}
-    NAME ""
+    NAME ESM_Negative_low_tone_Sound_FX_Arcade_Casino_Kids_Mobile_App
     PEAKCOL 24251641
     BEAT -1
     AUTOMODE 0
     PANLAWFLAGS 3
     VOLPAN 1 0 -1 -1 1
-    MUTESOLO 0 0 0
+    MUTESOLO 1 0 0
     IPHASE 0
     PLAYOFFS 0 1
     ISBUS 0 0
@@ -204,15 +204,37 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 0.63768707482993
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0.005 0 1 0 0 0
+      FADEOUT 1 0.005 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C9B5F4A6-24C3-41C4-A914-29F4F33C870D}
+      IID 3
+      NAME ESM_Negative_low_tone_Sound_FX_Arcade_Casino_Kids_Mobile_App.wav
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {C4AA7B68-3028-4075-B17B-FAF362BF613F}
+      <SOURCE WAVE
+        FILE "_sfx\ESM_Negative_low_tone_Sound_FX_Arcade_Casino_Kids_Mobile_App.wav"
+      >
+    >
   >
   <TRACK {5C269EF2-57AA-489A-BB91-DCFAC70598EA}
-    NAME ""
+    NAME ESM_Negative_low_Sound_FX_Arcade_Casino_Kids_Mobile_App
     PEAKCOL 20117512
     BEAT -1
     AUTOMODE 0
     PANLAWFLAGS 3
     VOLPAN 1 0 -1 -1 1
-    MUTESOLO 0 0 0
+    MUTESOLO 1 0 0
     IPHASE 0
     PLAYOFFS 0 1
     ISBUS 0 0
@@ -230,9 +252,31 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 0.23471655328798
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0.005 0 1 0 0 0
+      FADEOUT 1 0.005 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {8065A22D-997C-4D2A-A2B0-780E277A72AE}
+      IID 4
+      NAME ESM_Negative_low_Sound_FX_Arcade_Casino_Kids_Mobile_App.wav
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {B09FD17A-2E02-454F-B4C7-F78D4F72CA2D}
+      <SOURCE WAVE
+        FILE "_sfx\ESM_Negative_low_Sound_FX_Arcade_Casino_Kids_Mobile_App.wav"
+      >
+    >
   >
   <TRACK {A083A158-2846-47E1-98E9-B0D1DB31D42F}
-    NAME ""
+    NAME DM-CGS-30
     PEAKCOL 27309137
     BEAT -1
     AUTOMODE 0
@@ -256,6 +300,28 @@
     PERF 0
     MIDIOUT -1
     MAINSEND 1 0
+    <ITEM
+      POSITION 0
+      SNAPOFFS 0
+      LENGTH 0.49807256235828
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0.005 0 1 0 0 0
+      FADEOUT 1 0.005 0 1 0 0 0
+      MUTE 0 0
+      SEL 1
+      IGUID {E66F3C29-4C7A-406B-AC25-6239146764EF}
+      IID 19
+      NAME DM-CGS-30.wav
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {BC44A65D-60F4-48DE-A79E-96D8F79E0F39}
+      <SOURCE WAVE
+        FILE "_sfx\DM-CGS-30.wav"
+      >
+    >
   >
   <TRACK {17EB9DFC-0303-4314-A579-161F008C9F53}
     NAME ""

@@ -2282,7 +2282,7 @@ void GameFixedUpdate() {
   // Music lowpass.
   {  ///
     g.meta.musicLowpassFactor = MoveTowardsF(
-      g.meta.musicLowpassFactor, (g.run.gameplayEnded.IsSet() ? 0.6f : 1), FIXED_DT
+      g.meta.musicLowpassFactor, (g.run.gameplayEnded.IsSet() ? 0.57f : 1), FIXED_DT
     );
 
     if (ge.soundManager.CanPlaySound())

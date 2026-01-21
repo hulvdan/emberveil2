@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.52/win64" 1769014762
+<REAPER_PROJECT 0.1 "7.52/win64" 1769016723
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -19,7 +19,7 @@
   VIDEO_CONFIG 0 0 65792
   PANMODE 3
   PANLAWFLAGS 3
-  CURSOR 0
+  CURSOR 0.11209682995542
   ZOOM 392.51779035588163 0 0
   VZOOMEX 5.14101124 0
   USE_REC_CFG 0
@@ -204,7 +204,7 @@
       WAK 0 0
     >
     <ITEM
-      POSITION 0.10954917472916
+      POSITION 0.01019062090504
       SNAPOFFS 0
       LENGTH 0.21251700680272
       LOOP 1
@@ -275,33 +275,23 @@
     <ITEM
       POSITION 0
       SNAPOFFS 0
-      LENGTH 0.25492063492063
+      LENGTH 0.18714285714286
       LOOP 1
       ALLTAKES 0
       FADEIN 1 0.005 0 1 0 0 0
       FADEOUT 1 0.005 0 1 0 0 0
       MUTE 0 0
       SEL 0
-      IGUID {8EF1F16D-0BB0-48BA-A633-D5138E1DEC1B}
-      IID 10
-      NAME ESM_Arcade_Game_Jump_20_Classic_Retro_8_Bit_.wav
+      IGUID {3D1A3A27-30F4-4681-991F-E414DCA60CD6}
+      IID 17
+      NAME DM-CGS-32.wav
       VOLPAN 1 0 1 -1
       SOFFS 0
       PLAYRATE 1 1 0 -1 0 0.0025
       CHANMODE 0
-      GUID {4AF00498-4C14-4FBE-9C17-66D1C133FBEF}
+      GUID {1DFCD589-E195-496D-A61A-93AAE1F174B6}
       <SOURCE WAVE
-        FILE "_sfx\ESM_Arcade_Game_Jump_20_Classic_Retro_8_Bit_.wav"
-      >
-      TAKE SEL
-      NAME "ESM_Arcade_Game_Jump_20_Classic_Retro_8_Bit_ reversed 002.wav"
-      TAKEVOLPAN 0 1 -1
-      SOFFS 0
-      PLAYRATE 1 1 0 -1 0 0.0025
-      CHANMODE 0
-      GUID {44E52BB2-C78F-432B-8684-B23DA63E6CC9}
-      <SOURCE WAVE
-        FILE "_sfx\ESM_Arcade_Game_Jump_20_Classic_Retro_8_Bit_ reversed 002.wav"
+        FILE "_sfx\DM-CGS-32.wav"
       >
     >
   >

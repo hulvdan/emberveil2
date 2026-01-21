@@ -582,7 +582,7 @@ if (draw) {  ///
 
             DrawGroup_CommandRect({
               .pos   = LOGICAL_RESOLUTIONf / 2.0f,
-              .size  = ge.meta.scaledLogicalResolution,
+              .size  = ge.meta.scaledLogicalResolution * 1.1f,
               .color = d.color,
             });
           }
