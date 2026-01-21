@@ -2030,26 +2030,33 @@ void GameFixedUpdate() {
                   f.SetNow();
                 }
 
-                if (actionToSet == PlayerAction_PICKUP)
-                  PlaySound(Sound_GAME_ITEM_PICKUP);
-                else if (actionToSet == PlayerAction_PUT)
-                  PlaySound(Sound_GAME_ITEM_PUT_DOWN);
-                else if (actionToSet == PlayerAction_EXCHANGE) {
-                  PlaySound(Sound_GAME_ITEM_PICKUP);
-                  PlaySound(Sound_GAME_ITEM_PUT_DOWN);
-                }
-                else
-                  INVALID_PATH;
-
                 pl.action = actionToSet;
                 pl.actionStartedAt.SetNow();
                 pl.actionItemIndex = itemIndex;
                 pl.posFrom         = pl.pos;
                 pl.pos             = {.shelf = shelf, .itemIndex = itemIndex};
-                pl.lastAction      = {
-                       .touchID = ba.touchID,
-                       .shelf   = shelf,
-                       .item    = itemIndex,
+
+                u64 soundDelay = 0;
+                if (pl.posFrom != pl.pos) {
+                  PlaySound(Sound_GAME_UFO_MOVE);
+                  soundDelay = (u64)Round(glib->player_fly_duration_seconds() * 1000);
+                }
+
+                if (actionToSet == PlayerAction_PICKUP)
+                  PlaySound(Sound_GAME_ITEM_PICKUP, {.delayMilliseconds = soundDelay});
+                else if (actionToSet == PlayerAction_PUT)
+                  PlaySound(Sound_GAME_ITEM_PUT_DOWN, {.delayMilliseconds = soundDelay});
+                else if (actionToSet == PlayerAction_EXCHANGE) {
+                  PlaySound(Sound_GAME_ITEM_PICKUP, {.delayMilliseconds = soundDelay});
+                  PlaySound(Sound_GAME_ITEM_PUT_DOWN, {.delayMilliseconds = soundDelay});
+                }
+                else
+                  INVALID_PATH;
+
+                pl.lastAction = {
+                  .touchID = ba.touchID,
+                  .shelf   = shelf,
+                  .item    = itemIndex,
                 };
                 goto playerActionWasSet;
               }
@@ -2270,7 +2277,7 @@ void GameFixedUpdate() {
         && ge.soundManager.CanPlaySound())
     {
       once = true;
-      PlaySound(Sound_MUSIC_BATTLE);
+      PlaySound(Sound_MUSIC_THEME);
     }
   }
 

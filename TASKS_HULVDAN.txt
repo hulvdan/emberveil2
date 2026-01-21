@@ -7,11 +7,9 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 x fixed reaper fast workflow
 - portrait: zoom
 - portrait: fonts scaling
+x sfx pick up / put down delay
+x found cool music
 
-* portrait:
-* portrait:
-* portrait:
-*
 * sfx: game item pickup
 * sfx: game item put down
 * sfx: game item matched
@@ -23,7 +21,6 @@ x fixed reaper fast workflow
   3 stars
 * 2nd pass items
 * 2nd pass ufo
-* sfx
 * metrics: create target levels 1 2 3 5 7 9 11 13 15 20 etc up to 100
   progression pow(1.7)
 * metrics: send level complete metric
