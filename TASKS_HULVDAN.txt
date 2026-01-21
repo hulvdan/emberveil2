@@ -9,13 +9,16 @@ x fixed reaper fast workflow
 - portrait: fonts scaling
 x sfx pick up / put down delay
 x found cool music
+x normalized music
+x sfx: game item pickup
 
-* sfx: game item pickup
 * sfx: game item put down
 * sfx: game item matched
 * sfx: game item lost error
 * sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
+*
+* ufo squash upon picking up
 *
 * polish particles
   3 stars

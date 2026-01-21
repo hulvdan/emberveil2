@@ -82,6 +82,8 @@ debug_variables: # {  ###
     type: bool
   - name: drawLost
     type: bool
+  - name: backgroundRed
+    type: bool
   - name: test
     type: bool
 # }

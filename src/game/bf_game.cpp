@@ -2368,9 +2368,16 @@ void GameDraw() {
 
     const auto fb = fb_colors->Get(g.run.backgroundColorIndex);
 
+    auto colorFill = ToColor(fb->fill());
+    auto colorRect = ToColor(fb->rect());
+    if (gdebug.backgroundRed) {
+      colorFill = RED;
+      colorRect = RED;
+    }
+
     DrawTiledBackgroundRects({
-      .backgroundColor = ToColor(fb->fill()),
-      .rectColor       = ToColor(fb->rect()),
+      .backgroundColor = colorFill,
+      .rectColor       = colorRect,
       .rectTexID       = glib->ui_background_rect_texture_id(),
       .cycleDur        = 30 * FIXED_FPS,
       .scale           = Vector2One(),
@@ -2868,6 +2875,7 @@ void GameDraw() {
           gdebug = {};
 
         IM::Checkbox("test", &gdebug.test);
+        IM::Checkbox("NO PLAYING backgroundRed", &gdebug.backgroundRed);
 
         IM::Checkbox("Gizmos", &gdebug.gizmos);
         IM::Checkbox("Emulating Mobile", &gdebug.emulatingMobile);
