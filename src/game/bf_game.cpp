@@ -2047,8 +2047,10 @@ void GameFixedUpdate() {
                 else if (actionToSet == PlayerAction_PUT)
                   PlaySound(Sound_GAME_ITEM_PUT_DOWN, {.delayMilliseconds = soundDelay});
                 else if (actionToSet == PlayerAction_EXCHANGE) {
-                  PlaySound(Sound_GAME_ITEM_PICKUP, {.delayMilliseconds = soundDelay});
-                  PlaySound(Sound_GAME_ITEM_PUT_DOWN, {.delayMilliseconds = soundDelay});
+                  PlaySound(Sound_GAME_ITEM_EXCHANGE, {.delayMilliseconds = soundDelay});
+                  // PlaySound(Sound_GAME_ITEM_PICKUP, {.delayMilliseconds = soundDelay});
+                  // PlaySound(Sound_GAME_ITEM_PUT_DOWN, {.delayMilliseconds =
+                  // soundDelay});
                 }
                 else
                   INVALID_PATH;
