@@ -1459,6 +1459,8 @@ void DoUI() {
 
     componentOverlay([]() {}, stripP);
 
+    const bool won = (g.run.won || gdebug.drawWin);
+
     CLAY(  ///
       {
         .layout{
@@ -1503,8 +1505,6 @@ void DoUI() {
         }
       ) {
         FLOATING_BEAUTIFY;
-
-        const bool won = (g.run.won || gdebug.drawWin);
 
         // Assert.
         if (g.run.wonOrLostLabelIndex < 0) {  ///
@@ -1739,6 +1739,13 @@ void DoUI() {
         componentVerticalBlackStrip();
       }
     }
+
+    if (!endE.value && !ge.meta._drawing) {
+      if (won)
+        PlaySound(Sound_UI_WON);
+      else
+        PlaySound(Sound_UI_LOST);
+    }
   }
 
   if (g.run.levelControlPressedSkip && !g.run.levelControlPressed.IsSet()) {
@@ -1872,7 +1879,7 @@ void GameFixedUpdate() {
 
   SetVolume(VolumeType_MASTER, 0.85f);
   SetVolume(VolumeType_SFX, (f32)g.save.volumeSFX / 3.0f);
-  SetVolume(VolumeType_MUSIC, (f32)g.save.volumeMusic / 3.0f);
+  SetVolume(VolumeType_MUSIC, (f32)g.save.volumeMusic / 4.0f);
 
   g.meta.worldSize  = ToVector2Int(glib->world_size());
   g.meta.worldSizef = (Vector2)g.meta.worldSize;
@@ -2369,7 +2376,7 @@ void GameDraw() {
     auto colorFill = ToColor(fb->fill());
     auto colorRect = ToColor(fb->rect());
     if (gdebug.backgroundRed) {
-      if ((ge.meta.frameVisual % (FIXED_FPS * 2)) > FIXED_FPS) {
+      if ((ge.meta.frameVisual % (FIXED_FPS / 2)) > FIXED_FPS / 4) {
         colorFill = PAL_ALIZARIN_CRIMSON;
         colorRect = PAL_ALIZARIN_CRIMSON;
       }

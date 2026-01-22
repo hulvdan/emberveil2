@@ -89,6 +89,13 @@ debug_variables: # {  ###
     type: bool
 # }
 
+sounds:
+  - type: UI_WON
+    pitch_min: 1
+    pitch_max: 1
+  - type: UI_LOST
+    pitch_min: 1
+    pitch_max: 1
 portrait_breakpoints:
   - ratio: 0
     ui_scale_multiplier: 1

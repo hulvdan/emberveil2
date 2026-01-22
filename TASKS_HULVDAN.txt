@@ -7,9 +7,13 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 x ufo aura sprite
 x draw ufo aura
 x sfx: better pickup
+x better music
+x sfx ui win lost
+- sfx: ui win/lost transition whoosh
 
-* sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
+*
+* split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
 *
 * ufo squash upon picking up
 *
