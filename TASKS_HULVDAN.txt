@@ -12,8 +12,7 @@ x sfx ui win lost
 - sfx: ui win/lost transition whoosh
 
 * sfx: ui level transition whoosh
-*
-* split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
+* polish: ufo animation rotation
 *
 * ufo squash upon picking up
 *
@@ -27,7 +26,8 @@ x sfx ui win lost
 * metrics: change yandex metrika
 * make game easier
   можно балансить через вариативное количество пустых клеток
-* polish: ufo animation rotation
+*
+* split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
 RELEASED
 * polish: popping rows to front offset easing
 * polish: popping rows to front depth easing
