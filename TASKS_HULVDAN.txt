@@ -15,11 +15,10 @@ x polish: ufo animation rotation
 x metrics: change yandex metrika
 x added yandex metrics
 x metrics: send audio_unlocked
+x metrics: send tutor_first_move
+x metrics: send level_compl_X
+x metrics: send level_advanced_to_X
 
-* metrics: send tutor_first_move
-* metrics: send level_compl_X
-* metrics: send level_advanced_to_X
-*
 * polish particles. use 3 big stars
 * 2nd pass items
 * 2nd pass ufo

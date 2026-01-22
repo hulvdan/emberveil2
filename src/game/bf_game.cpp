@@ -29,10 +29,6 @@
 
 #pragma once
 
-Metric("tutor_first_move");
-Metric(TextFormat("level_compl_%d", g.save.level));
-Metric(TextFormat("level_advanced_to_%d", g.save.level + 1));
-
 #include "box2d/box2d.h"
 
 #include "bf_constants.cpp"
@@ -1869,8 +1865,10 @@ void EndGameplay(bool won) {  ///
   // }
   g.run.wonOrLostLabelIndex = 0;
 
-  if (won)
+  if (won) {
     Save();
+    Metric(TextFormat("level_compl_%d", g.save.level));
+  }
 }
 
 void GameFixedUpdate() {
@@ -2029,6 +2027,8 @@ void GameFixedUpdate() {
                 g.run.firstLevelTutorMoveIndex++;
                 g.run.firstLevelTutorPressed = {};
                 g.run.firstLevelTutorPressed.SetNow();
+
+                Metric("tutor_first_move");
               }
               else
                 actionToSet = {};
@@ -2262,6 +2262,7 @@ void GameFixedUpdate() {
     {
       if (g.run.won || g.run.levelControlPressedSkip)
         g.save.level++;
+      Metric(TextFormat("level_advanced_to_%d", g.save.level));
       g.meta.reload = true;
       if (!g.run.levelControlPressedSkip)
         ShowAdInter();
