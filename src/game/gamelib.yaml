@@ -29,9 +29,23 @@ particles: # {  ###
   - type: DIAMOND_BIG
     duration_seconds: 0.4
     disable_rotation: true
-    scale_x: 0.9
-    scale_y: 0.9
-    scale_target: 1.1
+    # scale_x: 1.4
+    # scale_y: 1.4
+    # scale_target: 0.5
+    scale_x: 0.5
+    scale_y: 0.5
+    scale_target: 3.4
+    fades_in: true
+    variations:
+      - texture_ids:
+          - _game_particle_star
+    render_function_name: COMMON
+  - type: DIAMOND_BIG2
+    duration_seconds: 0.5
+    disable_rotation: true
+    scale_x: 0.3
+    scale_y: 0.3
+    scale_target: 10
     fades_in: true
     variations:
       - texture_ids:

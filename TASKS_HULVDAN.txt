@@ -20,7 +20,7 @@ x metrics: send level_compl_X
 x metrics: send level_advanced_to_X
 x metrics: воронка в яндексе
 
-* polish particles. use 3 big stars
+* polish particles. use 3 big stars. round moving particles
 * 2nd pass items
 * 2nd pass ufo
 * make game easier

@@ -2167,7 +2167,7 @@ void GameFixedUpdate() {
         return e == lframe::FromSeconds(parts->Get(i));
       };
 
-      if (part(0))
+      if (0 && part(0))
         MakeParticles({
           .type = ParticleType_CIRCLE,
           .pos  = pp,
@@ -2175,26 +2175,36 @@ void GameFixedUpdate() {
           .rotationSpeedPlusMinus = 0,
         });
 
-      if (part(1))
+      if (part(1)) {
+        FOR_RANGE (int, i, 3) {
+          MakeParticles({
+            .type = ParticleType_DIAMOND_BIG,
+            .pos  = pp + Vector2(0.6f * (i - 1), 0),
+            .scalePlusMinus{},
+            .rotation               = glib->matching_particles_big_rotation(),
+            .rotationSpeedPlusMinus = 0,
+          });
+        }
+      }
+
+      if (0 && part(2))
         MakeParticles({
-          .type = ParticleType_DIAMOND_BIG,
+          .type = ParticleType_DIAMOND_BIG2,
           .pos  = pp,
           .scalePlusMinus{},
           .rotation               = glib->matching_particles_big_rotation(),
           .rotationSpeedPlusMinus = 0,
         });
-
-      if (part(2))
-        FOR_RANGE (int, i, 5) {
-          auto r = glib->matching_particles_big_rotation() + i * 2 * PI32 / 5;
-          MakeParticles({
-            .type = ParticleType_STAR,
-            .pos  = pp + Vector2Rotate({0, 0.6f}, r + PI32),
-            .scalePlusMinus{},
-            .rotation               = r,
-            .rotationSpeedPlusMinus = 0,
-          });
-        }
+      // FOR_RANGE (int, i, 5) {
+      //   auto r = glib->matching_particles_big_rotation() + i * 2 * PI32 / 5;
+      //   MakeParticles({
+      //     .type = ParticleType_STAR,
+      //     .pos  = pp + Vector2Rotate({0, 0.6f}, r + PI32),
+      //     .scalePlusMinus{},
+      //     .rotation               = r,
+      //     .rotationSpeedPlusMinus = 0,
+      //   });
+      // }
     };
 
     // Shelf matching.
@@ -2794,9 +2804,9 @@ void GameDraw() {
             * Clamp01(Remap(p, 0, glib->player_aura_fade_breakpoint(), 0, 1))
           );
           DrawGroup_CommandTexture({
-            .texID    = glib->game_player_aura_texture_id(),
-            .rotation = playerRotation,
-            .pos      = playerPos + Vector2(0, glib->player_aura_offset_y()),
+            .texID = glib->game_player_aura_texture_id(),
+            // .rotation = playerRotation,
+            .pos = playerPos + Vector2(0, glib->player_aura_offset_y()),
             .anchor{0.5f, 1},
             .scale = ToVector2(glib->player_aura_fade_scale())
                      * Lerp(glib->player_aura_scale_min(), 1, p),
