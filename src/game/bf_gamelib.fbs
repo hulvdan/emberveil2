@@ -182,6 +182,7 @@ table GameLibrary {
     // AUTOMATIC_TEXTURE_BIND_START
     vignette_texture_id: int;
     game_item_spot_shadow_texture_id: int;
+    game_player_aura_texture_id: int;
     ui_star_gold_texture_id: int;
     ui_star_gray_texture_id: int;
     ui_star_small_gold_texture_id: int;

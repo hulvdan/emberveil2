@@ -3,6 +3,7 @@ draw_z: # {  ###
   - SCREEN_BACKGROUND
   - DEBUG_TILED_BACKGROUND
   - CLOUDS
+  - PLAYER_AURA
   - DEEP_ITEMS
   - ITEMS
   - PLAYER
@@ -292,7 +293,7 @@ player_max_rotation: 0.2
 player_rotation_lerp_factor: 0.01
 player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
-player_action_duration_seconds: 0.3
+player_action_duration_seconds: 1.9
 player_fly_duration_seconds: 0.4
 item_margin:
   x: 0.1

@@ -2369,8 +2369,14 @@ void GameDraw() {
     auto colorFill = ToColor(fb->fill());
     auto colorRect = ToColor(fb->rect());
     if (gdebug.backgroundRed) {
-      colorFill = RED;
-      colorRect = RED;
+      if ((ge.meta.frameVisual % (FIXED_FPS * 2)) > FIXED_FPS) {
+        colorFill = PAL_ALIZARIN_CRIMSON;
+        colorRect = PAL_ALIZARIN_CRIMSON;
+      }
+      else {
+        colorFill = PAL_ORANGE;
+        colorRect = PAL_ORANGE;
+      }
     }
 
     DrawTiledBackgroundRects({
@@ -2696,16 +2702,21 @@ void GameDraw() {
     if (g.run.gameplayEnded.IsSet())
       fade = MAX(0, 1 - g.run.gameplayEnded.Elapsed().Progress(ANIMATION_1_FRAMES));
 
-    FOR_RANGE (int, mode, 3) {
-      // 0 - draw item, 1 - draw player glass, 2 - draw player front.
+    FOR_RANGE (int, mode, 4) {
+      // 0 - draw aura, 1 - draw item, 2 - draw player glass, 3 - draw player front.
 
-      if (mode == 1) {
-        DrawGroup_Begin(DrawZ_PLAYER);
+      if ((mode == 0) || (mode == 2)) {
+        if (mode == 0)
+          DrawGroup_Begin(DrawZ_PLAYER_AURA);
+        else if (mode == 2)
+          DrawGroup_Begin(DrawZ_PLAYER);
+        else
+          INVALID_PATH;
         DrawGroup_SetSortY(0);
       }
 
       auto color = WHITE;
-      if (mode == 1) {
+      if (mode == 2) {
         color = ColorFromRGBA(glib->player_glass_color());
         color.a *= glib->player_glass_fade();
       }
@@ -2713,15 +2724,28 @@ void GameDraw() {
       color.a *= fade;
       color.a *= audioUnlockP;
 
-      if (mode) {
+      if (mode >= 2) {
         DrawGroup_CommandTexture({
-          .texID    = texs->Get(mode - 1),
+          .texID    = texs->Get(mode - 2),
           .rotation = playerRotation,
           .pos      = playerPos,
           .color    = color,
         });
       }
-      else if (pl.item) {
+      else if ((mode == 0) && pl.action) {
+        f32 p = GetPlayerActionWithoutFlyingProgress();
+        if (p > 0) {
+          DrawGroup_CommandTexture({
+            .texID    = glib->game_player_aura_texture_id(),
+            .rotation = playerRotation,
+            .pos      = playerPos,
+            .anchor{0.5f, 1},
+            .sourceMargins{.bottom = 1 - p},
+            .color = color,
+          });
+        }
+      }
+      else if ((mode == 1) && pl.item) {
         f32 targetScale = CalculateItemScaleInsidePlayer(pl.item);
 
         const auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
@@ -2745,7 +2769,7 @@ void GameDraw() {
         );
       }
 
-      if (mode == 2)
+      if ((mode == 0) || (mode == 3))
         DrawGroup_End();
     }
   }

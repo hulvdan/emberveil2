@@ -4,6 +4,9 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
+x ufo aura sprite
+
+* draw ufo aura
 * sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
 *
