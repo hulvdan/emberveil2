@@ -5,8 +5,9 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
 x ufo aura sprite
+x draw ufo aura
 
-* draw ufo aura
+* sfx: better pickup
 * sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
 *
