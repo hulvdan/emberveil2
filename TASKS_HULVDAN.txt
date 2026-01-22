@@ -4,18 +4,6 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
-x fixed reaper fast workflow
-- portrait: zoom
-- portrait: fonts scaling
-x sfx pick up / put down delay
-x found cool music
-x normalized music
-x sfx: game item pickup
-x NO PLAYING background red
-x sfx: game item put down
-
-* sfx: game item matched
-* sfx: game item lost error
 * sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
 *
