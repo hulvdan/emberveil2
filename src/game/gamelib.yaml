@@ -301,6 +301,13 @@ player_rotation_lerp_factor: 0.01
 player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
 player_action_duration_seconds: 0.3
+player_move_sound_data:
+  - distance_le: 3
+    sound_hash: GAME_UFO_MOVE_3
+  - distance_le: 6
+    sound_hash: GAME_UFO_MOVE_2
+  - distance_le: inf
+    sound_hash: GAME_UFO_MOVE_1
 player_aura_scale_min: 0.7
 player_aura_offset_y: -0.3
 player_aura_fade: 0.7

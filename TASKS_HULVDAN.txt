@@ -10,12 +10,10 @@ x sfx: better pickup
 x better music
 x sfx ui win lost
 - sfx: ui win/lost transition whoosh
+x sfx: ui level transition whoosh
+x polish: ufo animation rotation
 
-* sfx: ui level transition whoosh
-* polish: ufo animation rotation
-*
 * ufo squash upon picking up
-*
 * polish particles
   3 stars
 * 2nd pass items
@@ -26,6 +24,8 @@ x sfx ui win lost
 * metrics: change yandex metrika
 * make game easier
   можно балансить через вариативное количество пустых клеток
+*
+* sfx: ufo movement
 *
 * split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
 RELEASED

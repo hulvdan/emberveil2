@@ -163,6 +163,11 @@ table PortraitBreakpoints {
     ratio: float;
     ui_scale_multiplier: float;
 }
+
+table PlayerMoveSoundData {
+    distance_le: float;
+    sound_hash: uint;
+}
 // GAME STUFF END
 
 table GameLibrary {
@@ -196,6 +201,8 @@ table GameLibrary {
     ui_input_touch_down_texture_id: int;
     ui_background_rect_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
+
+    player_move_sound_data: [PlayerMoveSoundData] (required);
 
     player_aura_scale_min: float;
     player_aura_offset_y: float;

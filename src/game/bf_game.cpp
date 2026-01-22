@@ -285,19 +285,20 @@ enum PlayerAction {  ///
   PlayerAction_PUT,
 };
 
-struct PlayerPos : public Equatable<PlayerPos> {  ///
-  int shelf     = -1;
-  int itemIndex = -1;
+struct PlayerPos {  ///
+  int shelf = -1;
+  int item  = -1;
 
-  [[nodiscard]] bool EqualTo(const PlayerPos& other) const {
-    return (
-      (shelf == other.shelf)  //
-      && (itemIndex == other.itemIndex)
-    );
+  bool operator==(const PlayerPos& other) const {
+    return (shelf == other.shelf) && (item == other.item);
   }
 
   operator bool() const {
-    return shelf >= 0;
+    if (shelf == -1)
+      ASSERT(item == -1);
+    if (item == -1)
+      ASSERT(shelf == -1);
+    return (shelf >= 0);
   }
 };
 
@@ -1740,11 +1741,9 @@ void DoUI() {
       }
     }
 
-    if (!endE.value && !ge.meta._drawing) {
-      if (won)
-        PlaySound(Sound_UI_WON);
-      else
-        PlaySound(Sound_UI_LOST);
+    // Playing won / lost sound.
+    if (!endE.value && !ge.meta._drawing) {  ///
+      PlaySound(won ? Sound_UI_WON : Sound_UI_LOST);
     }
   }
 
@@ -1801,7 +1800,7 @@ f32 GetItemOffsetX(int itemIndex) {  ///
 Vector2 ToWorld(PlayerPos pos) {  ///
   ASSERT(pos);
   return ShelfPos(pos.shelf)
-         + Vector2(GetItemOffsetX(pos.itemIndex), glib->player_inside_shelf_offset_y());
+         + Vector2(GetItemOffsetX(pos.item), glib->player_inside_shelf_offset_y());
 }
 
 Vector2 GetItemBottomPos(int shelf, int itemIndex, bool visual = false) {  ///
@@ -2041,12 +2040,27 @@ void GameFixedUpdate() {
                 pl.actionStartedAt.SetNow();
                 pl.actionItemIndex = itemIndex;
                 pl.posFrom         = pl.pos;
-                pl.pos             = {.shelf = shelf, .itemIndex = itemIndex};
+                pl.pos             = {.shelf = shelf, .item = itemIndex};
 
                 u64 soundDelay = 0;
                 if (pl.posFrom != pl.pos) {
                   PlaySound(Sound_GAME_UFO_MOVE);
                   soundDelay = (u64)Round(glib->player_fly_duration_seconds() * 1000);
+
+                  f32 moveDist = 0;
+
+                  if (pl.posFrom.shelf != -1) {
+                    auto p1  = GetItemBottomPos(pl.posFrom.shelf, pl.posFrom.item);
+                    auto p2  = GetItemBottomPos(pl.pos.shelf, pl.pos.item);
+                    moveDist = Vector2Distance(p1, p2);
+                  }
+
+                  for (auto d : *glib->player_move_sound_data()) {
+                    if (moveDist <= d->distance_le()) {
+                      PlaySound(d->sound_hash());
+                      break;
+                    }
+                  }
                 }
 
                 if (actionToSet == PlayerAction_PICKUP)
@@ -2229,8 +2243,11 @@ void GameFixedUpdate() {
 
   // Advancing level.
   if (g.run.levelControlPressed.IsSet()) {  ///
-    if ((g.run.levelControlPressed.Elapsed()
-         >= lframe::FromSeconds(glib->level_advance_transition_seconds()))
+    auto e = g.run.levelControlPressed.Elapsed();
+    if (e.value == 1)
+      PlaySound(Sound_UI_LEVEL_TRANSITION);
+
+    if ((e >= lframe::FromSeconds(glib->level_advance_transition_seconds()))
         && !g.meta.reload)
     {
       if (g.run.won || g.run.levelControlPressedSkip)
@@ -2494,8 +2511,7 @@ void GameDraw() {
 
   Vector2 playerPos{};
   Vector2 playerItemPos{};
-  // f32 playerRotation = InfinitySymbolRotation(infinityP);
-  f32 playerRotation = 0;
+  f32     playerRotation = 0;
 
   // Calculating.
   {  ///
@@ -2525,6 +2541,10 @@ void GameDraw() {
 
     f32 playerInfinityPosOffsetScale = 1;
 
+    playerRotation
+      = sinf(2 * PI32 * infinityP + (g.run.player.infinityReverse ? 1 : -1) * PI32 / 2)
+        * PI32 / 20;
+
     if (pl.pos) {
       const auto pos2 = ToWorld(pl.pos) + Vector2(0, glib->player_offset_y());
       if (pl.actionStartedAt.IsSet()) {
@@ -2540,6 +2560,11 @@ void GameDraw() {
         f32 posP
           = pl.actionStartedAt.Elapsed().Progress(GetPlayerActionAndFlyingDuration());
         playerInfinityPosOffsetScale = 1 - EaseInQuad(sinf(posP * PI32));
+
+        if (posP > 0.5f)
+          playerRotation *= (posP - 0.5f) / 0.5f;
+        else
+          playerRotation *= 1 - posP / 0.5f;
       }
     }
 
@@ -2641,6 +2666,7 @@ void GameDraw() {
             auto& item = s.rows[depth][itemIndex];
             auto  pos  = GetItemBottomPos(shelf, itemIndex, true);
 
+            f32     rotationP   = 0;
             f32     targetScale = 1;
             Vector2 actionOffset{};
             if (!depth) {
@@ -2651,13 +2677,22 @@ void GameDraw() {
                   f32 p        = GetPlayerActionWithoutFlyingProgress();
                   actionOffset = Vector2Lerp({}, playerItemPos - pos, EaseInOutQuad(p));
                   targetScale  = Lerp(1, CalculateItemScaleInsidePlayer(item), p);
+                  rotationP    = p;
                 }
               }
             }
 
             if ((mode == 1) && item) {
               // Drawing item.
-              drawItem(pos + actionOffset, item, 0, scale * targetScale, depth, 1, pos.y);
+              drawItem(
+                pos + actionOffset,
+                item,
+                playerRotation * rotationP,
+                scale * targetScale,
+                depth,
+                1,
+                pos.y
+              );
             }
             else if ((mode == 2) && ge.soundManager.unlocked.IsSet()) {
               // Drawing 1st level touch tutor.
@@ -2766,18 +2801,21 @@ void GameDraw() {
 
         const auto targetPos = GetItemBottomPos(pl.pos.shelf, pl.actionItemIndex, true);
 
+        f32 rotationP = 0;
+
         Vector2 actionOffset{};
         if ((pl.action == PlayerAction_PUT) || (pl.action == PlayerAction_EXCHANGE)) {
-          f32 p        = GetPlayerActionWithoutFlyingProgress();
-          actionOffset = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(p));
+          rotationP = GetPlayerActionWithoutFlyingProgress();
+          actionOffset
+            = Vector2Lerp({}, targetPos - playerItemPos, EaseInOutQuad(rotationP));
 
-          targetScale = Lerp(targetScale, 1, p);
+          targetScale = Lerp(targetScale, 1, rotationP);
         }
 
         drawItem(
           playerItemPos + actionOffset,
           pl.item,
-          playerRotation,
+          playerRotation * (1 - rotationP),
           Vector2One() * targetScale,
           0,
           fade,
