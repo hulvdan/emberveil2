@@ -6,8 +6,8 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 
 x ufo aura sprite
 x draw ufo aura
+x sfx: better pickup
 
-* sfx: better pickup
 * sfx: ui win/lost transition whoosh
 * sfx: ui level transition whoosh
 *
