@@ -29,6 +29,10 @@
 
 #pragma once
 
+Metric("tutor_first_move");
+Metric(TextFormat("level_compl_%d", g.save.level));
+Metric(TextFormat("level_advanced_to_%d", g.save.level + 1));
+
 #include "box2d/box2d.h"
 
 #include "bf_constants.cpp"
@@ -1900,6 +1904,12 @@ void GameFixedUpdate() {
 
   auto& pl = g.run.player;
   ReloadFontsIfNeeded();
+
+  static bool audioUnlocked = false;
+  if (!audioUnlocked && ge.soundManager.unlocked.IsSet()) {
+    audioUnlocked = true;
+    Metric("audio_unlocked");
+  }
   // }
 
   if (g.run.randomSeedForLevelHotReload != GetFBLevel(g.save.level)->random_seed())

@@ -14,9 +14,10 @@ x sfx: ui level transition whoosh
 x polish: ufo animation rotation
 x metrics: change yandex metrika
 x added yandex metrics
+x metrics: send audio_unlocked
 
+* metrics: send tutor_first_move
 * metrics: send level_compl_X
-* metrics: send audio_unlocked
 * metrics: send level_advanced_to_X
 *
 * polish particles. use 3 big stars
