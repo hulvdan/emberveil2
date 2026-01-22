@@ -2721,8 +2721,7 @@ void GameDraw() {
         color.a *= glib->player_glass_fade();
       }
 
-      color.a *= fade;
-      color.a *= audioUnlockP;
+      color.a *= fade * audioUnlockP;
 
       if (mode >= 2) {
         DrawGroup_CommandTexture({
@@ -2735,13 +2734,23 @@ void GameDraw() {
       else if ((mode == 0) && pl.action) {
         f32 p = GetPlayerActionWithoutFlyingProgress();
         if (p > 0) {
+          auto auraColor = PAL_DOLLY;
+          auraColor.a *= Clamp01(
+            fade * audioUnlockP * glib->player_aura_fade()
+            * Clamp01(Remap(p, 1 - glib->player_aura_fade_breakpoint(), 1, 1, 0))
+            * Clamp01(Remap(p, 0, glib->player_aura_fade_breakpoint(), 0, 1))
+          );
           DrawGroup_CommandTexture({
             .texID    = glib->game_player_aura_texture_id(),
             .rotation = playerRotation,
-            .pos      = playerPos,
+            .pos      = playerPos + Vector2(0, glib->player_aura_offset_y()),
             .anchor{0.5f, 1},
-            .sourceMargins{.bottom = 1 - p},
-            .color = color,
+            .scale = ToVector2(glib->player_aura_fade_scale())
+                     * Lerp(glib->player_aura_scale_min(), 1, p),
+            .sourceMargins{
+              .bottom = Lerp(glib->player_aura_fade_bottom_source_margin(), 0, p)
+            },
+            .color = auraColor,
           });
         }
       }

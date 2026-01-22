@@ -197,6 +197,13 @@ table GameLibrary {
     ui_background_rect_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    player_aura_scale_min: float;
+    player_aura_offset_y: float;
+    player_aura_fade: float;
+    player_aura_fade_breakpoint: float;
+    player_aura_fade_bottom_source_margin: float;
+    player_aura_fade_scale: Posf;
+
     portrait_breakpoints: [PortraitBreakpoints] (required);
 
     ui_pitch_step: float;
