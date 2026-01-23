@@ -410,9 +410,14 @@ def process_images():
         )
 
     # _game_particle_star
-    bf.im_outline(bf.im_star(320), radius=20, color=(255, 255, 255, 255)).save(
+    bf.im_outline(bf.im_star(270), radius=20, color=(255, 255, 255, 255)).save(
         bf.ART_TEXTURES_DIR / "_game_particle_star.png"
     )
+
+    # _game_particle_circle_outline
+    bf.im_ellipse(
+        180, width=int(20 * 7 / 8), fill=(0, 0, 0, 0), outline=(255, 255, 255)
+    ).save(bf.ART_TEXTURES_DIR / "_game_particle_circle_outline.png")
 
     # _game_feedback_circle
     bf.im_outline(

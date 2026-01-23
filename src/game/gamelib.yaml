@@ -76,6 +76,20 @@ particles: # {  ###
     variations:
       - texture_ids:
           - _game_feedback_circle
+  - type: CIRCLE_OUTLINE
+    duration_seconds: 0.8
+    disable_rotation: true
+    scale_x: 1.0
+    scale_y: 1.0
+    scale_target: 5.6
+    # scale_target_x: 1.3
+    # scale_target_y: 1.3
+    fades_in: true
+    # color: 0xfbb954af
+    variations:
+      - texture_ids:
+          - _game_particle_circle_outline
+    render_function_name: COMMON
 # }
 
 colors:
@@ -315,6 +329,7 @@ player_rotation_lerp_factor: 0.01
 player_vertical_restoration_stiffness: 20
 player_vertical_restoration_damping: 5
 player_action_duration_seconds: 0.3
+player_exchange_milliseconds_rand: 100
 player_move_sound_data:
   - distance_le: 3
     sound_hash: GAME_UFO_MOVE_3

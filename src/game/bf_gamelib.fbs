@@ -202,6 +202,7 @@ table GameLibrary {
     ui_background_rect_texture_id: int;
     // AUTOMATIC_TEXTURE_BIND_END
 
+    player_exchange_milliseconds_rand: uint;
     player_move_sound_data: [PlayerMoveSoundData] (required);
 
     player_aura_scale_min: float;

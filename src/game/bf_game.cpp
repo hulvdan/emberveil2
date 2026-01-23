@@ -2077,8 +2077,17 @@ void GameFixedUpdate() {
                   PlaySound(Sound_GAME_ITEM_PICKUP, {.delayMilliseconds = soundDelay});
                 else if (actionToSet == PlayerAction_PUT)
                   PlaySound(Sound_GAME_ITEM_PUT_DOWN, {.delayMilliseconds = soundDelay});
-                else if (actionToSet == PlayerAction_EXCHANGE)
-                  PlaySound(Sound_GAME_ITEM_EXCHANGE, {.delayMilliseconds = soundDelay});
+                else if (actionToSet == PlayerAction_EXCHANGE) {
+                  // PlaySound(Sound_GAME_ITEM_EXCHANGE, {.delayMilliseconds =
+                  // soundDelay});
+                  PlaySound(Sound_GAME_ITEM_PICKUP, {.delayMilliseconds = soundDelay});
+                  PlaySound(
+                    Sound_GAME_ITEM_PUT_DOWN,
+                    {.delayMilliseconds
+                     = soundDelay
+                       + (VRAND.Rand() % glib->player_exchange_milliseconds_rand())}
+                  );
+                }
                 else
                   INVALID_PATH;
 
@@ -2186,6 +2195,12 @@ void GameFixedUpdate() {
             .pos  = pp + Vector2(0.6f * (i - 1), 0),
             .scalePlusMinus{},
             .rotation               = glib->matching_particles_big_rotation(),
+            .rotationSpeedPlusMinus = 0,
+          });
+          MakeParticles({
+            .type = ParticleType_CIRCLE_OUTLINE,
+            .pos  = pp + Vector2(0.6f * (i - 1), 0),
+            .scalePlusMinus{},
             .rotationSpeedPlusMinus = 0,
           });
         }
