@@ -8,6 +8,7 @@ x smooth inf rotation
 x matching items fade out
 x outline circles particles
 x polish particles. use 3 big stars. round moving particles
+x better sfx reverb
 
 * make game easier
   можно балансить через вариативное количество пустых клеток
