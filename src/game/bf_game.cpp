@@ -851,12 +851,28 @@ void RunInit() {
 
     int emptySpots = shelves.count * 3;
 
+    // const f32 emptySpotsFactor = Lerp(
+    //   glib->level_gen_empty_item_spots_factor_min(),
+    //   glib->level_gen_empty_item_spots_factor_max(),
+    //   GRAND.FRand()
+    // );
+
     FOR_RANGE (int, colorIndex, g.run.remainingRows) {
-      FOR_RANGE (int, _, 3) {
+      FOR_RANGE (int, itemOrEmptySpotIf3, 3) {
+        // if (itemOrEmptySpotIf3 == 3) {
+        //   if ()
+        //     continue;
+        // }
+
         if (!emptySpots) {
           int guard = 0;
           while (1) {
-            if (PushSpotBack(GRAND.Rand() % shelves.count, GRAND.Rand() % 3)) {
+            const int  pushShelf = GRAND.Rand() % shelves.count;
+            const int  pushItem  = GRAND.Rand() % 3;
+            const bool isSame
+              = (shelves[pushShelf].rows[0][pushItem].color == colorIndex + 1);
+
+            if (!isSame && PushSpotBack(pushShelf, pushItem)) {
               emptySpots++;
               break;
             }
@@ -870,7 +886,7 @@ void RunInit() {
         while (1) {
           shelfIndex = GRAND.Rand() % shelves.count;
           itemIndex  = GRAND.Rand() % 3;
-          if (!g.run.shelves[shelfIndex].rows[0][itemIndex])
+          if (!shelves[shelfIndex].rows[0][itemIndex])
             break;
           if (guard++ >= 10000)
             INVALID_PATH;

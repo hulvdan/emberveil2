@@ -346,6 +346,8 @@ player_aura_fade_scale:
   x: 0.85
   y: 1
 player_fly_duration_seconds: 0.4
+level_gen_empty_item_spots_factor_min: 0.1
+level_gen_empty_item_spots_factor_max: 0.15
 item_margin:
   x: 0.1
   y: 0.1

@@ -212,6 +212,9 @@ table GameLibrary {
     player_aura_fade_bottom_source_margin: float;
     player_aura_fade_scale: Posf;
 
+    level_gen_empty_item_spots_factor_min: float;
+    level_gen_empty_item_spots_factor_max: float;
+
     portrait_breakpoints: [PortraitBreakpoints] (required);
 
     ui_pitch_step: float;
