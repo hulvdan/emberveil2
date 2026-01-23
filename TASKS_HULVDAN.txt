@@ -10,8 +10,8 @@ x outline circles particles
 x polish particles. use 3 big stars. round moving particles
 x better sfx reverb
 x level gen: один предмет не может сдвинуть назад тот же самый предмет
+x level gen: могут быть дырки (ставим иногда предметы -1 -> после генерации обнуляем)
 
-* level gen: могут быть дырки (ставим иногда предметы -1 -> после генерации обнуляем)
 * level gen: make game easier
   можно балансить через вариативное количество пустых клеток
 * level gen:

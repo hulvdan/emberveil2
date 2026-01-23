@@ -224,6 +224,10 @@ struct Item {  ///
 
 using ItemRow = Array<Item, 3>;
 
+bool IsRowEmpty(const ItemRow& r) {  ///
+  return !r[0] && !r[1] && !r[2];
+}
+
 Color CLOUD_COLORS_[]{
   PAL_ORANGE,            // #fb6b1d
   PAL_ALIZARIN_CRIMSON,  // #e83b3b
@@ -777,6 +781,32 @@ bool PushSpotBack(int shelfIndex, int itemIndex) {  ///
   return true;
 }
 
+void PushBackEmptyRows() {  ///
+  for (auto& s : g.run.shelves) {
+    if (s.rows.count <= 1)
+      continue;
+    const int total = s.rows.count;
+    int       off   = 0;
+    FOR_RANGE (int, i, total) {
+      const auto& r = s.rows[i - off];
+      if (IsRowEmpty(r)) {  // Won't remove the single empty row.
+        s.rows.RemoveAt(i - off);
+        off++;
+      }
+    }
+  }
+
+  // Assert. No empty rows in between of non-empty ones.
+  for (const auto& s : g.run.shelves) {
+    FOR_RANGE (int, i, s.rows.count - 1) {
+      const bool l = IsRowEmpty(s.rows[i]);
+      const bool r = IsRowEmpty(s.rows[i + 1]);
+      if (r)
+        ASSERT_FALSE(l);
+    }
+  }
+}
+
 void RunInit() {
   ZoneScoped;
 
@@ -851,18 +881,23 @@ void RunInit() {
 
     int emptySpots = shelves.count * 3;
 
-    // const f32 emptySpotsFactor = Lerp(
-    //   glib->level_gen_empty_item_spots_factor_min(),
-    //   glib->level_gen_empty_item_spots_factor_max(),
-    //   GRAND.FRand()
-    // );
+    const f32 emptySpotEveryNItems = Lerp(
+      glib->level_gen_empty_spots_every_n_items_min(),
+      glib->level_gen_empty_spots_every_n_items_max(),
+      GRAND.FRand()
+    );
+    f32 emptySpotEveryNItemsRem = emptySpotEveryNItems;
 
-    FOR_RANGE (int, colorIndex, g.run.remainingRows) {
-      FOR_RANGE (int, itemOrEmptySpotIf3, 3) {
-        // if (itemOrEmptySpotIf3 == 3) {
-        //   if ()
-        //     continue;
-        // }
+    FOR_RANGE (int, colorIndex_, g.run.remainingRows) {
+      FOR_RANGE (int, itemOrEmptySpotIf3, 4) {
+        int colorIndex = colorIndex_;
+
+        if (itemOrEmptySpotIf3 == 3) {
+          if (emptySpotEveryNItemsRem > 0)
+            continue;
+          emptySpotEveryNItemsRem += emptySpotEveryNItems;
+          colorIndex = -1;
+        }
 
         if (!emptySpots) {
           int guard = 0;
@@ -880,6 +915,8 @@ void RunInit() {
               INVALID_PATH;
           }
         }
+
+        emptySpotEveryNItemsRem -= 1;
 
         int shelfIndex, itemIndex = -1;
         int guard = 0;
@@ -899,6 +936,8 @@ void RunInit() {
       }
     }
   }
+
+  PushBackEmptyRows();
 
   FOR_RANGE (int, i, TOTAL_ITEMS)
     g.run.colorIndexToItemIndex[i] = i;
@@ -2274,11 +2313,7 @@ void GameFixedUpdate() {
     }
 
     // Pushing back rows from shelves if front ones are empty.
-    for (auto& s : g.run.shelves) {  ///
-      auto& r = s.rows[0];
-      if ((s.rows.count > 1) && !r[0] && !r[1] && !r[2])
-        s.rows.RemoveAt(0);
-    }
+    PushBackEmptyRows();
 
     if (!g.run.gameplayEnded.IsSet()) {
       // Checking if player's won.
