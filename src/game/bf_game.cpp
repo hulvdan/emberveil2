@@ -2115,10 +2115,14 @@ void GameFixedUpdate() {
     // Resetting player infinity progress and direction in the middle of action.
     if (pl.action) {  ///
       const auto e = pl.actionStartedAt.Elapsed();
-      if (e.value == GetPlayerActionAndFlyingDuration().value / 2) {
+
+      if (e.value == GetPlayerActionAndFlyingDuration().value / 2)
+        pl.infinityReverse = !pl.infinityReverse;
+      if ((e.value >= GetPlayerActionAndFlyingDuration().value / 2)
+          && (e.value <= GetPlayerActionAndFlyingDuration().value * 2 / 3))
+      {
         pl.infinityAt = {};
         pl.infinityAt.SetNow();
-        pl.infinityReverse = !pl.infinityReverse;
       }
     }
 
