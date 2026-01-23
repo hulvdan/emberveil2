@@ -2681,10 +2681,11 @@ void GameDraw() {
       else if ((mode == 1) || !g.save.level) {
         for (int depth = s.rows.count - 1; depth >= 0; depth--) {
           Vector2 scale{1, 1};
+          f32     matchingP = 0;
           if (s.IsLocked() && !depth) {
             const auto dur = lframe::FromSeconds(glib->shelf_matching_duration_seconds());
-            const auto p   = s.updatedAt.Elapsed().Progress(dur);
-            scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(p * PI32));
+            matchingP      = s.updatedAt.Elapsed().Progress(dur);
+            scale *= Lerp(1, glib->shelf_matching_item_scale(), sinf(matchingP * PI32));
           }
 
           FOR_RANGE (int, itemIndex, 3) {
@@ -2715,7 +2716,7 @@ void GameDraw() {
                 playerRotation * rotationP,
                 scale * targetScale,
                 depth,
-                1,
+                1 - EaseInCubic(matchingP),
                 pos.y
               );
             }
@@ -3061,16 +3062,18 @@ void GameDraw() {
   }
 }
 
-Color particleColors[]{
-  PAL_ALIZARIN_CRIMSON,
+const Color PARTICLE_COLORS[]{
+  // PAL_ALIZARIN_CRIMSON,
+  // PAL_CASABLANCA,
   PAL_CASABLANCA,
   PAL_DOLLY,
   PAL_CASABLANCA,
-  PAL_MAUVE,
+  PAL_DOLLY,
+  // PAL_MAUVE,
 };
 
 void ParticleRender_COMMON(f32 p, lframe e, ParticleRenderData data) {  ///
-  auto color    = particleColors[ProgressToIndex(p, ARRAY_COUNT(particleColors))];
+  auto color    = PARTICLE_COLORS[ProgressToIndex(p, ARRAY_COUNT(PARTICLE_COLORS))];
   data.color->r = color.r;
   data.color->g = color.g;
   data.color->b = color.b;

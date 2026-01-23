@@ -34,7 +34,7 @@ particles: # {  ###
     # scale_target: 0.5
     scale_x: 0.5
     scale_y: 0.5
-    scale_target: 3.4
+    scale_target: 2.8
     fades_in: true
     variations:
       - texture_ids:
