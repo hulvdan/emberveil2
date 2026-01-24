@@ -4,19 +4,10 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
-x smooth inf rotation
-x matching items fade out
-x outline circles particles
-x polish particles. use 3 big stars. round moving particles
-x better sfx reverb
-x level gen: один предмет не может сдвинуть назад тот же самый предмет
-x level gen: могут быть дырки (ставим иногда предметы -1 -> после генерации обнуляем)
-
-* level gen: make game easier
+x more levels
+- level gen: make game easier
   можно балансить через вариативное количество пустых клеток
-* level gen:
-* level gen:
-* level gen:
+
 * 2nd pass items
 * 2nd pass ufo
 * yandex: icon
@@ -24,6 +15,7 @@ x level gen: могут быть дырки (ставим иногда пред�
 * yandex: screenshots
 * yandex: video
 * yandex: promo
+* yandex:
 *
 RELEASED
 * sfx: ufo movement

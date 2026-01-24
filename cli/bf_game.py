@@ -128,6 +128,7 @@ def _process_gamelib(
 
         for level_index, level in enumerate(d.levels):
             entities = level.get_layer("Entities")
+            tiles = level.get_layer("Tiles")
             if s is None:
                 sx = entities.cWid_
                 sy = entities.cHei_
@@ -144,8 +145,19 @@ def _process_gamelib(
             manually_placed_items_ = []
 
             shelves = []
+            added_tile_shelves = False
+            for i, t in enumerate(tiles.intGridCsv):
+                if not t:
+                    continue
+                if t == 1:
+                    added_tile_shelves = True
+                    shelves.append({"pos": (i % sx, sy - i // sx - 1)})
+                else:
+                    assert False
+
             for entity in entities.entityInstances:
                 if entity.identifier_ == "Zone":
+                    assert not added_tile_shelves
                     shelf = {
                         "pos": (entity.grid_[0], sy - entity.grid_[1] - 1),
                     }
