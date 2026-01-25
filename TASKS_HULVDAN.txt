@@ -4,10 +4,6 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
-x more levels
-- level gen: make game easier
-  можно балансить через вариативное количество пустых клеток
-
 * 2nd pass items
 * 2nd pass ufo
 * yandex: icon
@@ -15,7 +11,7 @@ x more levels
 * yandex: screenshots
 * yandex: video
 * yandex: promo
-* yandex:
+* yandex: ASO
 *
 RELEASED
 * sfx: ufo movement
