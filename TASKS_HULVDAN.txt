@@ -1,6 +1,20 @@
 WORKING SINCE 2026-01-05
 https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 
+BIG PLAN
+* THIS GAME. ASO, KEYWORDS
+* GODOT, НИШИ (+ MENTOR?)
+* MENTOR!
+* ...
+* ...
+* ...
+
+PLAN
+* MAKE GRAPHICS GOOD
+* YANDEX SHIET
+* SEND TO MODERATION
+* MODERTION
+
 helicopter - UGH https://youtu.be/FzM1qHJ04k0
 Заоблачная НЛО Сортировка
 
@@ -14,6 +28,7 @@ helicopter - UGH https://youtu.be/FzM1qHJ04k0
 * yandex: ASO
 *
 RELEASED
+============================================================
 * sfx: ufo movement
 * split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
 * ufo squash upon picking up
@@ -49,4 +64,4 @@ PROGRESSION
 * progression: platform sprites
 ENGINE
 * fix ui gizmos positioning
-* happy: assert on clay counter. latch. so that i don't RETURN inside CLAY
+* happy: assert on clay counter. latch. so that i won't RETURN inside CLAY
