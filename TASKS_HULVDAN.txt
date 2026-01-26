@@ -27,18 +27,18 @@ PLAN
 
 x 2nd pass items
 x 2nd pass ufo
+x enlarge «lvl» label
 
-* enlarge «lvl» label
 * yandex: icon
 * yandex: banner
 * yandex: screenshots
 * yandex: video
 * yandex: promo
 * yandex: ASO
-* ufo squash
 *
 RELEASED
 ============================================================
+* ufo squash
 * sfx: ufo movement
 * split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
 * ufo squash upon picking up
