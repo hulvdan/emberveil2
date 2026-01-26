@@ -26,8 +26,8 @@ PLAN
 * MODERATION
 
 x 2nd pass items
+x 2nd pass ufo
 
-* 2nd pass ufo
 * enlarge «lvl» label
 * yandex: icon
 * yandex: banner

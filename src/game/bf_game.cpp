@@ -1039,7 +1039,7 @@ void ReloadFontsIfNeeded() {  ///
     // fontUI.
     {
       .filepath        = fontpath,
-      .size            = 18,
+      .size            = 22,
       .FIXME_sizeScale = 43.0f / 30.0f,
       .codepoints      = g_codepoints,
       .codepointsCount = ARRAY_COUNT(g_codepoints),
