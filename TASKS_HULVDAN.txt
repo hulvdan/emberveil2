@@ -2,8 +2,10 @@ WORKING SINCE 2026-01-05
 https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 
 BIG PLAN
-* > ASO, KEYWORDS
-* GODOT, НИШИ (+ MENTOR?), GAME ANALYTICS ВОРОНКИ ПО ВЕРСИЯМ ИГРЫ
+x ШАБЛОННАЯ РЕПА, ОТПРАВКА ИГРЫ НА МОДЕРАЦИЮ ЯНДЕКСА
+x РЕЛИЗ ПЕРВОЙ ИГРЫ НА ЯНДЕКСЕ
+* ОТСОСАТЬ ТРАФИК У УЖЕ СУЩЕСТВУЮЩЕЙ ИГРЫ, СДЕЛАТЬ ИСКАБЕЛЬНУЮ ИГРУ, ASO, KEYWORDS
+* GODOT, СДЕЛАТЬ ИГРУ В НИШЕ, GAME ANALYTICS ВОРОНКИ ПО ВЕРСИЯМ ИГРЫ, (+ MENTOR?)
 * MENTOR!
 * !!! СОБРАТЬ ДОП. ПЛОЩАДКИ
 * !!! ВЫЛОЖИТЬ НА ДРУГИЕ ПЛОЩАДКИ
@@ -20,17 +22,14 @@ BIG PLAN
 * ...
 
 PLAN
-* MAKE GRAPHICS GOOD
+x MAKE GRAPHICS GOOD
 * YANDEX SHIET
 * SEND TO MODERATION
 * MODERATION
 
-x 2nd pass items
-x 2nd pass ufo
-x enlarge «lvl» label
+x yandex: icon
+x yandex: banner
 
-* yandex: icon
-* yandex: banner
 * yandex: screenshots
 * yandex: video
 * yandex: promo
