@@ -508,7 +508,7 @@ def process_images():
     banner_colors = [
         "8fd3ff",
         "91db69",
-        "a884f3",
+        "eaaded",
         "8fd3ff",
     ]
     _result = bf.read_localization_csv()
@@ -565,19 +565,15 @@ def process_images():
                 brightness = 1.06
                 contrast = 1.1
 
-            img = Image.new("RGBA", (3840, 1550))
-            img = bf.im_draw_on_top(
+            img = Image.new("RGBA", (1920, 1080))
+            img.paste(
                 ImageEnhance.Brightness(
                     ImageEnhance.Contrast(Image.open(f)).enhance(contrast)
-                ).enhance(brightness)
+                ).enhance(brightness),
+                (0, -50),
             )
-
             bf.im_draw_on_top(
-                bf.im_draw_on_top(
-                    img,
-                    banner,
-                    (*banner_color, 255),
-                ),
+                bf.im_draw_on_top(img, banner, (*banner_color, 255)),
                 text_image.resize((1920, 1080)),
             ).save(out_dir / f.name)
 

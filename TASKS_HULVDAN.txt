@@ -32,6 +32,10 @@ x yandex: banner
 x yandex: ASO
 
 * yandex: screenshots
+* draw shadows? it's kinda too flat
+  (ref look at сортировка по полочкам - compare single level -> decide if it's needed)
+* for video make hand that moves with 2 states (default and pressed)
+  ease it's moving
 * yandex: video
 * yandex: promo
 *
