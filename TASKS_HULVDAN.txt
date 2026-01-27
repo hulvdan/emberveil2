@@ -29,11 +29,11 @@ x MAKE GRAPHICS GOOD
 
 x yandex: icon
 x yandex: banner
+x yandex: ASO
 
 * yandex: screenshots
 * yandex: video
 * yandex: promo
-* yandex: ASO
 *
 RELEASED
 ============================================================
