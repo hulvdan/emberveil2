@@ -114,7 +114,13 @@ function rebuild_tasks()
                 vim.fn.execute([[term uv run python cli\bf_cli.py receive_ws_logs 8003]])
             end,
         },
-        { "w_temp", cli_command("temp") },
+        -- { "w_temp", cli_command("temp") },
+        {
+            "w_temp",
+            function()
+                vim.fn.execute([[term uv run python cli\bf_cli.py temp]])
+            end,
+        },
         -- { "list_sounds", cli_command("list_sounds") },
         -- { "z_clean_cmake", [[del /f/s/q .cmake]] },
         -- { "x_clean_temp", [[del /f/s/q .temp]] },

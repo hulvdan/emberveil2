@@ -1403,89 +1403,91 @@ void DoUI() {
   };
 
   // HUD.
-  CLAY(  ///
-    {
-      .layout{
-        BF_CLAY_SIZING_GROW_XY,
-        BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
-          UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
-        ),
-      },
-      .floating{
-        .zIndex             = zIndex,
-        .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-        .attachTo           = CLAY_ATTACH_TO_PARENT,
-      },
-    }
-  ) {
-    FLOATING_BEAUTIFY;
+  if (!gdebug.hideUIForVideo) {
+    CLAY(  ///
+      {
+        .layout{
+          BF_CLAY_SIZING_GROW_XY,
+          BF_CLAY_PADDING_HORIZONTAL_VERTICAL(
+            UI_PADDING_OUTER_HORIZONTAL, UI_PADDING_OUTER_VERTICAL
+          ),
+        },
+        .floating{
+          .zIndex             = zIndex,
+          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+          .attachTo           = CLAY_ATTACH_TO_PARENT,
+        },
+      }
+    ) {
+      FLOATING_BEAUTIFY;
 
-    CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
-      // Current level.
-      if (g.save.level) {  ///
-        CLAY({
-          .floating{
+      CLAY({.layout{BF_CLAY_SIZING_GROW_XY}}) {
+        // Current level.
+        if (g.save.level) {  ///
+          CLAY({
+            .floating{
+              .zIndex = zIndex,
+              .attachPoints{
+                .element = CLAY_ATTACH_POINT_LEFT_TOP,
+                .parent  = CLAY_ATTACH_POINT_LEFT_TOP,
+              },
+              .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
+              .attachTo           = CLAY_ATTACH_TO_PARENT,
+            },
+          }) {
+            FLOATING_BEAUTIFY;
+            BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
+            BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
+          }
+        }
+
+        // Volume buttons.
+        {  ///
+          LAMBDA (void, componentVolumeButtons, ()) {
+            LAMBDA (void, componentButtonVolume, (int iconTexID, ButtonID id, int* var)) {
+              const bool clicked = componentButton(
+                {
+                  .id        = id,
+                  .iconTexID = iconTexID,
+                  .iconTexID2
+                  = glib->ui_icon_volume_bands_texture_ids()->Get(MAX(0, *var - 1)),
+                  .noTexID2     = (*var == 0),
+                  .noBackground = true,
+                  .noBreathing  = true,
+                },
+                [](f32 p) {}
+              );
+
+              if (clicked) {
+                *var = *var - 1;
+                if (*var < 0)
+                  *var = 3;
+                Save();
+              }
+            };
+
+            componentButtonVolume(
+              glib->ui_icon_sfx_texture_id(), ButtonID_SFX, &g.save.volumeSFX
+            );
+            componentButtonVolume(
+              glib->ui_icon_music_texture_id(), ButtonID_MUSIC, &g.save.volumeMusic
+            );
+          };
+
+          CLAY({.floating{
             .zIndex = zIndex,
             .attachPoints{
-              .element = CLAY_ATTACH_POINT_LEFT_TOP,
-              .parent  = CLAY_ATTACH_POINT_LEFT_TOP,
+              .element = CLAY_ATTACH_POINT_RIGHT_TOP,
+              .parent  = CLAY_ATTACH_POINT_RIGHT_TOP,
             },
             .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
             .attachTo           = CLAY_ATTACH_TO_PARENT,
-          },
-        }) {
-          FLOATING_BEAUTIFY;
-          BF_CLAY_TEXT_LOCALIZED(Loc_UI_LEVEL_TOP_LEVEL__CAPS);
-          BF_CLAY_TEXT(TextFormat(" %d", g.save.level + 1));
-        }
-      }
+          }}) {
+            FLOATING_BEAUTIFY;
 
-      // Volume buttons.
-      {  ///
-        LAMBDA (void, componentVolumeButtons, ()) {
-          LAMBDA (void, componentButtonVolume, (int iconTexID, ButtonID id, int* var)) {
-            const bool clicked = componentButton(
-              {
-                .id        = id,
-                .iconTexID = iconTexID,
-                .iconTexID2
-                = glib->ui_icon_volume_bands_texture_ids()->Get(MAX(0, *var - 1)),
-                .noTexID2     = (*var == 0),
-                .noBackground = true,
-                .noBreathing  = true,
-              },
-              [](f32 p) {}
-            );
-
-            if (clicked) {
-              *var = *var - 1;
-              if (*var < 0)
-                *var = 3;
-              Save();
-            }
-          };
-
-          componentButtonVolume(
-            glib->ui_icon_sfx_texture_id(), ButtonID_SFX, &g.save.volumeSFX
-          );
-          componentButtonVolume(
-            glib->ui_icon_music_texture_id(), ButtonID_MUSIC, &g.save.volumeMusic
-          );
-        };
-
-        CLAY({.floating{
-          .zIndex = zIndex,
-          .attachPoints{
-            .element = CLAY_ATTACH_POINT_RIGHT_TOP,
-            .parent  = CLAY_ATTACH_POINT_RIGHT_TOP,
-          },
-          .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH,
-          .attachTo           = CLAY_ATTACH_TO_PARENT,
-        }}) {
-          FLOATING_BEAUTIFY;
-
-          CLAY({.layout{.childGap = GAP_BIG}})
-          componentVolumeButtons();
+            CLAY({.layout{.childGap = GAP_BIG}})
+            componentVolumeButtons();
+          }
         }
       }
     }
@@ -2546,6 +2548,8 @@ void GameDraw() {
     ASSERT(item);
     if (depth > 1)
       return;
+    if (gdebug.hideDeepItemsForVideo && depth)
+      return;
 
     const auto fb = glib->items()->Get(g.run.colorIndexToItemIndex[item.color]);
 
@@ -2664,6 +2668,9 @@ void GameDraw() {
     playerItemPos
       = playerPos
         + Vector2Rotate({0, glib->item_inside_player_offset_y()}, playerRotation);
+
+    if (gdebug.disableUfoRotationForVideo)
+      playerRotation = 0;
   }
 
   FirstLevelTutorMove firstLevelTutorMove
@@ -3048,6 +3055,10 @@ void GameDraw() {
         IM::Checkbox("Gizmos", &gdebug.gizmos);
         IM::Checkbox("Emulating Mobile", &gdebug.emulatingMobile);
         IM::Checkbox("Hide UI For Video", &gdebug.hideUIForVideo);
+        IM::Checkbox("Hide Deep Items For Video", &gdebug.hideDeepItemsForVideo);
+        IM::Checkbox(
+          "Disable UFO Rotation For Video", &gdebug.disableUfoRotationForVideo
+        );
         ge.meta.device
           = (gdebug.emulatingMobile ? DeviceType_MOBILE : DeviceType_DESKTOP);
 

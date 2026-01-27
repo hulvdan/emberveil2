@@ -19,6 +19,7 @@ from collections import Counter
 from itertools import groupby
 
 import bf_lib as bf
+import spacy
 from bf_typer import command, timing
 from PIL import Image
 
@@ -489,7 +490,16 @@ def process_images():
 
 @command
 def temp():
-    pass
+    nlp = spacy.load("ru_core_news_sm")
+    text = input("enter: ")
+    lemmas = [token.lemma_ for token in nlp(text) if token.is_alpha]
+    values = []
+    for k, v in Counter(lemmas).items():
+        values.append((v, k))
+    values.sort(key=lambda x: -x[0])
+    for v, k in values:
+        if v >= 3 and len(k) > 2:
+            print(v, k)
 
 
 ###

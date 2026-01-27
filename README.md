@@ -14,12 +14,6 @@
     ```
 - Windows. Uninstall python
 - Windows. If running `python` in terminal opens Windows Store, then do what people here do: https://stackoverflow.com/questions/58754860/cmd-opens-windows-store-when-i-type-python
-- After installing pyenv run in default terminal:
-  ```shell
-  pyenv install 3.11.3
-  pyenv global 3.11.3
-  ```
-- TODO: MB migrate to `ux` instead of `poetry` + `pyenv`?
 - Install ffmpeg + llvm:
   ```shell
   choco install ffmpeg
@@ -41,10 +35,9 @@
 ## Contributing to game-template
 
 ```shell
-pip install poetry pre-commit
+pip install pre-commit
 pre-commit install
 pre-commit install --install-hooks
-poetry install
 ```
 
 ## Zheka: Contributing to a specific game
@@ -62,6 +55,7 @@ uv python install 3.11
 pre-commit install
 pre-commit install --install-hooks
 uv sync
+uv run spacy download ru_core_news_sm
 cd vendor
 cd bgfx
 del /f/s/q .build

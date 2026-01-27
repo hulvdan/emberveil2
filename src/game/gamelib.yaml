@@ -103,6 +103,10 @@ debug_variables: # {  ###
   - name: hideUIForVideo
     type: bool
   # Game stuff:
+  - name: hideDeepItemsForVideo
+    type: bool
+  - name: disableUfoRotationForVideo
+    type: bool
   - name: drawTiledBackground
     type: bool
   - name: matchingParticles
