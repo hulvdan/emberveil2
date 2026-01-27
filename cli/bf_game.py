@@ -501,15 +501,15 @@ def process_images():
     banner = bf.im_outline(
         banner,
         radius=80,
-        color=(0, 0, 0, int(255 * 5 / 16)),
+        color=(0, 0, 0, int(255 * 3 / 16)),
         is_shadow=True,
         extend=False,
     )
     banner_colors = [
-        "e7ae4b",
-        "b59a66",
-        "66a650",
-        "c95d9c",
+        "8fd3ff",
+        "91db69",
+        "a884f3",
+        "8fd3ff",
     ]
     _result = bf.read_localization_csv()
     screenshot_loc_id_indices = sorted(
@@ -565,11 +565,16 @@ def process_images():
                 brightness = 1.06
                 contrast = 1.1
 
+            img = Image.new("RGBA", (3840, 1550))
+            img = bf.im_draw_on_top(
+                ImageEnhance.Brightness(
+                    ImageEnhance.Contrast(Image.open(f)).enhance(contrast)
+                ).enhance(brightness)
+            )
+
             bf.im_draw_on_top(
                 bf.im_draw_on_top(
-                    ImageEnhance.Brightness(
-                        ImageEnhance.Contrast(Image.open(f)).enhance(contrast)
-                    ).enhance(brightness),
+                    img,
                     banner,
                     (*banner_color, 255),
                 ),
