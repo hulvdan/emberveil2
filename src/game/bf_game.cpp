@@ -2663,14 +2663,16 @@ void GameDraw() {
       }
     }
 
-    playerPos += playerPosInfinityOffset * playerInfinityPosOffsetScale;
+    if (gdebug.disableUfoMovementForVideo)
+      playerRotation = 0;
+    else
+      playerPos += playerPosInfinityOffset * playerInfinityPosOffsetScale;
+
+    playerPos += Vector2(gdebug.ufoOffsetX, gdebug.ufoOffsetY);
 
     playerItemPos
       = playerPos
         + Vector2Rotate({0, glib->item_inside_player_offset_y()}, playerRotation);
-
-    if (gdebug.disableUfoRotationForVideo)
-      playerRotation = 0;
   }
 
   FirstLevelTutorMove firstLevelTutorMove
@@ -3057,8 +3059,11 @@ void GameDraw() {
         IM::Checkbox("Hide UI For Video", &gdebug.hideUIForVideo);
         IM::Checkbox("Hide Deep Items For Video", &gdebug.hideDeepItemsForVideo);
         IM::Checkbox(
-          "Disable UFO Rotation For Video", &gdebug.disableUfoRotationForVideo
+          "Disable UFO Movement For Video", &gdebug.disableUfoMovementForVideo
         );
+        IM::SliderFloat("UFO Offset X", &gdebug.ufoOffsetX, -5, 5);
+        IM::SliderFloat("UFO Offset Y", &gdebug.ufoOffsetY, -5, 5);
+
         ge.meta.device
           = (gdebug.emulatingMobile ? DeviceType_MOBILE : DeviceType_DESKTOP);
 

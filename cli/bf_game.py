@@ -21,7 +21,7 @@ from itertools import groupby
 import bf_lib as bf
 import spacy
 from bf_typer import command, timing
-from PIL import Image
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 
 # }
 
@@ -479,6 +479,102 @@ def process_images():
         bf.imc_scale(0.55),
         bf.imc_outline(radius=OUTLINE_WIDTH),
     )
+
+    # Screenshots.
+    if 1:
+        banner = Image.new("RGBA", (1920, 1080))
+        h = 185
+        # margin = 20
+        margin = 0
+        outline_width = 7
+        w = 1920 + 2 * outline_width
+        rect = bf.im_rectangle(
+            (w - margin * 2, h - margin),
+            fill="white",
+            # radius=80,
+            width=outline_width,
+            outline="black",
+        )
+        banner.paste(rect, ((1920 - w) // 2 + margin, 1080 - h + outline_width))
+    else:
+        banner = Image.open(bf.ART_DIR / "src" / "screenshot_text_banner.png")
+    banner = bf.im_outline(
+        banner,
+        radius=80,
+        color=(0, 0, 0, int(255 * 5 / 16)),
+        is_shadow=True,
+        extend=False,
+    )
+    banner_colors = [
+        "e7ae4b",
+        "b59a66",
+        "66a650",
+        "c95d9c",
+    ]
+    _result = bf.read_localization_csv()
+    screenshot_loc_id_indices = sorted(
+        i for i, x in enumerate(_result.loc_ids) if x.startswith("YANDEX_SCREENSHOT_")
+    )
+    font = ImageFont.truetype(
+        bf.ART_DIR / "src" / "screenshots" / "SeymourOne-Regular.ttf", size=150
+    )
+
+    for language, texts in _result.loc_by_languages.items():
+        out_dir = bf.ART_DIR / "src" / "screenshots_processed" / language
+        for f in out_dir.glob("*.png"):
+            f.unlink()
+        bf.recursive_mkdir(out_dir)
+
+        for banner_color_, loc_id_index, f in zip(
+            banner_colors,
+            screenshot_loc_id_indices,
+            (bf.ART_DIR / "src" / "screenshots").glob("*.png"),
+            strict=True,
+        ):
+            banner_color = bf.hex_to_rgb_ints(banner_color_)
+
+            text_image = Image.new("RGBA", (3840, 1550))
+            draw = ImageDraw.Draw(text_image)
+            draw.text(
+                (1920, 1478),
+                texts[loc_id_index],
+                fill=tuple(
+                    int(x * 255)
+                    for x in bf.transform_color(
+                        bf.hex_to_rgb_floats(banner_color_),
+                        saturation_scale=0.23,
+                        value_scale=2.5,
+                    )
+                ),
+                anchor="ms",
+                font=font,
+                stroke_width=14,
+                stroke_fill="black",
+            )
+            text_image = bf.im_outline(
+                text_image,
+                radius=40,
+                color=(0, 0, 0, round(255 * 3 / 16)),
+                is_shadow=True,
+                extend=False,
+            )
+
+            brightness = 1.0
+            contrast = 1.0
+            if 1:
+                brightness = 1.06
+                contrast = 1.1
+
+            bf.im_draw_on_top(
+                bf.im_draw_on_top(
+                    ImageEnhance.Brightness(
+                        ImageEnhance.Contrast(Image.open(f)).enhance(contrast)
+                    ).enhance(brightness),
+                    banner,
+                    (*banner_color, 255),
+                ),
+                text_image.resize((1920, 1080)),
+            ).save(out_dir / f.name)
 
     import bf_cli  # noqa
 

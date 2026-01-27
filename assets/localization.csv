@@ -1,4 +1,8 @@
 id;russian;english;comment
+YANDEX_SCREENSHOT_1;Наведи порядок;a;
+YANDEX_SCREENSHOT_2;ф;b;
+YANDEX_SCREENSHOT_3;а;c;
+YANDEX_SCREENSHOT_4;в;d;
 UI_WEB_AUDIO_BUTTON_PROMPT;Нажмите, Чтобы Начать;Tap To Start;
 UI_LEVEL_TOP_LEVEL;Ур.;Lvl.;
 UI_LEVEL_NEXT;Продолжить;Keep Going;

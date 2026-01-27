@@ -105,8 +105,12 @@ debug_variables: # {  ###
   # Game stuff:
   - name: hideDeepItemsForVideo
     type: bool
-  - name: disableUfoRotationForVideo
+  - name: disableUfoMovementForVideo
     type: bool
+  - name: ufoOffsetX
+    type: f32
+  - name: ufoOffsetY
+    type: f32
   - name: drawTiledBackground
     type: bool
   - name: matchingParticles
