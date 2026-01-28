@@ -32,13 +32,18 @@ x yandex: banner
 x yandex: ASO
 x yandex: screenshots
 x screenshots: better ufo offset
-
-* screenshots: draw shadows? it's kinda too flat
+x screenshots: draw shadows? it's kinda too flat
   (ref look at сортировка по полочкам - compare single level -> decide if it's needed)
+
+* screnshots w/ shadows
 * for video make hand that moves with 2 states (default and pressed)
   ease it's moving
+  IN CODE
+* screenshots: better banner
 * yandex: video
 * yandex: promo
+* aso вынести отдельно
+* ASO больше вставить «сортировка»
 *
 RELEASED
 ============================================================
