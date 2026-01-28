@@ -59,13 +59,13 @@ x for video make hand that moves with 2 states (default and pressed)
   IN CODE
 x yandex: video
 
-* screenshots: better banner
 * yandex: promo
-* aso вынести отдельно
+* screenshots: better banner
 * ASO больше вставить «сортировка»
 *
 RELEASED
 ============================================================
+* aso вынести отдельно
 * ufo squash
 * sfx: ufo movement
 * split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
