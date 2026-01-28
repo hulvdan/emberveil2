@@ -54,12 +54,12 @@ x MAKE GRAPHICS GOOD
 
 x item shadows
 x screnshots w/ shadows
-
-* for video make hand that moves with 2 states (default and pressed)
+x for video make hand that moves with 2 states (default and pressed)
   ease it's moving
   IN CODE
+x yandex: video
+
 * screenshots: better banner
-* yandex: video
 * yandex: promo
 * aso вынести отдельно
 * ASO больше вставить «сортировка»
