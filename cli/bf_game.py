@@ -481,27 +481,28 @@ def process_images():
     )
 
     # Screenshots.
-    if 1:
-        banner = Image.new("RGBA", (1920, 1080))
-        h = 185
-        # margin = 20
-        margin = 0
-        outline_width = 7
-        w = 1920 + 2 * outline_width
-        rect = bf.im_rectangle(
-            (w - margin * 2, h - margin),
-            fill="white",
-            # radius=80,
-            width=outline_width,
-            outline="black",
-        )
-        banner.paste(rect, ((1920 - w) // 2 + margin, 1080 - h + outline_width))
-    else:
-        banner = Image.open(bf.ART_DIR / "src" / "screenshot_text_banner.png")
+    # if 1:
+    banner = Image.open(bf.ART_DIR / "src" / "dist_screenshot.png")
+    # banner =
+    # h = 185
+    # # margin = 20
+    # margin = 0
+    # outline_width = 7
+    # w = 1920 + 2 * outline_width
+    # rect = bf.im_rectangle(
+    #     (w - margin * 2, h - margin),
+    #     fill="white",
+    #     # radius=80,
+    #     width=outline_width,
+    #     outline="black",
+    # )
+    # banner.paste(rect, ((1920 - w) // 2 + margin, 1080 - h + outline_width))
+    # # else:
+    # #     banner = Image.open(bf.ART_DIR / "src" / "screenshot_text_banner.png")
     banner = bf.im_outline(
         banner,
-        radius=80,
-        color=(0, 0, 0, int(255 * 3 / 16)),
+        radius=40,
+        color=(0, 0, 0, int(255 * 4 / 16)),
         is_shadow=True,
         extend=False,
     )

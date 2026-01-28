@@ -59,8 +59,8 @@ x for video make hand that moves with 2 states (default and pressed)
   IN CODE
 x yandex: video
 x yandex: promo
+x screenshots: better banner
 
-* screenshots: better banner
 RELEASED
 ============================================================
 * ASO больше вставить «сортировка»
