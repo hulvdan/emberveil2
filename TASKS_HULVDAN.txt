@@ -1,5 +1,6 @@
 WORKING SINCE 2026-01-05
 https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
+2026-01-28 - 23 days - sent to moderation
 
 BIG PLAN
 x ШАБЛОННАЯ РЕПА, ОТПРАВКА ИГРЫ НА МОДЕРАЦИЮ ЯНДЕКСА
@@ -48,8 +49,8 @@ x РЕЛИЗ ПЕРВОЙ ИГРЫ НА ЯНДЕКСЕ
 
 PLAN
 x MAKE GRAPHICS GOOD
-* YANDEX SHIET
-* SEND TO MODERATION
+x YANDEX SHIET
+x SEND TO MODERATION
 * MODERATION
 
 x item shadows
