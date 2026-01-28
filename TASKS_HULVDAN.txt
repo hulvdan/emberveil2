@@ -58,13 +58,12 @@ x for video make hand that moves with 2 states (default and pressed)
   ease it's moving
   IN CODE
 x yandex: video
+x yandex: promo
 
-* yandex: promo
 * screenshots: better banner
-* ASO больше вставить «сортировка»
-*
 RELEASED
 ============================================================
+* ASO больше вставить «сортировка»
 * aso вынести отдельно
 * ufo squash
 * sfx: ufo movement
