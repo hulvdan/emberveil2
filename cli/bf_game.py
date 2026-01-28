@@ -507,8 +507,8 @@ def process_images():
     )
     banner_colors = [
         "8fd3ff",
-        "91db69",
         "eaaded",
+        "91db69",
         "8fd3ff",
     ]
     _result = bf.read_localization_csv()
@@ -570,7 +570,7 @@ def process_images():
                 ImageEnhance.Brightness(
                     ImageEnhance.Contrast(Image.open(f)).enhance(contrast)
                 ).enhance(brightness),
-                (0, -50),
+                (0, -100),
             )
             bf.im_draw_on_top(
                 bf.im_draw_on_top(img, banner, (*banner_color, 255)),

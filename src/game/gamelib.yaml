@@ -107,6 +107,8 @@ debug_variables: # {  ###
     type: bool
   - name: disableUfoMovementForVideo
     type: bool
+  - name: fingerForVideo
+    type: bool
   - name: ufoOffsetX
     type: f32
   - name: ufoOffsetY
@@ -373,6 +375,15 @@ shelf_size:
 player_offset_y: -0.25
 item_inside_player_offset_y: -0.3
 item_inside_player_size_y_for_scale_calculation: 220
+finger_lerp_factor: 0.1
+finger_offset:
+  x: 20
+  y: -70
+finger_scale: 2
+finger_rotation: 0
+finger_texture_ids:
+  - game_finger_up
+  - game_finger_down
 player_texture_ids:
   - game_player_back
   - game_player_front

@@ -418,6 +418,10 @@ struct GameData {
 
     PerlinParams perlinParams = {};
 
+    Vector2 videoFingerPos       = {};
+    Vector2 videoFingerLatestPos = {};
+    bool    videoFingerIsDown    = false;
+
     // Using "X-macros". ref: https://www.geeksforgeeks.org/c/x-macros-in-c/
     // These containers preserve allocated memory upon resetting state of the run.
 
@@ -2422,6 +2426,13 @@ void GameFixedUpdate() {
   DoUI();
 
   ge.meta.frameVisual++;
+
+  g.run.videoFingerIsDown = IsTouchDown(ge.meta._latestActiveTouchID);
+  if (g.run.videoFingerIsDown)
+    g.run.videoFingerLatestPos = ScreenPosToLogical(GetMouseScreenPos());
+  g.run.videoFingerPos = Vector2Lerp(
+    g.run.videoFingerPos, g.run.videoFingerLatestPos, glib->finger_lerp_factor()
+  );
 }
 
 Color ToColor(const BFGame::Color2* fb) {  ///
@@ -2978,6 +2989,19 @@ void GameDraw() {
 
   EndMode2D();
 
+  // Finger for video.
+  if (gdebug.fingerForVideo) {  ///
+    DrawGroup_OneShotTexture(
+      {
+        .texID    = glib->finger_texture_ids()->Get((int)g.run.videoFingerIsDown),
+        .rotation = glib->finger_rotation(),
+        .pos      = g.run.videoFingerPos + ToVector2(glib->finger_offset()),
+        .scale    = Vector2One() * glib->finger_scale(),
+      },
+      DrawZ_GIZMOS
+    );
+  }
+
   // Dim screen if audio is not unlocked yet.
   if (audioUnlockP < 1) {  ///
     DrawGroup_OneShotRect(
@@ -3058,6 +3082,7 @@ void GameDraw() {
         IM::Checkbox("Emulating Mobile", &gdebug.emulatingMobile);
         IM::Checkbox("Hide UI For Video", &gdebug.hideUIForVideo);
         IM::Checkbox("Hide Deep Items For Video", &gdebug.hideDeepItemsForVideo);
+        IM::Checkbox("Finger For Video", &gdebug.fingerForVideo);
         IM::Checkbox(
           "Disable UFO Movement For Video", &gdebug.disableUfoMovementForVideo
         );
