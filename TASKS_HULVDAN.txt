@@ -70,6 +70,7 @@ x icon banner shadows
 
 * godot prototype
 * polish
+  * polish: win: particles
   * polish: ufo squash
   * polish: popping rows to front offset easing
   * polish: popping rows to front depth easing
@@ -88,11 +89,9 @@ x icon banner shadows
   * pyright after python exception?
   *
   *
-
 RELEASED
 ============================================================
 * ASO больше вставить «сортировка»
-* win: particles
 * progression: ufos trails
 PROGRESSION
 * progression: cosmetic ufos
