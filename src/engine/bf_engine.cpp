@@ -2319,6 +2319,22 @@ void Metric(const char* goalId) {  ///
 #endif
 }
 
+void Leaderboard(const char* leaderboardId, int score) {  ///
+  LOGI("Leaderboard: %s: %d", leaderboardId, score);
+
+#ifdef BF_PLATFORM_WebYandex
+  // clang-format off
+  EM_ASM({
+    try {
+      window.ysdk.leaderboards.setScore(UTF8ToString($0), $1);
+    } catch (e) {
+      console.error("Error sending data to Yandex Leaderboard:", e);
+    }
+  }, leaderboardId, score);
+  // clang-format on
+#endif
+}
+
 void MarkGameplay() {  ///
   ge.meta.markGameplay = 2;
 }

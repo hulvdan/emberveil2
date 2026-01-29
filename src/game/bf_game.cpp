@@ -814,6 +814,7 @@ void PushBackEmptyRows() {  ///
 void RunInit() {
   ZoneScoped;
 
+  Leaderboard("BestPlayer", g.save.level);
   const auto fb_level = GetFBLevel(g.save.level);
 
   g.run.randomSeedForLevelHotReload = fb_level->random_seed();
@@ -1929,7 +1930,10 @@ void EndGameplay(bool won) {  ///
   if (won) {
     Save();
     Metric(TextFormat("level_compl_%d", g.save.level));
+    Leaderboard("BestPlayer", g.save.level + 1);
   }
+  else
+    Leaderboard("BestPlayer", g.save.level);
 }
 
 void GameFixedUpdate() {

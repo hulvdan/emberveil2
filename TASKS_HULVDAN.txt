@@ -54,48 +54,48 @@ x SEND TO MODERATION
 * MODERATION
 
 x better banner and icon
+- sfx: ufo movement
+- bf_image fade_white для стекла, что прозрачное, а контур - нет
+- better clouds
+- найти, где задать вопрос
+  задать вопрос, как делать воронки для АБ тестов по прохождению уровней
+- star on level -> player would gather stars for meta
+  (receives 2 stars by default + 1 pickupable)
+- specifying color in gamelib w/ saturation and brightness
+- fix ui gizmos positioning
+- happy: assert on clay counter. latch. so that i won't RETURN inside CLAY
+
+* add leaderboard BestPlayers
+* godot prototype
+* polish
+  * polish: ufo squash
+  * polish: popping rows to front offset easing
+  * polish: popping rows to front depth easing
+  * polish: HARD touch/hover feedback
+  * polish: progress on top (sortirovka po polochkam-like)
+  * polish: drag: show arrow
+* какие минусы?
+  *
+  *
+  *
+  *
+  *
+* dev experience
+  * split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
+  * aso вынести отдельно
+  * pyright after python exception?
+  *
+  *
 
 RELEASED
 ============================================================
 * ASO больше вставить «сортировка»
-* aso вынести отдельно
-* ufo squash
-* sfx: ufo movement
-* split keyboard f24 f1 f2 works in game (would possibly solve reaper workflow)
-* ufo squash upon picking up
-* polish: popping rows to front offset easing
-* polish: popping rows to front depth easing
-* bf_image fade_white для стекла, что прозрачное, а контур - нет
-* pyright after python exception?
-* better clouds
 * win: particles
-* add leaderboard
 * progression: ufos trails
-* specifying color in gamelib w/ saturation and brightness
-* найти, где задать вопрос
-  задать вопрос, как делать воронки для АБ тестов по прохождению уровней
-* progress on top (sortirovka po polochkam-like)
-* drag: show arrow
-* progress bar on top: draw progress rects
-* progress bar on top: draw outline
-* progress bar on top: sprite circle generate it
-* progress bar on top: stars quarters
-* progress bar on top: animate stars
-* star on level -> player would gather stars for meta
-  (receives 2 stars by default + 1 pickupable)
-* drag items outline (нужно вести действия)
 PROGRESSION
-* progression: different ufos
-  * flyer
-  * balanced
-  * horizontal
-* progression: ufos colors?
-* progression: change doors
-* progression: another passenger sprites
-* progression: platform sprites
-ENGINE
-* fix ui gizmos positioning
-* happy: assert on clay counter. latch. so that i won't RETURN inside CLAY
+* progression: cosmetic ufos
+* progression: cosmetic cloud sprites
+* progression: cosmetic background sprites
 
 ASO
 ============================================================
