@@ -65,7 +65,9 @@ x better banner and icon
 - fix ui gizmos positioning
 - happy: assert on clay counter. latch. so that i won't RETURN inside CLAY
 
-* add leaderboard BestPlayers
+x add leaderboard BestPlayers
+x icon banner shadows
+
 * godot prototype
 * polish
   * polish: ufo squash
