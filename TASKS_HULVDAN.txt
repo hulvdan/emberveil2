@@ -53,16 +53,8 @@ x YANDEX SHIET
 x SEND TO MODERATION
 * MODERATION
 
-x item shadows
-x screnshots w/ shadows
-x for video make hand that moves with 2 states (default and pressed)
-  ease it's moving
-  IN CODE
-x yandex: video
-x yandex: promo
-x screenshots: better banner
+x better banner and icon
 
-* icon banner shadows
 RELEASED
 ============================================================
 * ASO больше вставить «сортировка»
