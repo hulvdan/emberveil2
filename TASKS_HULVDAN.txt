@@ -62,6 +62,7 @@ x yandex: video
 x yandex: promo
 x screenshots: better banner
 
+* icon banner shadows
 RELEASED
 ============================================================
 * ASO больше вставить «сортировка»
