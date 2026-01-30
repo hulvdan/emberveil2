@@ -71,6 +71,7 @@ x icon banner shadows
 * godot prototype
 * polish
   * polish: win: particles
+  * polish: double tap 2 fixed frames restriction
   * polish: ufo squash
   * polish: popping rows to front offset easing
   * polish: popping rows to front depth easing
