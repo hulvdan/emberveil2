@@ -1,6 +1,7 @@
 WORKING SINCE 2026-01-05
 https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 2026-01-28 - 23 days - sent to moderation
+2026-01-31 - 26 days - moderation rejected build
 
 BIG PLAN
 x ШАБЛОННАЯ РЕПА, ОТПРАВКА ИГРЫ НА МОДЕРАЦИЮ ЯНДЕКСА
@@ -54,9 +55,8 @@ x SEND TO MODERATION
 * MODERATION
 
 x ufo min max traverse duration
+x instant inter ad
 
-* instant inter ad
-*
 * godot prototype
 * polish
   * polish: win: particles
