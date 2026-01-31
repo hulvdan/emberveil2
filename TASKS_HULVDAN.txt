@@ -53,8 +53,9 @@ x YANDEX SHIET
 x SEND TO MODERATION
 * MODERATION
 
+x ufo min max traverse duration
+
 * instant inter ad
-* ufo min max traverse duration
 *
 * godot prototype
 * polish

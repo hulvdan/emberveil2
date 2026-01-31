@@ -465,11 +465,69 @@ Rect ShelfRect(int shelf) {  ///
   return {.pos = ShelfPos(shelf), .size = ToVector2(glib->shelf_size())};
 }
 
-lframe GetPlayerActionAndFlyingDuration() {  ///
+f32 GetItemOffsetX(int itemIndex) {  ///
+  ASSERT(itemIndex >= 0);
+  ASSERT(itemIndex <= 2);
+  const f32 off
+    = (glib->shelf_size()->x() / 2 - glib->item_margin()->x() - glib->item_collider_size()->x() / 2);
+  return (itemIndex - 1) * off;
+}
+
+Vector2 GetItemBottomPos(int shelf, int itemIndex, bool visual = false) {  ///
+  auto result
+    = ShelfPos(shelf)
+      + Vector2(
+        GetItemOffsetX(itemIndex), glib->item_margin()->y() - glib->shelf_size()->y() / 2
+      );
+
+  if (visual) {
+    result += Vector2(glib->item_breathing_offset_x() * (itemIndex - 1), 0)
+              * (1 - g.meta.cloudsBreathingP);
+  }
+
+  return result;
+}
+
+const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
+  const auto fb_levels = glib->levels();
+  if (index >= fb_levels->size()) {
+    index -= fb_levels->size();
+    index = glib->cycleable_levels_indices()->Get(
+      index % glib->cycleable_levels_indices()->size()
+    );
+  }
+  if (actualIndex)
+    *actualIndex = index;
+  return fb_levels->Get(index);
+}
+
+f32 GetPlayerFlyDurationSeconds() {  ///
+  const auto& pl = g.run.player;
+
+  const auto fb_level = GetFBLevel(g.save.level);
+
+  auto posFrom = ToVector2(fb_level->player());
+  if (pl.posFrom.shelf >= 0)
+    posFrom = GetItemBottomPos(pl.posFrom.shelf, pl.posFrom.item);
+
+  const f32 t = Clamp01(
+    Vector2Distance(GetItemBottomPos(pl.pos.shelf, pl.pos.item), posFrom)
+    / glib->player_fly_dist_max()
+  );
+  return Lerp(
+    glib->player_fly_duration_seconds_min(), glib->player_fly_duration_seconds_max(), t
+  );
+}
+
+lframe GetPlayerFlyDuration() {  ///
+  return lframe::FromSeconds(GetPlayerFlyDurationSeconds());
+}
+
+lframe GetPlayerActionAndFlyDuration() {  ///
   const auto& pl      = g.run.player;
   f32         seconds = glib->player_action_duration_seconds();
   if (pl.posFrom != pl.pos)
-    seconds += glib->player_fly_duration_seconds();
+    seconds += GetPlayerFlyDurationSeconds();
   return lframe::FromSeconds(seconds);
 }
 
@@ -483,8 +541,7 @@ lframe GetPlayerActionWithoutFlyingElapsed() {  ///
   auto e = pl.actionStartedAt.Elapsed();
 
   if (pl.posFrom != pl.pos) {
-    const auto flyDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
-    e.value -= flyDur.value;
+    e.value -= GetPlayerFlyDuration().value;
     if (e.value < 0)
       return lframe::Unscaled(0);
   }
@@ -711,19 +768,6 @@ void MakeWalls(MakeWallsData data) {  ///
     if (data.outBodies.count)
       data.outBodies[i] = body;
   }
-}
-
-const auto GetFBLevel(int index, int* actualIndex = nullptr) {  ///
-  const auto fb_levels = glib->levels();
-  if (index >= fb_levels->size()) {
-    index -= fb_levels->size();
-    index = glib->cycleable_levels_indices()->Get(
-      index % glib->cycleable_levels_indices()->size()
-    );
-  }
-  if (actualIndex)
-    *actualIndex = index;
-  return fb_levels->Get(index);
 }
 
 int SolvableRowOfThreeExists() {  ///
@@ -1858,33 +1902,10 @@ void UpdateCamera() {  ///
   }
 }
 
-f32 GetItemOffsetX(int itemIndex) {  ///
-  ASSERT(itemIndex >= 0);
-  ASSERT(itemIndex <= 2);
-  const f32 off
-    = (glib->shelf_size()->x() / 2 - glib->item_margin()->x() - glib->item_collider_size()->x() / 2);
-  return (itemIndex - 1) * off;
-}
-
 Vector2 ToWorld(PlayerPos pos) {  ///
   ASSERT(pos);
   return ShelfPos(pos.shelf)
          + Vector2(GetItemOffsetX(pos.item), glib->player_inside_shelf_offset_y());
-}
-
-Vector2 GetItemBottomPos(int shelf, int itemIndex, bool visual = false) {  ///
-  auto result
-    = ShelfPos(shelf)
-      + Vector2(
-        GetItemOffsetX(itemIndex), glib->item_margin()->y() - glib->shelf_size()->y() / 2
-      );
-
-  if (visual) {
-    result += Vector2(glib->item_breathing_offset_x() * (itemIndex - 1), 0)
-              * (1 - g.meta.cloudsBreathingP);
-  }
-
-  return result;
 }
 
 Rect GetItemRect(int shelf, int itemIndex) {  ///
@@ -2127,7 +2148,7 @@ void GameFixedUpdate() {
                 u64 soundDelay = 0;
                 if (pl.posFrom != pl.pos) {
                   PlaySound(Sound_GAME_UFO_MOVE);
-                  soundDelay = (u64)Round(glib->player_fly_duration_seconds() * 1000);
+                  soundDelay = (u64)Round(GetPlayerFlyDurationSeconds() * 1000);
 
                   f32 moveDist = 0;
 
@@ -2191,16 +2212,16 @@ void GameFixedUpdate() {
         g.run.bufferedActions.RemoveAt(0);
     }
 
-    const auto actionDur = GetPlayerActionAndFlyingDuration();
+    const auto actionDur = GetPlayerActionAndFlyDuration();
 
     // Resetting player infinity progress and direction in the middle of action.
     if (pl.action) {  ///
       const auto e = pl.actionStartedAt.Elapsed();
 
-      if (e.value == GetPlayerActionAndFlyingDuration().value / 2)
+      if (e.value == GetPlayerActionAndFlyDuration().value / 2)
         pl.infinityReverse = !pl.infinityReverse;
-      if ((e.value >= GetPlayerActionAndFlyingDuration().value / 2)
-          && (e.value <= GetPlayerActionAndFlyingDuration().value * 2 / 3))
+      if ((e.value >= GetPlayerActionAndFlyDuration().value / 2)
+          && (e.value <= GetPlayerActionAndFlyDuration().value * 2 / 3))
       {
         pl.infinityAt = {};
         pl.infinityAt.SetNow();
@@ -2663,17 +2684,15 @@ void GameDraw() {
     if (pl.pos) {
       const auto pos2 = ToWorld(pl.pos) + Vector2(0, glib->player_offset_y());
       if (pl.actionStartedAt.IsSet()) {
-        const auto actionDur = lframe::FromSeconds(glib->player_fly_duration_seconds());
-        f32        posP      = pl.actionStartedAt.Elapsed().Progress(actionDur);
-        posP                 = MIN(1, posP);
-        playerPos            = Vector2Lerp(playerPos, pos2, EaseInOutQuad(posP));
+        f32 posP  = pl.actionStartedAt.Elapsed().Progress(GetPlayerFlyDuration());
+        posP      = MIN(1, posP);
+        playerPos = Vector2Lerp(playerPos, pos2, EaseInOutQuad(posP));
       }
       else
         playerPos = pos2;
 
       if (pl.actionStartedAt.IsSet()) {
-        f32 posP
-          = pl.actionStartedAt.Elapsed().Progress(GetPlayerActionAndFlyingDuration());
+        f32 posP = pl.actionStartedAt.Elapsed().Progress(GetPlayerActionAndFlyDuration());
         playerInfinityPosOffsetScale = 1 - EaseInQuad(sinf(posP * PI32));
 
         if (posP > 0.5f)

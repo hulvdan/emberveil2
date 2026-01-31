@@ -276,7 +276,9 @@ table GameLibrary {
     player_vertical_restoration_stiffness: float;
     player_vertical_restoration_damping: float;
     player_action_duration_seconds: float;
-    player_fly_duration_seconds: float;
+    player_fly_duration_seconds_min: float;
+    player_fly_duration_seconds_max: float;
+    player_fly_dist_max: float;
     item_margin: Posf;
     item_max_shown: int;
     item_collider_size: Posf;
