@@ -1749,7 +1749,10 @@ void DoUI() {
                     },
                     [](f32 p) {}
                   ))
+              {
                 g.run.levelControlPressed.SetNow();
+                ShowAdInter(&g.run.levelControlPressedNextOrRestart);
+              }
             }
             else {
               if (componentButton(
@@ -1760,7 +1763,10 @@ void DoUI() {
                     },
                     [](f32 p) {}
                   ))
+              {
                 g.run.levelControlPressed.SetNow();
+                ShowAdInter(&g.run.levelControlPressedNextOrRestart);
+              }
 
 #if BF_DEBUG || defined(BF_PLATFORM_WebYandex)
               if (componentButton(
@@ -2354,8 +2360,6 @@ void GameFixedUpdate() {
         g.save.level++;
       Metric(TextFormat("level_advanced_to_%d", g.save.level));
       g.meta.reload = true;
-      if (!g.run.levelControlPressedSkip)
-        ShowAdInter();
     }
   }
 

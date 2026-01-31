@@ -2263,7 +2263,7 @@ void fromJS_setDeviceType(int type) {  ///
 
 #endif
 
-void ShowAdInter() {  ///
+void ShowAdInter(bool* asyncAdClosedOrErrored) {  ///
 #ifdef BF_PLATFORM_WebYandex
   // TODO: Мб тут заранее (до вызова ysdk-ем callback-а onOpen)
   // проставить `adIsPlaying = true`?
@@ -2272,12 +2272,20 @@ void ShowAdInter() {  ///
   EM_ASM({
     ysdk.adv.showFullscreenAdv({
       callbacks: {
-        onOpen: () => { Module.fromJS_setAdIsPlaying(1); },
-        onClose: () => { Module.fromJS_setAdIsPlaying(0); },
-        onError: (e) => { Module.fromJS_setAdIsPlaying(0); },
+        onOpen: () => {
+          Module.fromJS_setAdIsPlaying(1);
+        },
+        onClose: () => {
+          Module.fromJS_setAdIsPlaying(0);
+          HEAPU8[$0] = 1;
+        },
+        onError: (e) => {
+          Module.fromJS_setAdIsPlaying(0);
+          HEAPU8[$0] = 1;
+        },
       },
     });
-  });
+  }, asyncAdClosedOrErrored);
 // clang-format on
 #endif
 }
