@@ -391,9 +391,10 @@ struct GameData {
     Array<lframe, TOTAL_ITEMS> lostFrontUniqueColorsStartFlashes = {};
     int                        wonOrLostLabelIndex               = -1;
 
-    FrameVisual levelControlPressed           = {};
-    bool        levelControlPressedSkip       = false;
-    FrameVisual levelStartedAfterTransitionAt = {};
+    FrameVisual levelControlPressed              = {};
+    bool        levelControlPressedNextOrRestart = false;
+    bool        levelControlPressedSkip          = false;
+    FrameVisual levelStartedAfterTransitionAt    = {};
 
     PushableArray<PlayerBufferedAction, 12> bufferedActions = {};
 
