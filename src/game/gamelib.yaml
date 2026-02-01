@@ -355,8 +355,8 @@ player_aura_fade_bottom_source_margin: 0.3
 player_aura_fade_scale:
   x: 0.85
   y: 1
-player_fly_duration_seconds_min: 0.4
-player_fly_duration_seconds_max: 0.8
+player_fly_duration_seconds_min: 0.3
+player_fly_duration_seconds_max: 0.6
 player_fly_dist_max: 8
 level_gen_empty_spots_every_n_items_min: 7
 level_gen_empty_spots_every_n_items_max: 14
