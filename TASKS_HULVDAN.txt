@@ -62,6 +62,7 @@ x SEND TO MODERATION
 
 x leaderboard doesn't work
 x METRICS DON'T WORK!!!
+- ASO больше вставить «сортировка»
 
 * godot prototype
 * polish
@@ -87,7 +88,6 @@ x METRICS DON'T WORK!!!
   *
 RELEASED
 ============================================================
-* ASO больше вставить «сортировка»
 * progression: ufos trails
 PROGRESSION
 * progression: cosmetic ufos
