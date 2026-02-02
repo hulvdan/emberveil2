@@ -2,6 +2,12 @@ WORKING SINCE 2026-01-05
 https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 2026-01-28 - 23 days - sent to moderation
 2026-01-31 - 26 days - moderation rejected build
+2026-02-01 - 27 days - sent to moderation
+  x ufo min max traverse duration
+  x instant inter ad
+2026-02-02 - 28 days - published
+  * found out that leaderboard doesn't work
+  * found out that metrics don't work
 
 BIG PLAN
 x ШАБЛОННАЯ РЕПА, ОТПРАВКА ИГРЫ НА МОДЕРАЦИЮ ЯНДЕКСА
@@ -54,9 +60,8 @@ x YANDEX SHIET
 x SEND TO MODERATION
 * MODERATION
 
-x ufo min max traverse duration
-x instant inter ad
-
+* METRICS DON'T WORK!!!
+* leaderboard doesn't work
 * godot prototype
 * polish
   * polish: win: particles
