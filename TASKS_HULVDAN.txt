@@ -60,8 +60,9 @@ x YANDEX SHIET
 x SEND TO MODERATION
 * MODERATION
 
-* METRICS DON'T WORK!!!
-* leaderboard doesn't work
+x leaderboard doesn't work
+x METRICS DON'T WORK!!!
+
 * godot prototype
 * polish
   * polish: win: particles
