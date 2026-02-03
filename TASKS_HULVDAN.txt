@@ -66,8 +66,6 @@ x gameanalytics: setup
 x gameanalytics: Metric
 x FROG on first levels
 
-* gameanalytics:
-* gameanalytics:
 * godot prototype
 * polish
   * polish: win: particles
