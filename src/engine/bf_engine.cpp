@@ -4462,8 +4462,8 @@ void InitEngine() {  ///
     {
       gameanalytics.GameAnalytics.setEnabledInfoLog(true);
       gameanalytics.GameAnalytics.setEnabledVerboseLog(true);
-      gameanalytics.GameAnalytics.configureBuild($0);
-      gameanalytics.GameAnalytics.initialize($1, $2);
+      gameanalytics.GameAnalytics.configureBuild(UTF8ToString($0));
+      gameanalytics.GameAnalytics.initialize(UTF8ToString($1), UTF8ToString($2));
     }, BF_VERSION, BF_GAMEANALYTICS_GAME_ID, BF_GAMEANALYTICS_SECRET
   );
   // clang-format on
