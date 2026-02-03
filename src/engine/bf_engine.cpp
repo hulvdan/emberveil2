@@ -2313,7 +2313,7 @@ void Metric(const char* goalId) {  ///
 #ifdef BF_PLATFORM_WebYandex
   // clang-format off
   EM_ASM({
-    GameAnalytics("addDesignEvent", $0);
+    GameAnalytics("addDesignEvent", UTF8ToString($0));
   }, goalId);
   // clang-format on
 #endif
@@ -4460,8 +4460,6 @@ void InitEngine() {  ///
   // clang-format off
   EM_ASM(
     {
-      gameanalytics.GameAnalytics.setEnabledInfoLog(true);
-      gameanalytics.GameAnalytics.setEnabledVerboseLog(true);
       gameanalytics.GameAnalytics.configureBuild(UTF8ToString($0));
       gameanalytics.GameAnalytics.initialize(UTF8ToString($1), UTF8ToString($2));
     }, BF_VERSION, BF_GAMEANALYTICS_GAME_ID, BF_GAMEANALYTICS_SECRET

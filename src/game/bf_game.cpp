@@ -1957,7 +1957,8 @@ void EndGameplay(bool won) {  ///
 
   if (won) {
     Save();
-    Metric(TextFormat("level_compl_%d", g.save.level));
+    if (g.save.level <= 50)
+      Metric(TextFormat("level_compl_%d", g.save.level));
     Leaderboard("BestPlayer", g.save.level + 1);
   }
   else
@@ -2380,7 +2381,8 @@ void GameFixedUpdate() {
     {
       if (g.run.won || g.run.levelControlPressedSkip)
         g.save.level++;
-      Metric(TextFormat("level_advanced_to_%d", g.save.level));
+      if (g.save.level <= 50)
+        Metric(TextFormat("level_advanced_to_%d", g.save.level));
       g.meta.reload = true;
     }
   }
