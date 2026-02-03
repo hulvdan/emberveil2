@@ -4460,15 +4460,15 @@ void InitEngine() {  ///
   // clang-format off
   EM_ASM(
     {
-      GameAnalytics("setEnabledInfoLog", true);
-      GameAnalytics("setEnabledVerboseLog", true);
-      GameAnalytics("configureBuild", $0);
+      gameanalytics.GameAnalytics.setEnabledInfoLog(true);
+      gameanalytics.GameAnalytics.setEnabledVerboseLog(true);
+      gameanalytics.GameAnalytics.configureBuild($0);
       // GameAnalytics.configureAvailableResourceCurrencies(["gems", "gold"]);
       // GameAnalytics.configureAvailableResourceItemTypes(["boost", "gold"]);
       // GameAnalytics.configureAvailableCustomDimensions01(["ninja", "samurai"]);
       // GameAnalytics.configureAvailableCustomDimensions02(["whale", "dolphin"]);
       // GameAnalytics.configureAvailableCustomDimensions03(["horde", "alliance"]);
-      GameAnalytics("initialize", $1, $2);
+      gameanalytics.GameAnalytics.initialize($1, $2);
     }, BF_VERSION, BF_GAMEANALYTICS_GAME_ID, BF_GAMEANALYTICS_SECRET
   );
   // clang-format on

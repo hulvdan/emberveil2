@@ -1500,17 +1500,6 @@ def do_generate(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
             codegen_file.write(value)
             codegen_file.write("\n")
 
-        genline(
-            'constexpr const char* BF_GAMEANALYTICS_GAME_ID = "{}";'.format(
-                bf.game_settings.gameanalytics_game_id
-            )
-        )
-        genline(
-            'constexpr const char* BF_GAMEANALYTICS_SECRET = "{}";\n'.format(
-                bf.game_settings.gameanalytics_secret
-            )
-        )
-
         generate_flatbuffer_files()
 
         remove_intermediate_generation_files()
@@ -1536,6 +1525,17 @@ def do_generate(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
         assert len(downscale_factors) == 1
         convert_gamelib_json_to_binary(
             platform, texture_name_2_id, genline, atlases_data[0], original_texture_sizes
+        )
+
+        genline(
+            'constexpr const char* BF_GAMEANALYTICS_GAME_ID = "{}";'.format(
+                bf.game_settings.gameanalytics_game_id
+            )
+        )
+        genline(
+            'constexpr const char* BF_GAMEANALYTICS_SECRET = "{}";\n'.format(
+                bf.game_settings.gameanalytics_secret
+            )
         )
 
         genline("///")
