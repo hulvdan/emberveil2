@@ -60,10 +60,11 @@ x YANDEX SHIET
 x SEND TO MODERATION
 * MODERATION
 
-x leaderboard doesn't work
-x METRICS DON'T WORK!!!
-- ASO больше вставить «сортировка»
-
+* gameanalytics: load js
+* gameanalytics: setup
+* gameanalytics: Metric
+* gameanalytics:
+* gameanalytics:
 * godot prototype
 * polish
   * polish: win: particles

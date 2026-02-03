@@ -41,6 +41,8 @@ class _GameSettings:
     languages: list[str] = field(default_factory=lambda: ["russian", "english"])
     generate_flatbuffers_api_for: list[str] = field(default_factory=list)
     yandex_metrica_counter_id: int | None = None
+    gameanalytics_game_id: str = "6cd0800abea682e27c7c5e25e5767957"
+    gameanalytics_secret: str = "1cccb4f791628c4a3d3bf49e30d9a139e81aa563"
     colors: list[str] = field(default_factory=lambda: ["#ffffff", "#000000"])
 
     computed_color_names: list[str] = field(default_factory=list)

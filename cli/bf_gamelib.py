@@ -1407,24 +1407,8 @@ def do_generate(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
             bf.BuildPlatform.WebYandex: {
                 "EXTEND_BODY_START": """
                     <script src="/sdk.js"></script>
-                    <!-- Yandex.Metrika counter -->
-                    <script type="text/javascript">
-                        window.yandexMetricaCounterId = YANDEX_METRIC_COUNTER_ID;
-                        (function(m,e,t,r,i,k,a){
-                            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-                            m[i].l=1*new Date();
-                            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-                            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-                        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=YANDEX_METRIC_COUNTER_ID', 'ym');
-
-                        ym(YANDEX_METRIC_COUNTER_ID, 'init', {ssr:true, clickmap:true, accurateTrackBounce:true, trackLinks:true});
-                    </script>
-                    <noscript><div><img src="https://mc.yandex.ru/watch/YANDEX_METRIC_COUNTER_ID" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-                    <!-- /Yandex.Metrika counter -->
-                """.replace(
-                    "YANDEX_METRIC_COUNTER_ID",
-                    str(bf.game_settings.yandex_metrica_counter_id),
-                ),
+                    <script src="GameAnalytics.min.js"></script>
+                """,
                 "EXTEND_BEFORE_WASM": "",
                 "EXTEND_PRE_RUN": "",
                 "EXTEND_POST_RUN": "",
@@ -1515,6 +1499,17 @@ def do_generate(platform: bf.BuildPlatform, build_type: bf.BuildType) -> None:
         def genline(value):
             codegen_file.write(value)
             codegen_file.write("\n")
+
+        genline(
+            'constexpr const char* BF_GAMEANALYTICS_GAME_ID = "{}";'.format(
+                bf.game_settings.gameanalytics_game_id
+            )
+        )
+        genline(
+            'constexpr const char* BF_GAMEANALYTICS_SECRET = "{}";\n'.format(
+                bf.game_settings.gameanalytics_secret
+            )
+        )
 
         generate_flatbuffer_files()
 

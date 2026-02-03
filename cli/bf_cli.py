@@ -2,6 +2,7 @@
 import asyncio
 import datetime
 import os
+import shutil
 import zipfile
 from collections import Counter
 from pathlib import Path
@@ -56,8 +57,10 @@ def make_web_build_archive(zip_path: Path, cmake_build_out_path: Path) -> None:
             "index.html",
             "index.js",
             "index.wasm",
+            "GameAnalytics.min.js",
         ):
             archive.write(cmake_build_out_path / filepath, filepath)
+
         RESOURCES_POSTLOAD_DIR = bf.PROJECT_DIR / "resp"
         for f in RESOURCES_POSTLOAD_DIR.glob("*"):
             archive.write(f, "{}/{}".format(RESOURCES_POSTLOAD_DIR.name, f.name))
@@ -123,6 +126,10 @@ def do_build(
             if platform.lower().startswith("web"):
                 bf.run_command(
                     rf"cmake --build .cmake/{platform}_{build_type} -t {target}"
+                )
+                shutil.copy(
+                    bf.ASSETS_DIR / "GameAnalytics.min.js",
+                    f".cmake/{platform}_{build_type}/",
                 )
 
                 if platform == bf.BuildPlatform.WebYandex:

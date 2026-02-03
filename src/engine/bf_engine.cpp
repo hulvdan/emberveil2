@@ -2313,15 +2313,7 @@ void Metric(const char* goalId) {  ///
 #ifdef BF_PLATFORM_WebYandex
   // clang-format off
   EM_ASM({
-    try {
-      if (typeof ym === "function") {
-        ym(window.yandexMetricaCounterId, 'reachGoal', UTF8ToString($0));
-      } else {
-        console.warn("Yandex Metrica is not ready yet.");
-      }
-    } catch (e) {
-      console.error("Error sending data to Yandex Metrica:", e);
-    }
+    GameAnalytics("addDesignEvent", $0);
   }, goalId);
   // clang-format on
 #endif
@@ -4463,6 +4455,24 @@ void SetMusicLowpassFactor(f32 factor) {  ///
 
 void InitEngine() {  ///
   ZoneScopedN("InitEngine");
+
+#if defined(BF_PLATFORM_WebYandex)
+  // clang-format off
+  EM_ASM(
+    {
+      GameAnalytics("setEnabledInfoLog", true);
+      GameAnalytics("setEnabledVerboseLog", true);
+      GameAnalytics("configureBuild", $0);
+      // GameAnalytics.configureAvailableResourceCurrencies(["gems", "gold"]);
+      // GameAnalytics.configureAvailableResourceItemTypes(["boost", "gold"]);
+      // GameAnalytics.configureAvailableCustomDimensions01(["ninja", "samurai"]);
+      // GameAnalytics.configureAvailableCustomDimensions02(["whale", "dolphin"]);
+      // GameAnalytics.configureAvailableCustomDimensions03(["horde", "alliance"]);
+      GameAnalytics("initialize", $1, $2);
+    }, BF_VERSION, BF_GAMEANALYTICS_GAME_ID, BF_GAMEANALYTICS_SECRET
+  );
+  // clang-format on
+#endif
 
 #ifdef SDL_PLATFORM_EMSCRIPTEN
   // clang-format off

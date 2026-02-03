@@ -28,7 +28,8 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 bf.game_settings.itch_target = "hulvdan/emberveil2"
 bf.game_settings.languages = ["russian", "english"]
 bf.game_settings.generate_flatbuffers_api_for = ["bf_save.fbs"]
-bf.game_settings.yandex_metrica_counter_id = 106388631
+bf.game_settings.gameanalytics_game_id = "9b90c45775ca579f61342bd7896da394"
+bf.game_settings.gameanalytics_secret = "68804780910e61d527c0294a41727298d4ee1a46"
 bf.game_settings.colors = [  ###
     "#ffffff",
     "#fb6b1d",
