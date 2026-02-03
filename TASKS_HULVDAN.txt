@@ -58,11 +58,13 @@ PLAN
 x MAKE GRAPHICS GOOD
 x YANDEX SHIET
 x SEND TO MODERATION
-* MODERATION
+x MODERATION
+* WAIT FOR RESULTS
 
-* gameanalytics: load js
-* gameanalytics: setup
-* gameanalytics: Metric
+x gameanalytics: load js
+x gameanalytics: setup
+x gameanalytics: Metric
+
 * gameanalytics:
 * gameanalytics:
 * godot prototype
