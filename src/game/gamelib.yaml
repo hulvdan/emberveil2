@@ -123,6 +123,8 @@ debug_variables: # {  ###
     type: bool
   - name: backgroundRed
     type: bool
+  - name: overrideSeed
+    type: int
   - name: test
     type: bool
 # }

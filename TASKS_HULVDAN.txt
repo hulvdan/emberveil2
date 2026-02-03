@@ -64,6 +64,7 @@ x MODERATION
 x gameanalytics: load js
 x gameanalytics: setup
 x gameanalytics: Metric
+x FROG on first levels
 
 * gameanalytics:
 * gameanalytics:

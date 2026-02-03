@@ -370,6 +370,8 @@ struct GameData {
     int perlinIndex        = {};
     f32 musicLowpassFactor = 1;
     int portrait           = -1;
+
+    int overrideSeedPrev = 0;
   } meta;
 
   struct Save {
@@ -863,10 +865,15 @@ void RunInit() {
   const auto fb_level = GetFBLevel(g.save.level);
 
   g.run.randomSeedForLevelHotReload = fb_level->random_seed();
+  if (gdebug.overrideSeed)
+    g.run.randomSeedForLevelHotReload = gdebug.overrideSeed;
+
+  g.meta.overrideSeedPrev = gdebug.overrideSeed;
 
   // Consistent GRAND state.
   {  ///
-    u32 val = Hash32((u8*)&g.save.level, sizeof(g.save.level)) + fb_level->random_seed();
+    u32 val = Hash32((u8*)&g.save.level, sizeof(g.save.level))
+              + g.run.randomSeedForLevelHotReload;
     ge.meta.logicRand._state = Hash32((u8*)&val, sizeof(val));
   }
 
@@ -2004,8 +2011,14 @@ void GameFixedUpdate() {
   }
   // }
 
-  if (g.run.randomSeedForLevelHotReload != GetFBLevel(g.save.level)->random_seed())
-    g.meta.reload = true;
+  if (gdebug.overrideSeed) {
+    if (gdebug.overrideSeed != g.meta.overrideSeedPrev)
+      g.meta.reload = true;
+  }
+  else {
+    if (g.run.randomSeedForLevelHotReload != GetFBLevel(g.save.level)->random_seed())
+      g.meta.reload = true;
+  }
 
   // Reloading.
   if (g.meta.reload) {  ///
@@ -3155,8 +3168,17 @@ void GameDraw() {
             EndGameplay(false);
         }
 
+        IM::Text("Seed override: %d", gdebug.overrideSeed);
+        if (IM::Button("Reset seed override"))
+          gdebug.overrideSeed = 0;
+        if (IM::Button("Seed override++"))
+          gdebug.overrideSeed++;
+        if (IM::Button("Seed override--"))
+          gdebug.overrideSeed--;
+
         if (IM::Button("Reset Level"))
           g.meta.reload = true;
+
         if (IM::Button("Set Level To 0")) {
           g.save.level  = 0;
           g.meta.reload = true;
