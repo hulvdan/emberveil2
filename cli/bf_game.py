@@ -164,10 +164,11 @@ def _process_gamelib(
                         "pos": (entity.grid_[0], sy - entity.grid_[1] - 1),
                     }
                     for i in range(3):
-                        item = entity.field(f"item{i + 1}")
-                        shelf[f"manual_item{i + 1}"] = item
-                        if item:
-                            manually_placed_items_.append(item)
+                        for row in range(1, 3):
+                            item = entity.field(f"item{row}{i + 1}")
+                            shelf[f"manual_item{row}{i + 1}"] = item
+                            if item:
+                                manually_placed_items_.append(item)
                     shelves.append(shelf)
             shelves.sort(key=lambda x: (x["pos"][1], x["pos"][0]))  # type: ignore
             player = bf.ldtk_get_single_entity(entities, "Player")

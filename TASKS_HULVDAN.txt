@@ -61,12 +61,8 @@ x SEND TO MODERATION
 x MODERATION
 * WAIT FOR RESULTS
 
-x gameanalytics: load js
-x gameanalytics: setup
-x gameanalytics: Metric
-x FROG on first levels
+x better introduction levels
 
-* godot prototype
 * polish
   * polish: win: particles
   * polish: double tap 2 fixed frames restriction

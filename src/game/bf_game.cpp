@@ -919,12 +919,34 @@ void RunInit() {
     for (auto s : *fb_level->shelves()) {
       shelf++;
 
-      if (s->manual_item1())
-        placeItem(0, s->manual_item1());
-      if (s->manual_item2())
-        placeItem(1, s->manual_item2());
-      if (s->manual_item3())
-        placeItem(2, s->manual_item3());
+      bool hasItemOnBackRow
+        = s->manual_item11() || s->manual_item12() || s->manual_item13();
+
+      // Back row.
+      {
+        if (s->manual_item21()) {
+          placeItem(0, s->manual_item21());
+          PushSpotBack(shelf, 0);
+        }
+        if (s->manual_item22()) {
+          placeItem(1, s->manual_item22());
+          PushSpotBack(shelf, 1);
+        }
+        if (s->manual_item23()) {
+          placeItem(2, s->manual_item23());
+          PushSpotBack(shelf, 2);
+        }
+      }
+
+      // Front row.
+      {
+        if (s->manual_item11())
+          placeItem(0, s->manual_item11());
+        if (s->manual_item12())
+          placeItem(1, s->manual_item12());
+        if (s->manual_item13())
+          placeItem(2, s->manual_item13());
+      }
     }
   }
   // Automatically filling shelves with items.

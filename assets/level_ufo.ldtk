@@ -11,7 +11,7 @@
 	"iid": "6a178760-d380-11f0-a13a-3d653bfb682a",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 42,
+	"nextUid": 45,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -147,7 +147,7 @@
 			"pivotY": 0,
 			"fieldDefs": [
 				{
-					"identifier": "item1",
+					"identifier": "item11",
 					"doc": null,
 					"__type": "Int",
 					"uid": 18,
@@ -184,7 +184,7 @@
 					"tilesetUid": null
 				},
 				{
-					"identifier": "item2",
+					"identifier": "item12",
 					"doc": null,
 					"__type": "Int",
 					"uid": 19,
@@ -221,10 +221,121 @@
 					"tilesetUid": null
 				},
 				{
-					"identifier": "item3",
+					"identifier": "item13",
 					"doc": null,
 					"__type": "Int",
 					"uid": 20,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "item21",
+					"doc": null,
+					"__type": "Int",
+					"uid": 42,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "item22",
+					"doc": null,
+					"__type": "Int",
+					"uid": 43,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "item23",
+					"doc": null,
+					"__type": "Int",
+					"uid": 44,
 					"type": "F_Int",
 					"isArray": false,
 					"canBeNull": false,
@@ -514,9 +625,12 @@
 							"defUid": 1,
 							"px": [80,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [null] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 1, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 2, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [null] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 1, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 2, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 80,
 							"__worldY": 64
@@ -534,9 +648,12 @@
 							"defUid": 1,
 							"px": [112,48],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 1, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 1, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 1, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 1, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 112,
 							"__worldY": 48
@@ -554,9 +671,12 @@
 							"defUid": 1,
 							"px": [48,48],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 2, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 2, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 2, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 2, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 48,
 							"__worldY": 48
@@ -751,9 +871,12 @@
 							"defUid": 1,
 							"px": [32,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 4, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 5, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [null] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 224,
 							"__worldY": 32
@@ -771,9 +894,12 @@
 							"defUid": 1,
 							"px": [64,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 1, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 2, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 1, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 256,
 							"__worldY": 32
@@ -791,9 +917,12 @@
 							"defUid": 1,
 							"px": [80,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 1, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 3, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 272,
 							"__worldY": 64
@@ -811,9 +940,12 @@
 							"defUid": 1,
 							"px": [48,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 4, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 2, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 5, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 240,
 							"__worldY": 64
@@ -831,9 +963,12 @@
 							"defUid": 1,
 							"px": [112,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 5, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 4, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 2, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [null] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [null] }
 							],
 							"__worldX": 304,
 							"__worldY": 64
@@ -851,9 +986,12 @@
 							"defUid": 1,
 							"px": [96,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 3, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 3, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 288,
 							"__worldY": 32
@@ -865,7 +1003,7 @@
 							"__tags": [],
 							"__tile": null,
 							"__smartColor": "#63C74D",
-							"iid": "7e10ca50-d380-11f0-a13a-b3d782c6c66d",
+							"iid": "06a42cc0-fa90-11f0-9424-038b65b0ad07",
 							"width": 16,
 							"height": 16,
 							"defUid": 12,
@@ -1048,9 +1186,12 @@
 							"defUid": 1,
 							"px": [80,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 5, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 6, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 6, "__tile": null, "defUid": 42, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 464,
 							"__worldY": 32
@@ -1068,9 +1209,12 @@
 							"defUid": 1,
 							"px": [80,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 3, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 3, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 4, "__tile": null, "defUid": 44, "realEditorValues": [{ "id": "V_Int", "params": [4] }] }
 							],
 							"__worldX": 464,
 							"__worldY": 64
@@ -1088,9 +1232,12 @@
 							"defUid": 1,
 							"px": [48,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [null] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 1, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 2, "__tile": null, "defUid": 42, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [null] }
 							],
 							"__worldX": 432,
 							"__worldY": 64
@@ -1108,9 +1255,12 @@
 							"defUid": 1,
 							"px": [48,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 1, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 1, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 2, "__tile": null, "defUid": 43, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 2, "__tile": null, "defUid": 44, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
 							],
 							"__worldX": 432,
 							"__worldY": 32
@@ -1128,9 +1278,12 @@
 							"defUid": 1,
 							"px": [112,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 5, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [null] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 6, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 496,
 							"__worldY": 32
@@ -1148,9 +1301,12 @@
 							"defUid": 1,
 							"px": [112,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 4, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 4, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 3, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 5, "__tile": null, "defUid": 42, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 496,
 							"__worldY": 64
@@ -1345,9 +1501,12 @@
 							"defUid": 1,
 							"px": [16,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 1, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 5, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 8, "__tile": null, "defUid": 44, "realEditorValues": [{ "id": "V_Int", "params": [8] }] }
 							],
 							"__worldX": 592,
 							"__worldY": 32
@@ -1365,9 +1524,12 @@
 							"defUid": 1,
 							"px": [16,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 4, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 3, "__tile": null, "defUid": 42, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 592,
 							"__worldY": 64
@@ -1385,9 +1547,12 @@
 							"defUid": 1,
 							"px": [48,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 4, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 5, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 5, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [5] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 6, "__tile": null, "defUid": 42, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 6, "__tile": null, "defUid": 43, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 624,
 							"__worldY": 64
@@ -1405,9 +1570,12 @@
 							"defUid": 1,
 							"px": [48,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 6, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [6] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 3, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 624,
 							"__worldY": 32
@@ -1425,9 +1593,12 @@
 							"defUid": 1,
 							"px": [144,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 2, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 3, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 2, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 8, "__tile": null, "defUid": 43, "realEditorValues": [{ "id": "V_Int", "params": [8] }] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 720,
 							"__worldY": 32
@@ -1445,9 +1616,12 @@
 							"defUid": 1,
 							"px": [112,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 1, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 2, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 8, "__tile": null, "defUid": 44, "realEditorValues": [{ "id": "V_Int", "params": [8] }] }
 							],
 							"__worldX": 688,
 							"__worldY": 32
@@ -1465,9 +1639,12 @@
 							"defUid": 1,
 							"px": [112,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 7, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [7] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 7, "__tile": null, "defUid": 19, "realEditorValues": [{ "id": "V_Int", "params": [7] }] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 688,
 							"__worldY": 64
@@ -1485,9 +1662,12 @@
 							"defUid": 1,
 							"px": [144,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 4, "__tile": null, "defUid": 18, "realEditorValues": [{ "id": "V_Int", "params": [4] }] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 1, "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 7, "__tile": null, "defUid": 43, "realEditorValues": [{ "id": "V_Int", "params": [7] }] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 720,
 							"__worldY": 64
@@ -1682,9 +1862,12 @@
 							"defUid": 1,
 							"px": [80,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 848,
 							"__worldY": 32
@@ -1702,9 +1885,12 @@
 							"defUid": 1,
 							"px": [80,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 848,
 							"__worldY": 64
@@ -1722,9 +1908,12 @@
 							"defUid": 1,
 							"px": [112,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 880,
 							"__worldY": 64
@@ -1742,9 +1931,12 @@
 							"defUid": 1,
 							"px": [112,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 880,
 							"__worldY": 32
@@ -1762,9 +1954,12 @@
 							"defUid": 1,
 							"px": [144,48],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 912,
 							"__worldY": 48
@@ -1782,9 +1977,12 @@
 							"defUid": 1,
 							"px": [48,32],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 816,
 							"__worldY": 32
@@ -1802,9 +2000,12 @@
 							"defUid": 1,
 							"px": [48,64],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 816,
 							"__worldY": 64
@@ -1822,9 +2023,12 @@
 							"defUid": 1,
 							"px": [16,48],
 							"fieldInstances": [
-								{ "__identifier": "item1", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
-								{ "__identifier": "item2", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
-								{ "__identifier": "item3", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] }
+								{ "__identifier": "item11", "__type": "Int", "__value": 0, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "item12", "__type": "Int", "__value": 0, "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "item13", "__type": "Int", "__value": 0, "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "item21", "__type": "Int", "__value": 0, "__tile": null, "defUid": 42, "realEditorValues": [] },
+								{ "__identifier": "item22", "__type": "Int", "__value": 0, "__tile": null, "defUid": 43, "realEditorValues": [] },
+								{ "__identifier": "item23", "__type": "Int", "__value": 0, "__tile": null, "defUid": 44, "realEditorValues": [] }
 							],
 							"__worldX": 784,
 							"__worldY": 48
