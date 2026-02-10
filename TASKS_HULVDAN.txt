@@ -8,6 +8,12 @@ https://www.timeanddate.com/date/durationresult.html?d1=5&m1=1&y1=2026
 2026-02-02 - 28 days - published
   * found out that leaderboard doesn't work
   * found out that metrics don't work
+2026-02-10 - 36 days - sent to moderation
+  x gameanalytics: load js
+  x gameanalytics: setup
+  x gameanalytics: Metric
+  x FROG on first levels
+  x better introduction levels
 
 BIG PLAN
 x ШАБЛОННАЯ РЕПА, ОТПРАВКА ИГРЫ НА МОДЕРАЦИЮ ЯНДЕКСА
@@ -60,8 +66,6 @@ x YANDEX SHIET
 x SEND TO MODERATION
 x MODERATION
 * WAIT FOR RESULTS
-
-x better introduction levels
 
 * polish
   * polish: win: particles
