@@ -126,6 +126,7 @@ ignore = [
     "TRY300",
     "UP032",
     "UP035",
+    "UP042",
 ]
 
 [tool.pytest.ini_options]
